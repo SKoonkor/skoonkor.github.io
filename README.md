@@ -1,2 +1,2 @@
-# suttikoonkoonkor.github.io
-This is my personal websit
+# READ ME
+This is for my personal websit
