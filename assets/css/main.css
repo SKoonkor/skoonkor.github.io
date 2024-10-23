@@ -3621,13 +3621,20 @@ input, select, textarea {
 		margin: -4rem auto 0 auto;
 		overflow: hidden;
 		padding: 0 2rem 0 0;
-		position: sticky;
+		position: relative;
 		width: calc(100% - 4rem);
 		max-width: 72rem;
 		top: 0;
-		z-index: 1000;
+		z-index: 2;
 	}
-
+.sticky {
+	position: fixed;
+	top: 0;
+	width: calc(100% - 4rem);
+	z-index: 1000;
+	background-color: rgba(255, 255, 255, 0.175);
+	
+}
 		#nav ul.divided li {
 			border-top-color: #ffffff;
 		}
