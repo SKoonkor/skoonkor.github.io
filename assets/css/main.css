@@ -1760,7 +1760,16 @@ input, select, textarea {
 			background: #f00;
 		}
 
-			.image.avatar48 img {
+		.image.profile {
+			width: 200px;
+			height: 200px;
+			background: #f00;
+			border-radius: 50%;
+			overflow: hidden;
+			object-fit: cover;
+		}
+
+		.image.avatar48 img {
 				width: 48px;
 				height: 48px;
 			}
