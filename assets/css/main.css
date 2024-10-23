@@ -1763,10 +1763,10 @@ input, select, textarea {
 		.image.profile {
 			width: 200px;
 			height: 200px;
-			background: #f00;
 			border-radius: 50%;
 			overflow: hidden;
 			object-fit: cover;
+			background: #f00;
 		}
 
 		.image.avatar48 img {
