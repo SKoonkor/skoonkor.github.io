@@ -1748,7 +1748,9 @@ input, select, textarea {
 		display: inline-block;
 		border: 0;
 	}
-
+	.profile-container {
+    		text-align: center; /* Centers inline elements (like span) within the div */
+	}
 		.image img {
 			display: block;
 			width: 100%;
