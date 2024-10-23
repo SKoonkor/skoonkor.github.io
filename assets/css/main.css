@@ -1753,7 +1753,7 @@ input, select, textarea {
 	    	display: flex; /* Enables flexbox layout */
 	    	justify-content: center; /* Centers horizontally */
 	    	align-items: center; /* Centers vertically (if height is specified) */
-	    	height: 100px; /* Adjust the height as needed */
+	    	height: 250px; /* Adjust the height as needed */
 	}
 		.image img {
 			display: block;
