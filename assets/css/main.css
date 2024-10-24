@@ -217,6 +217,10 @@ input, select, textarea {
 		margin: 0 auto;
 		max-width: 100%;
 		width: 1400px;
+	    	display: flex; /* Enables flexbox layout */
+    		justify-content: center; /* Centers horizontally */
+    		align-items: center; /* Centers vertically (if height is specified) */
+		height: 100vh;
 			
 		
 	}
