@@ -2264,10 +2264,17 @@ input, select, textarea {
 			#main > section.one {
 				background-color: #81918E;
 				background-image: url("../../images/seqB_037a.jpg");
+				background-size: cover;
+				background-repeat: no-repeat;
+				height: 100vh;
+				margin: 0;
+				padding: 0;
 			}
 
 			#main > section.two {
 				background-color: #f5fafa;
+				margin-top: 0;
+				padding-top: 0;
 			}
 
 			#main > section.three {
