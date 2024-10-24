@@ -211,6 +211,21 @@ input, select, textarea {
 		clear: both;
 	}
 
+.full-screen-section {
+	    display: flex; /* Enables Flexbox */
+	    justify-content: center; /* Centers the content horizontally */
+	    align-items: center; /* Centers the content vertically */
+	    flex-direction: column; /* Stacks the header and footer vertically */
+	    height: 100vh; /* Full viewport height */
+	    background-image: url("images/seqB_037a.jpg"); /* Background image */
+	    background-size: cover; /* Cover the entire section */
+	    background-position: center; /* Centers the background image */
+	    background-repeat: no-repeat; /* Ensures no repeat */
+	    text-align: center; /* Centers text inside the section */
+	    padding: 0; /* No padding needed */
+	    margin: 0; /* No margin needed */
+}
+
 /* Container */
 
 	.container {
