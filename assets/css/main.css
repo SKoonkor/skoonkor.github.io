@@ -217,13 +217,6 @@ input, select, textarea {
 		margin: 0 auto;
 		max-width: 100%;
 		width: 1400px;
-		/* fix starts here */
-/* 		height: 100vh;
-		display: flex;
-	    	justify-content: center; */
-	   	align-items: center;
-	    	flex-direction: column; 
-		text-align: center
 			
 		
 	}
@@ -2271,13 +2264,17 @@ input, select, textarea {
 			}				
 
 			#main > section.one {
-				background-position: center;
+				display: flex;
+				justify-containt: centre;
+				align-item: center;
+				flex-direction: column;
+				height: 100vh;
 				background-color: #81918E;
 				background-image: url("../../images/seqB_037a.jpg");
 				background-size: cover;
+				background-position: center;
 				background-repeat: no-repeat;
 				text-align: center;
-				height: 100vh;
 				margin: 0;
 				padding: 0;
 			}
