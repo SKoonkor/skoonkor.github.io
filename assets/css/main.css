@@ -2262,6 +2262,11 @@ input, select, textarea {
 			}
 
 			#main > section.one {
+				display: flex;
+				justify-content: center;
+				align-item: center;
+				background-position: center;
+				text-align: center;
 				background-color: #81918E;
 				background-image: url("../../images/seqB_037a.jpg");
 				background-size: cover;
