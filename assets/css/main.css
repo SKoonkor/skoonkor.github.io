@@ -218,11 +218,11 @@ input, select, textarea {
 		max-width: 100%;
 		width: 1400px;
 		/* fix starts here */
-		height: 100vh;
+/* 		height: 100vh;
 		display: flex;
 	    	justify-content: center;
 	   	align-items: center;
-	    	flex-direction: column;
+	    	flex-direction: column; */
 		text-align: center
 			
 		
@@ -2267,8 +2267,8 @@ input, select, textarea {
 			#main > section.cover {
 				padding: 10em 0;
 				background-size: cover;
-				background-position: center center;
-			}				text-align: center;
+				background-position: center center;text-align: center;
+			}				
 
 			#main > section.one {
 				background-position: center;
@@ -2276,6 +2276,7 @@ input, select, textarea {
 				background-image: url("../../images/seqB_037a.jpg");
 				background-size: cover;
 				background-repeat: no-repeat;
+				text-align: center;
 				height: 100vh;
 				margin: 0;
 				padding: 0;
@@ -2283,8 +2284,6 @@ input, select, textarea {
 
 			#main > section.two {
 				background-color: #f5fafa;
-				margin-top: 0;
-				padding-top: 0;
 			}
 
 			#main > section.three {
