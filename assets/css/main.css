@@ -218,6 +218,7 @@ input, select, textarea {
 		max-width: 100%;
 		width: 1400px;
 		/* fix starts here */
+		height: 100vh;
 		display: flex;
 	    	justify-content: center;
 	   	align-items: center;
