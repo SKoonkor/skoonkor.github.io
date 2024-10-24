@@ -217,10 +217,6 @@ input, select, textarea {
 		margin: 0 auto;
 		max-width: 100%;
 		width: 1400px;
-	    	display: flex; /* Enables flexbox layout */
-    		justify-content: center; /* Centers horizontally */
-    		align-items: center; /* Centers vertically (if height is specified) */
-		height: 100vh;
 			
 		
 	}
@@ -264,6 +260,62 @@ input, select, textarea {
 			}
 
 		}
+
+/* Container */
+
+	.containerone {
+		margin: 0 auto;
+		max-width: 100%;
+		width: 1400px;
+		
+	    	display: flex; /* Enables flexbox layout */
+    		justify-content: center; /* Centers horizontally */
+    		align-items: center; /* Centers vertically (if height is specified) */
+		height: 100vh;
+			
+		
+	}
+
+		@media screen and (min-width: 961px) and (max-width: 1880px) {
+
+			.containerone {
+				width: 1200px;
+			}
+
+		}
+
+		@media screen and (min-width: 961px) and (max-width: 1620px) {
+
+			.containerone {
+				width: 960px;
+			}
+
+		}
+
+		@media screen and (min-width: 961px) and (max-width: 1320px) {
+
+			.containerone {
+				width: 100%;
+			}
+
+		}
+
+		@media screen and (max-width: 960px) {
+
+			.containerone {
+				width: 100%;
+			}
+
+		}
+
+		@media screen and (max-width: 736px) {
+
+			.containerone {
+				width: 100%;
+			}
+
+		}
+
 
 /* Row */
 
