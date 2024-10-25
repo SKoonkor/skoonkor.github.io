@@ -2304,7 +2304,8 @@ input, select, textarea {
 			}
 
 			#main > section.four {
-				background-color: #e8edec;
+				background-color: #ffffff;
+				/* #e8edec */
 			}
 			#main > section.five {
 				background-color: #dae3e1;
