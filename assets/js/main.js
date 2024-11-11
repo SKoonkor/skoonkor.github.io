@@ -130,13 +130,13 @@ document.addEventListener("DOMContentLoaded", function() {
 
     toggleButtons.forEach(button => {
         button.addEventListener("click", function() {
-            const description = this.previousElementSibling; // Select the .research-description-content
+            const descriptionContent = this.previousElementSibling; // Select the .research-description-content
 
             // Toggle 'show' class on the description content
-            description.classList.toggle("show");
+            descriptionContent.classList.toggle("show");
 
             // Update button text based on visibility
-            if (description.classList.contains("show")) {
+            if (descriptionContent.classList.contains("show")) {
                 this.textContent = "Show Less";
             } else {
                 this.textContent = "Show More";
@@ -144,3 +144,4 @@ document.addEventListener("DOMContentLoaded", function() {
         });
     });
 });
+
