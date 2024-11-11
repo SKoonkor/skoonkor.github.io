@@ -125,17 +125,18 @@
 
 
 document.addEventListener("DOMContentLoaded", function() {
+    // Get all toggle buttons
     const toggleButtons = document.querySelectorAll(".toggle-description");
 
     toggleButtons.forEach(button => {
         button.addEventListener("click", function() {
-            const parent = this.parentElement; // Select the .research-description container
+            const description = this.previousElementSibling; // Select the .research-description-content
 
-            // Toggle 'show' class to show/hide content
-            parent.classList.toggle("show");
+            // Toggle 'show' class on the description content
+            description.classList.toggle("show");
 
             // Update button text based on visibility
-            if (parent.classList.contains("show")) {
+            if (description.classList.contains("show")) {
                 this.textContent = "Show Less";
             } else {
                 this.textContent = "Show More";
