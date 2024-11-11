@@ -124,16 +124,11 @@
 
 
 
-
-// Add the toggle description functionality
 document.addEventListener("DOMContentLoaded", function() {
-    // Get all toggle buttons
     const toggleButtons = document.querySelectorAll(".toggle-description");
 
-    // Add click event listener to each button
     toggleButtons.forEach(button => {
         button.addEventListener("click", function() {
-            const description = this.previousElementSibling; // Select the .research-description-content
             const parent = this.parentElement; // Select the .research-description container
 
             // Toggle 'show' class to show/hide content
