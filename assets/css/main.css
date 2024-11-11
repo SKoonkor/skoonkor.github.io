@@ -2684,23 +2684,28 @@ input, select, textarea {
 /* Research page */
 /* Main container for the research page */
 #research-page {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 20px;
-    text-align: center;
+	max-width: 1200px;
+	margin: 0 auto;
+	padding: 20px;
+	text-align: center;
 }
 
 /* Styling for each research item */
 .research-item {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    gap: 20px;
-    margin: 20px 0;
-    padding: 20px;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	gap: 20px;
+	margin: 20px 0;
+	padding: 20px;
+	border: 1px solid #ddd;
+	border-radius: 8px;
+	box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Reverses the layout for items with the .reverse class */
+.research-item.reverse {
+    flex-direction: row-reverse;
 }
 
 /* Image container */
@@ -2724,7 +2729,7 @@ input, select, textarea {
 
 .research-description h3 {
     margin-top: 0;
-    font-size: 1.5rem;
+    font-size: 2.5rem;
     color: #333;
 }
 
@@ -2735,13 +2740,18 @@ input, select, textarea {
 
 /* Responsive adjustments for smaller screens */
 @media (max-width: 768px) {
-    .research-item {
-        flex-direction: column;
-        text-align: center;
-    }
+	.research-item {
+	flex-direction: column;
+	text-align: center;
+	}
 
-    .research-image,
-    .research-description {
-        max-width: 100%; /* Full width on smaller screens */
-    }
+	/* This ensures the reverse layout stacks vertically as well */
+	.research-item.reverse {
+	flex-direction: column;
+	}
+
+	.research-image,
+	.research-description {
+	max-width: 100%; /* Full width on smaller screens */
+	}
 }
