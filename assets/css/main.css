@@ -2766,24 +2766,24 @@ input, select, textarea {
 	display: none; /* Hide the button by default */
 	}
 
-/* On small screens, hide the description content and show the button */
+/* On small screens, hide only the paragraph in the description */
 @media (max-width: 768px) {
-	.research-description-content {
-		display: none; /* Hide description by default on small screens */
-		}
+    .research-description-content p {
+        display: none; /* Hide the paragraph text by default */
+    }
 
-	.research-description.show .research-description-content {
-		display: block; /* Show description when 'show' class is added */
-		}
+    .research-description.show p {
+        display: block; /* Show paragraph text when 'show' class is added */
+    }
 
-	.toggle-description {
-		display: block; /* Show the button on small screens */
-		margin-top: 10px;
-		background-color: #007bff;
-		color: #fff;
-		border: none;
-		padding: 8px 12px;
-		border-radius: 5px;
-		cursor: pointer;
-		}
+    .toggle-description {
+        display: block; /* Show the toggle button on small screens */
+        margin-top: 10px;
+        background-color: #007bff;
+        color: #fff;
+        border: none;
+        padding: 8px 12px;
+        border-radius: 5px;
+        cursor: pointer;
+    }
 }
