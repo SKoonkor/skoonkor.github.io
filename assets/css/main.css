@@ -2757,8 +2757,17 @@ input, select, textarea {
 		}
 }
 
+
+
+
+
+
 /* Description visibility by default */
 .research-description-content {
+	display: block; /* Show on larger screens */
+	}
+
+.research-description-content p {
 	display: block; /* Show on larger screens */
 	}
 
