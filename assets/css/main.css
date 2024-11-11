@@ -2738,24 +2738,8 @@ input, select, textarea {
     line-height: 1.6;
 }
 
-/* Description visibility by default */
-.research-description-content {
-    display: block; /* Show on larger screens */
-}
-
-.toggle-description {
-    display: none; /* Hide the button by default */
-}
-
 /* Responsive adjustments for smaller screens */
 @media (max-width: 768px) {
-	.research-description-content {
-		display: none; /* Hide description by default on small screens */
-		}
-	
-	.research-description.show .research-description-content {
-		display: block; /* Show description when 'show' class is added */
-		}
 	
 	.research-item {
 		flex-direction: column;
@@ -2771,7 +2755,27 @@ input, select, textarea {
 	.research-description {
 		max-width: 100%; /* Full width on smaller screens */
 		}
-	
+}
+
+/* Description visibility by default */
+.research-description-content {
+	display: block; /* Show on larger screens */
+	}
+
+.toggle-description {
+	display: none; /* Hide the button by default */
+	}
+
+/* On small screens, hide the description content and show the button */
+@media (max-width: 768px) {
+	.research-description-content {
+		display: none; /* Hide description by default on small screens */
+		}
+
+	.research-description.show .research-description-content {
+		display: block; /* Show description when 'show' class is added */
+		}
+
 	.toggle-description {
 		display: block; /* Show the button on small screens */
 		margin-top: 10px;
@@ -2781,6 +2785,5 @@ input, select, textarea {
 		padding: 8px 12px;
 		border-radius: 5px;
 		cursor: pointer;
-	    }
-
+		}
 }
