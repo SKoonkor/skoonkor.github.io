@@ -2797,3 +2797,40 @@ input, select, textarea {
         cursor: pointer;
     }
 }
+
+
+
+
+#cv {
+	margin-top: 20px;
+}
+
+.cv-row {
+	display: flex;
+	border-bottom: 1px solid #ddd;
+	padding: 10px 0;
+}
+
+.cv-topic, .cv-details, .cv-years {
+	padding: 10px;
+	font-size: 1rem;
+}
+
+.cv-topic {
+	flex: 1; /* 1 part of space */
+	font-weight: bold;
+}
+
+.cv-details {
+	flex: 2; /* 2 parts of space */
+}
+
+.cv-years {
+	flex: 1; /* 1 part of space */
+	text-align: right;
+}
+
+/* Optional: Add spacing between rows */
+.cv-row:last-child {
+	border-bottom: none; /* Remove bottom border on last row */
+}
