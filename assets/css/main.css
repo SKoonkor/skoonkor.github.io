@@ -2802,35 +2802,41 @@ input, select, textarea {
 
 
 #cv {
-	margin-top: 20px;
+	margin: 0 auto;
+	padding: 20px;
+	max-width: 1000px; /* Limit the max width on larger screens */
 }
 
+/* Styles for each row */
 .cv-row {
 	display: flex;
 	border-bottom: 1px solid #ddd;
 	padding: 10px 0;
 }
 
+/* Individual columns */
 .cv-topic, .cv-details, .cv-years {
 	padding: 10px;
 	font-size: 1rem;
 }
 
 .cv-topic {
-	flex: 1; /* 1 part of space */
+	flex: 1;
 	font-weight: bold;
 }
 
 .cv-details {
-	flex: 2; /* 2 parts of space */
+	flex: 2;
+	text-align: left; /* Ensure left alignment */
 }
 
 .cv-years {
-	flex: 1; /* 1 part of space */
+	flex: 1;
 	text-align: right;
+	padding-right: 20px; /* Adds space on the right to avoid touching the edge */
 }
 
 /* Optional: Add spacing between rows */
 .cv-row:last-child {
-	border-bottom: none; /* Remove bottom border on last row */
+	border-bottom: none;
 }
