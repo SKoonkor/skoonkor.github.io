@@ -2817,7 +2817,7 @@ input, select, textarea {
 /* Individual columns */
 .cv-topic, .cv-details, .cv-years {
 	padding: 10px;
-	font-size: 1rem;
+	font-size: 1.1rem;
 }
 
 .cv-topic {
@@ -2836,7 +2836,7 @@ input, select, textarea {
 }
 
 .cv-sub-detail {
-	margin: 5px 0 15px 0; /* Adds space above and below the description */
+	margin: 1px 0 5px 0; /* Adds space above and below the description */
 	font-size: 0.95rem; /* Slightly smaller text for descriptions */
 	color: #666; /* Optional: softer color for descriptions */
 }
