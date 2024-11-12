@@ -2830,6 +2830,17 @@ input, select, textarea {
 	text-align: left !important; /* Ensure left alignment */
 }
 
+.cv-details strong {
+	font-weight: bold;
+	display: block; /* Ensures each main item starts on a new line */
+}
+
+.cv-sub-detail {
+	margin: 5px 0 15px 0; /* Adds space above and below the description */
+	font-size: 0.95rem; /* Slightly smaller text for descriptions */
+	color: #666; /* Optional: softer color for descriptions */
+}
+
 .cv-years {
 	flex: 1;
 	text-align: right;
