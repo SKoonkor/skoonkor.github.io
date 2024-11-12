@@ -2832,19 +2832,23 @@ input, select, textarea {
 .cv-details {
 	flex: 4;
 	text-align: left !important; /* Ensure left alignment */
+	line-height: 1.2; 
 }
 
 .cv-details strong {
 	font-weight: bold;
 	display: block; /* Ensures each main item starts on a new line */
-	margin-bottom: 3px !important;
+	margin-bottom: 1px !important;
+	line-height: 1.2;
 }
 
 .cv-sub-detail {
+	display: inline;
 	margin: 0 !important; /* Adds space above and below the description */
 	padding-left: 5px; /* Optional: slight indent for sub-detail */
 	font-size: 0.95rem; /* Slightly smaller text for descriptions */
 	color: #666; /* Optional: softer color for descriptions */
+	line-height: 1.2;
 }
 
 .cv-years {
