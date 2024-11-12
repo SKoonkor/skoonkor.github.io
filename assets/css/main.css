@@ -2711,7 +2711,7 @@ input, select, textarea {
 /* Image container */
 .research-image {
 	flex: 1;
-	max-width: 40%; /* Ensures image takes 1/3 of the item width */
+	max-width: 45%; /* Ensures image takes 1/3 of the item width */
 }
 
 .research-image img {
@@ -2736,7 +2736,7 @@ input, select, textarea {
 .research-description p {
     	color: #666;
     	line-height: 1.4;
-	font-size: 1.0rem;
+	font-size: 1.1rem;
 }
 
 /* Responsive adjustments for smaller screens */
