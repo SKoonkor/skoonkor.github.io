@@ -2817,7 +2817,7 @@ input, select, textarea {
 /* Individual columns */
 .cv-topic, {
 	padding: 10px;
-	font-size: 1.5rem;
+	font-size: 1.1rem;
 }
 .cv-details, .cv-years {
 	padding: 10px;
@@ -2837,12 +2837,12 @@ input, select, textarea {
 .cv-details strong {
 	font-weight: bold;
 	display: block; /* Ensures each main item starts on a new line */
-	margin-bottom: 3px;
+	margin-bottom: 3px !important;
 }
 
 .cv-sub-detail {
-	margin: 0; /* Adds space above and below the description */
-	padding-left: 3px; /* Optional: slight indent for sub-detail */
+	margin: 0 !important; /* Adds space above and below the description */
+	padding-left: 5px; /* Optional: slight indent for sub-detail */
 	font-size: 0.95rem; /* Slightly smaller text for descriptions */
 	color: #666; /* Optional: softer color for descriptions */
 }
