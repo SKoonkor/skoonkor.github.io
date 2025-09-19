@@ -1,0 +1,878 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="UTF-8"/>
+    <title>Git Commands Cheat Sheet</title>
+    <style>
+        /* Bootstrap theme */
+
+body {
+    font-size: 1rem;
+    line-height: 1.6;
+    --bezel-color: rgba(0, 0, 0, 0.03);
+}
+
+body.app-style-dark {
+    --bezel-color: rgba(0, 0, 0, 0.25);
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    margin-top: 0;
+    margin-bottom: 1rem;
+    font-weight: 500;
+    line-height: 1.2;
+}
+
+h1 {
+    font-size: 1.6rem;
+}
+
+h2 {
+    font-size: 1.4rem;
+}
+
+h3 {
+    font-size: 1.2rem;
+}
+
+h4 {
+    font-size: 1.1rem;
+}
+
+h5 {
+    font-size: 1rem;
+}
+
+h6 {
+    font-size: 1rem;
+}
+
+p {
+    margin: 1rem 0;
+}
+
+hr {
+    box-sizing: content-box;
+    height: 0;
+    overflow: visible;
+    margin-top: 1.5rem;
+    margin-bottom: 1.5rem;
+    border: 0;
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.app-style-dark hr {
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+ol,
+ul {
+    padding-left: 2rem;
+    margin-top: 0;
+    margin-bottom: 1rem;
+}
+
+ol p,
+ul p {
+    margin: 0.3rem 0;
+}
+
+ol ol,
+ul ul,
+ol ul,
+ul ol {
+    margin-bottom: 0;
+}
+
+ul.task-list {
+    list-style-type: none;
+    padding: 0;
+}
+
+dl {
+    margin-top: 0;
+    margin-bottom: 1rem;
+}
+
+dt {
+    font-weight: 700;
+}
+
+dd {
+    margin-bottom: 0.5rem;
+    margin-left: 2rem;
+}
+
+.footnote {
+    font-size: 87.5%;
+}
+
+.footnote p {
+    margin: 0;
+}
+
+blockquote {
+    margin: 0 0 1rem;
+}
+
+dfn {
+    font-style: italic;
+}
+
+b,
+strong {
+    font-weight: bolder;
+}
+
+small {
+    font-size: 80%;
+}
+
+sub,
+sup {
+    position: relative;
+    font-size: 75%;
+    line-height: 0;
+    vertical-align: baseline;
+}
+
+sub {
+    bottom: -0.25em;
+}
+
+sup {
+    top: -0.5em;
+}
+
+a {
+    color: var(--accent-color);
+    text-decoration: none;
+    background-color: transparent;
+    -webkit-text-decoration-skip: objects;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+a:not([href]):not([tabindex]) {
+    color: inherit;
+    text-decoration: none;
+}
+
+a:not([href]):not([tabindex]):hover,
+a:not([href]):not([tabindex]):focus {
+    color: inherit;
+    text-decoration: none;
+}
+
+a:not([href]):not([tabindex]):focus {
+    outline: 0;
+}
+
+pre,
+code,
+kbd,
+samp {
+    font-family: ui-monospace, monospace;
+}
+
+pre {
+    margin: 1rem 0;
+    overflow: auto;
+}
+
+code {
+    color: #e83e8c;
+    word-break: break-word;
+}
+
+pre,
+code {
+    font-size: 87.5%;
+}
+
+pre code {
+    font-size: inherit;
+    color: inherit;
+    word-break: normal;
+}
+
+a > code {
+    color: inherit;
+}
+
+img {
+    vertical-align: middle;
+    border-style: none;
+}
+
+mark {
+    padding: 2px 4px;
+    background-color: #fcf8e3;
+    border-radius: 4px;
+}
+
+.app-style-dark mark {
+    background-color: rgba(255, 255, 0, 0.8);
+    color: #000;
+}
+
+table {
+    width: 100%;
+    max-width: 100%;
+    margin-bottom: 1rem;
+    border-collapse: collapse;
+    background-color: transparent;
+    --border-color: rgba(0, 0, 0, 0.09);
+    --hover-color: rgba(0, 0, 0, 0.03);
+}
+
+.app-style-dark table {
+    --border-color: rgba(255, 255, 255, 0.2);
+    --hover-color: rgba(255, 255, 255, 0.03);
+}
+
+table th,
+table td {
+    padding: 0.5rem;
+    vertical-align: top;
+    border-top: 1px solid var(--border-color);
+    border-bottom: 1px solid var(--border-color);
+}
+
+table thead th {
+    vertical-align: bottom;
+    border-bottom: 2px solid var(--border-color);
+}
+
+table tbody + tbody {
+    border-top: 2px solid var(--border-color);
+}
+
+table tbody tr:hover {
+    background-color: var(--hover-color);
+}
+
+.toc {
+    max-width: min(50%, 300px);
+    float: right;
+    margin: 0 0 20px 20px;
+    padding: 10px 0;
+    background-color: var(--bezel-color);
+    border-radius: 8px;
+}
+
+@media (max-width: 350px) {
+    .toc {
+        float: none;
+        margin: 1.5rem 0;
+        max-width: none;
+    }
+
+    .toc:first-child {
+        margin: 0 0 1.5rem;
+    }
+}
+
+.toc > ul {
+    margin: 0;
+}
+
+.toc ul {
+    list-style: none;
+    padding: 0;
+}
+
+.toc > ul > li:not(:last-child) {
+    padding-bottom: 5px;
+}
+
+.toc a {
+    display: block;
+    padding: 1px 15px 1px 13px;
+    border-left: 2px solid transparent;
+    font-weight: 600;
+    color: inherit;
+    opacity: 0.75;
+}
+
+.toc a:hover,
+.toc a:focus {
+    text-decoration: none;
+    opacity: 1;
+    border-left: 2px solid var(--accent-color);
+    color: var(--accent-color);
+}
+
+.toc ul ul a {
+    font-size: 90%;
+    font-weight: 500;
+    padding-left: 25px;
+    opacity: 0.85;
+}
+
+.toc ul ul ul a {
+    padding-left: 40px;
+    font-weight: 400;
+}
+
+.toc ul ul ul ul a {
+    padding-left: 55px;
+}
+
+.toc ul ul ul ul ul a {
+    padding-left: 70px;
+}
+
+.toc ul ul ul ul ul ul a {
+    padding-left: 85px;
+}
+
+.codehilite pre {
+    padding: 1rem 1.5rem;
+    background-color: var(--bezel-color);
+}
+
+blockquote {
+    border-left: 3px solid rgba(0, 0, 0, 0.1);
+    padding-left: 10px;
+}
+
+.app-style-dark blockquote {
+    border-color: rgba(255, 255, 255, 0.15);
+}
+
+        :root { font-size: 13.0px }
+:root { --accent-color: #337aff }
+
+body {
+    font-family: -apple-system, system-ui, sans-serif;
+    line-height: 1.5;
+    margin: 0;
+    padding: 16px 20px;
+    color: #d9d9d9;
+    print-color-adjust: exact;
+}
+
+
+
+
+
+
+
+html, body { background-color: #121212 }
+
+a { color: #337aff }
+
+pre, code, kbd, samp {
+    font-family: ui-monospace, monospace;
+    -webkit-font-smoothing: subpixel-antialiased !important;
+}
+
+/* prevent horizontal overflow */
+
+body { overflow-wrap: break-word }
+ul, ol { word-break: break-word }
+img { max-width: 100% !important }
+code { white-space: normal !important }
+pre { white-space: pre-wrap !important }
+
+/* supporting pre/code structure for code blocks */
+
+pre code {
+    white-space: pre-wrap !important;
+    display: contents !important;
+}
+
+/* supporting code block line numbers */
+
+[data-linenos]:before {
+    content: attr(data-linenos);
+    opacity: 0.4;
+}
+
+/* overscroll */
+
+body > *:nth-last-child(1 of :not(.sticky-toc)) {
+    margin-bottom: 0;
+}
+
+
+
+.mermaid:not([data-processed]),
+.mermaid-parse-error {
+    background-color: var(--bezel-color);
+    padding: 1rem 1.5rem;
+    margin: 1rem 0;
+    border-radius: 6px;
+    font-family: ui-monospace, monospace;
+    font-size: 87.5%;
+    white-space: pre-wrap;
+    -webkit-font-smoothing: subpixel-antialiased;
+}
+.mermaid-parse-error {
+    padding: 0;
+
+    .error-message {
+        padding: 0.8rem 1.5rem 1rem;
+        border-radius: 6px 6px 0 0;
+        color: rgba(255, 255, 255, 0.9);
+        background: #b8292a;
+    }
+    .error-source {
+        padding: 1rem 1.5rem;
+    }
+}
+.mermaid {
+    --mermaid-font-family: -apple-system, Helvetica, sans-serif;
+    .chart-title text,
+.titleText,
+text[class$="TitleText"],
+text[font-size="4ex"], /* timeline */
+svg[aria-roledescription="quadrantChart"] .title text,
+svg[aria-roledescription="sequence"] > text:last-child,
+svg[aria-roledescription="c4"] > text:last-child
+{
+    font-size: 1.2rem !important;
+    font-weight: 600 !important;
+}
+
+.edgeLabel .label span {
+    color: #bcbcbc !important;
+    background: #404040 !important;
+}
+
+.edgeLabel .label rect,
+.relationshipLabelBox {
+    opacity: 1.0 !important;
+    fill: #404040 !important;
+}
+
+.relationshipLabel {
+    fill: #bcbcbc;
+}
+
+svg[aria-roledescription="gantt"] {
+    .grid .tick line {
+        stroke: #626262;
+    }
+}
+
+svg[aria-roledescription="c4"] {
+    text[fill="#444444"] {
+        fill: currentcolor;
+    }
+    line[stroke="#444444"], path[stroke="#444444"] {
+        stroke: currentcolor;
+    }
+    rect[stroke="#444444"] {
+        stroke: #477ed8;
+    }
+}
+
+svg[aria-roledescription="journey"] {
+    circle.face, circle.face + g > * {
+        stroke: #1e1e1e !important;
+    }
+    circle.face + g > * {
+        fill: #1e1e1e !important;
+    }
+    rect.journey-section, rect.task {
+        stroke: transparent !important;
+    }
+}
+
+svg[aria-roledescription="quadrantChart"] {
+    .labels text, .quadrants text {
+        font-size: 1rem !important;
+    }
+    .data-points text {
+        font-size: 0.8rem !important;
+    }
+}
+
+svg[aria-roledescription="gitGraph"] {
+    .branchLabelBkg {
+        opacity: 0.3;
+    }
+    .commit-label-bkg {
+        opacity: 0.7 !important;
+    }
+    .commit-cherry-pick[fill] {
+        fill: #1e1e1e;
+    }
+    .commit-cherry-pick[stroke] {
+        stroke: #1e1e1e;
+    }
+}
+
+svg[aria-roledescription="block"] {
+    rect.cluster {
+        fill: #1d2737 !important;
+    }
+}
+
+svg[aria-roledescription="mindmap"] {
+    .section-root text {
+        fill: #d9d9d9 !important;
+    }
+}
+
+svg[aria-roledescription="classDiagram"] .divider,
+svg[aria-roledescription="requirement"] .req-title-line {
+    opacity: 0.3;
+}
+
+svg[aria-roledescription="xychart"] {
+    g[class^="bar-plot-"] {
+        opacity: 0.3;
+    }
+}
+
+svg[aria-roledescription="classDiagram"] {
+    .cluster rect {
+        stroke: #477ed8 !important;
+    }
+    .cluster-label text {
+        text-anchor: middle;
+    }
+}
+
+svg[aria-roledescription="sequence"] {
+    rect.rect[stroke="rgb(0,0,0, 0.5)"] {
+        stroke: #477ed8;
+    }
+}
+}
+
+.codehilite .kr { color: #fc5fa2 }
+.codehilite .kd { color: #fc5fa2 }
+.codehilite .sx { color: #fb6a5d }
+.codehilite .nb { color: #fc5fa2 }
+.codehilite .kc { color: #fc5fa2 }
+.codehilite .py { color: #42a0c0 }
+.codehilite .vi { color: #42a0c0 }
+.codehilite .no { color: #d1a8ff }
+.codehilite .mh { color: #d0bf6a }
+.codehilite .mf { color: #d0bf6a }
+.codehilite .p { color: #d9d9d9 }
+.codehilite .sh { color: #91a1b0 }
+.codehilite .k { color: #fc5fa2 }
+.codehilite .ch { color: #91a1b0 }
+.codehilite .pm { color: #d9d9d9 }
+.codehilite .ni { color: #d0bf6a }
+.codehilite .cs { color: #91a1b0 }
+.codehilite .ga { color: #ffffff }
+.codehilite .w { color: #d9d9d9 }
+.codehilite .mb { color: #d0bf6a }
+.codehilite .vm { color: #a266e7 }
+.codehilite .ges { color: #d0bf6a }
+.codehilite .vg { color: #a266e7 }
+.codehilite .na { color: #bf8455 }
+.codehilite .bp { color: #d1a8ff }
+.codehilite .nc { color: #9df1dd }
+.codehilite .nx { color: #d9d9d9 }
+.codehilite .gd { color: #6b7985 }
+.codehilite .ne { color: #d1a8ff }
+.codehilite .g { color: #d9d9d9 }
+.codehilite .ow { color: #fc5fa2 }
+.codehilite .l { color: #d0bf6a }
+.codehilite .dl { color: #fb6a5d }
+.codehilite .si { color: #d9d9d9 }
+.codehilite .gs { color: #d0bf6a }
+.codehilite .s1 { color: #fb6a5d }
+.codehilite .esc { color: #d9d9d9 }
+.codehilite .il { color: #d0bf6a }
+.codehilite .x { color: #d9d9d9 }
+.codehilite .cd { color: #5dd7ff }
+.codehilite .nv { color: #d9d9d9 }
+.codehilite .gr { color: #fb6a5d }
+.codehilite .ge { color: #fb6a5d }
+.codehilite .fm { color: #a266e7 }
+.codehilite .nl { color: #a266e7 }
+.codehilite .ld { color: #d0bf6a }
+.codehilite .s { color: #fb6a5d }
+.codehilite .gi { color: #42b545 }
+.codehilite .mi { color: #d0bf6a }
+.codehilite .cpf { color: #fb6a5d }
+.codehilite .gp { color: #42b545 }
+.codehilite .cm { color: #6b7985 }
+.codehilite .kt { color: #fc5fa2 }
+.codehilite .mo { color: #d0bf6a }
+.codehilite .sd { color: #91a1b0 }
+.codehilite .nf { color: #66b6a4 }
+.codehilite .s2 { color: #fb6a5d }
+.codehilite .c { color: #6b7985 }
+.codehilite .se { color: #d0bf6a }
+.codehilite .nd { color: #fc5fa2 }
+.codehilite .vc { color: #42a0c0 }
+.codehilite .sb { color: #d0bf6a }
+.codehilite .cp { color: #fd8e3e }
+.codehilite .gh { color: #f12ad1 }
+.codehilite .go { color: #818181 }
+.codehilite .gu { color: #f12ad1 }
+.codehilite .gt { color: #fb6a5d }
+.codehilite .sa { color: #fb6a5d }
+.codehilite .nt { color: #fc5fa2 }
+.codehilite .nn { color: #d9d9d9 }
+.codehilite .m { color: #d0bf6a }
+.codehilite .ss { color: #fb6a5d }
+.codehilite .sc { color: #d0bf6a }
+.codehilite .o { color: #d9d9d9 }
+.codehilite .kn { color: #fc5fa2 }
+.codehilite .err { color: #d9d9d9 }
+.codehilite .kp { color: #fc5fa2 }
+.codehilite .n { color: #d9d9d9 }
+.codehilite .sr { color: #fb6a5d }
+.codehilite .c1 { color: #6b7985 }
+.codehilite .hll {
+    display: block;
+    background-color: rgba(58, 49, 31, 1.000);
+}
+
+.codehilite {
+    position: relative;
+    overflow-x: hidden;
+    margin: 1rem 0;
+}
+
+.codehilite pre {
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+}
+
+.codehilite:hover .copy-button {
+    opacity: 1;
+}
+
+.codehilite .copy-button {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    background-color: rgba(41, 41, 41, 1.000);
+    border: 1px solid transparent;
+    border-radius: 6px;
+    padding: 8px 6px 7px;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.15s ease-in;
+    will-change: opacity;
+
+    svg {
+        display: block;
+        fill: rgba(217, 217, 217, 0.800);
+    }
+}
+
+.sticky-toc {
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    z-index: 1;
+    max-width: min(60%, 340px);
+    display: none;
+}
+
+@media (max-width: 350px) {
+    .sticky-toc {
+        max-width: calc(100% - 20px);
+    }
+}
+
+.sticky-toc .toc {
+    display: none;
+    max-width: none;
+    max-height: calc(100vh - 40px);
+    overflow-y: auto;
+    float: none;
+    margin: 0;
+}
+
+.hot-corner {
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    padding: 10px;
+    border-radius: 8px;
+    z-index: -1;
+    opacity: 1;
+}
+
+.hot-corner svg {
+    fill: rgba(217, 217, 217, 1.000);
+}
+
+.hot-corner svg,
+.hot-corner {
+    width: 16px;
+    height: 16px;
+}
+
+.sticky-toc .toc,
+.hot-corner {
+    background: rgba(32, 32, 32, 1.000);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    
+}
+
+.sticky-toc:hover .hot-corner {
+    opacity: 0;
+}
+
+.hot-corner:hover + .toc,
+.toc:hover {
+    display: block;
+}
+    </style>
+    <!-- MathJax -->
+<script>
+    window.MathJax = {
+      startup: {
+        typeset: true
+      },
+      options: {
+        enableMenu: false,
+        // Arithmatex
+        ignoreHtmlClass: 'tex2jax_ignore',
+        processHtmlClass: 'tex2jax_process',
+        renderActions: {
+          find: [10, function (doc) {
+            for (const node of document.querySelectorAll('script[type^="math/tex"]')) {
+              const display = !!node.type.match(/; *mode=display/);
+              const math = new doc.options.MathItem(node.textContent, doc.inputJax[0], display);
+              const text = document.createTextNode('');
+              const sibling = node.previousElementSibling;
+              node.parentNode.replaceChild(text, node);
+              math.start = {node: text, delim: '', n: 0};
+              math.end = {node: text, delim: '', n: 0};
+              doc.math.push(math);
+              if (sibling && sibling.matches('.MathJax_Preview')) {
+                sibling.parentNode.removeChild(sibling);
+              }
+            }
+          }, '']
+        }
+      }
+    };
+</script>
+<script type="text/javascript" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg-full.js"></script>
+    
+</head>
+<body class="app-style-dark app-theme-Mojave-Dark app-lang-en-GB">
+    <div class="toc">
+<ul>
+<li><a href="#largegit-commands-cheat-sheet">\large{Git \ Commands \ Cheat \ Sheet}</a><ul>
+<li><a href="#1-starting-from-github-rightarrow-cloning-locally">1) Starting from  GitHub \rightarrow Cloning Locally</a></li>
+<li><a href="#2-start-locally-rightarrow-pushing-to-github">2) Start Locally \rightarrow Pushing to GitHub</a></li>
+<li><a href="#3-daily-workflow-inside-any-repo-folder">3) Daily Workflow (Inside Any Repo Folder)</a></li>
+<li><a href="#4-switching-between-projects">4) Switching Between Projects</a></li>
+<li><a href="#5-common-handy-commands">5) Common Handy Commands</a></li>
+<li><a href="#tips-to-keep-in-mind">Tips to keep in mind</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<h1 id="largegit-commands-cheat-sheet"><span class="arithmatex"><script type="math/tex">\large{Git \ Commands \ Cheat \ Sheet}</script></span></h1>
+<p></n><br />
+This document is a practical reference for using <em>Git</em> with with multiple projects on <em>GitHub</em> It assumes you already have git installed and a <em>GitHub</em> account set up with SSH or HTTPS access.<br />
+</n></p>
+<hr />
+<h2 id="1-starting-from-github-rightarrow-cloning-locally">1) Starting from  <em>GitHub</em> <span class="arithmatex"><script type="math/tex">\rightarrow</script></span> Cloning Locally</h2>
+<p>If you begin a project by creating a repository on <em>GitHub</em> first, the next step is to bring that empty repository down to your computer. This ensures that your local folder is already connected to the <em>GitHub</em> remote, so you can immediately start adding files and pushing commits.</p>
+<div class="codehilite"><pre><span></span><code>bash
+
+<span class="c1"># Go to where you want the project folder</span>
+<span class="nb">cd</span><span class="w"> </span>~/projects
+
+<span class="c1"># Clone empty repo from GitHub</span>
+git<span class="w"> </span>clone<span class="w"> </span>git@github.com:USERNAME/REPO_NAME.git
+
+<span class="nb">cd</span><span class="w"> </span>REPO_NAME
+
+<span class="c1"># Add your files here, then commit + push</span>
+git<span class="w"> </span>add<span class="w"> </span>.<span class="w"> </span>
+git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;Initial commit&quot;</span>
+git<span class="w"> </span>push<span class="w"> </span>-u<span class="w"> </span>origin<span class="w"> </span>main
+</code></pre></div>
+<hr />
+<h2 id="2-start-locally-rightarrow-pushing-to-github">2) Start Locally <span class="arithmatex"><script type="math/tex">\rightarrow</script></span> Pushing to <em>GitHub</em></h2>
+<p>Sometimes you already have a project folder with files before setting up <em>Git</em>. In this case, you can turn that folder into a <em>Git</em> repository, commit its contents, and then link it to an empty <em>GitHub</em> repo. After linking, your local and remote repositories will stay in sync.</p>
+<div class="codehilite"><pre><span></span><code>bash
+
+<span class="nb">cd</span><span class="w"> </span>~/projects/local_project
+
+<span class="c1"># Initialize git</span>
+git<span class="w"> </span>init
+
+<span class="c1"># Add files</span>
+git<span class="w"> </span>add<span class="w"> </span>.
+git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s1">&#39;Initial commit&#39;</span>
+
+<span class="c1"># Create empty repo on GitHub, then link it</span>
+git<span class="w"> </span>remote<span class="w"> </span>add<span class="w"> </span>origin<span class="w"> </span>git@github.com:USERNAME/REPO_NAME.git
+
+<span class="c1"># Push to GitHub</span>
+git<span class="w"> </span>push<span class="w"> </span>-u<span class="w"> </span>origin<span class="w"> </span>main
+</code></pre></div>
+<hr />
+<h2 id="3-daily-workflow-inside-any-repo-folder">3) Daily Workflow (Inside Any Repo Folder)</h2>
+<p>Once your project is set up, your day-to-day work involves tracking changes, committing them, and syncing with <em>GitHub</em>. This workflow is the same for every repository you manage.</p>
+<div class="codehilite"><pre><span></span><code>bash
+git<span class="w"> </span>status<span class="w">                  </span><span class="c1"># check changes</span>
+git<span class="w"> </span>add<span class="w"> </span>.<span class="w">                   </span><span class="c1"># stage all changes</span>
+git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s1">&#39;Message&#39;</span><span class="w">     </span><span class="c1"># commit snapshot</span>
+git<span class="w"> </span>push<span class="w">                    </span><span class="c1"># upload to GitHub</span>
+git<span class="w"> </span>pull<span class="w">                    </span><span class="c1"># update with GitHub changes  </span>
+</code></pre></div>
+<hr />
+<h2 id="4-switching-between-projects">4) Switching Between Projects</h2>
+<p>Each project you work on is independent and has its own <code>.git/</code> directory. That means <em>Git</em> knows which repository it's working with based on the folder you're currently in. To swtich between projects, simply navigate into the correct direcotry, and <em>Git</em> will apply commands to that project only.</p>
+<div class="codehilite"><pre><span></span><code>bash
+
+<span class="nb">cd</span><span class="w"> </span>~/projects/projec1<span class="w">       </span><span class="c1"># now working on Project 1</span>
+git<span class="w"> </span>push<span class="w">              </span>
+
+<span class="nb">cd</span><span class="w"> </span>~/projects/project2<span class="w">      </span><span class="c1"># now switch to working on Porject 2</span>
+git<span class="w"> </span>push
+</code></pre></div>
+<hr />
+<h2 id="5-common-handy-commands">5) Common Handy Commands</h2>
+<p>Beyond the basics, <em>Git</em> has a set of frequently usefull commands that help you inspect history, manage branches, and undo changes. These are not part of the minimal daily workflow, but they are extramely handy when you want to look deeper into your repository or fix mistakes.</p>
+<ul>
+<li><span class="arithmatex"><script type="math/tex">\texttt{to view history}</script></span></li>
+</ul>
+<p><div class="codehilite"><pre><span></span><code>git<span class="w"> </span>log<span class="w"> </span>--oneline<span class="w"> </span>--graph
+</code></pre></div><br />
+- to see changes not staged<br />
+<div class="codehilite"><pre><span></span><code>git<span class="w"> </span>diff
+</code></pre></div><br />
+- to discard local changes to a file<br />
+<div class="codehilite"><pre><span></span><code>git<span class="w"> </span>checkout<span class="w"> </span>FILE
+</code></pre></div><br />
+- to list branches<br />
+<div class="codehilite"><pre><span></span><code>git<span class="w"> </span>branch
+</code></pre></div></p>
+<ul>
+<li>to create and switch to new branch<br />
+<div class="codehilite"><pre><span></span><code>git<span class="w"> </span>checkout<span class="w"> </span>-b<span class="w"> </span>new-branch
+</code></pre></div></li>
+</ul>
+<hr />
+<h2 id="tips-to-keep-in-mind">Tips to keep in mind</h2>
+<ul>
+<li>Run <code>git status</code> often it — it shows exactly what <em>Git</em> is tracking</li>
+<li>Write meaningful commit messages (e.g., "Fix bug in plotting function" rather then "Update").</li>
+<li>one project - one repository. This avoids mixing unrelated work.</li>
+</ul>
+<p><br/><br />
+<br/></p>
+<hr />
+<div style="text-align: right">© 2025 Suttikoon Koonkor, All right reserved. </div>
+</body>
+</html>
