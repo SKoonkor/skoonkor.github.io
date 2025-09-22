@@ -1,0 +1,791 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="UTF-8"/>
+    <title>The Galaxy Survey Timeline</title>
+    <style>
+        /* Bootstrap theme */
+
+body {
+    font-size: 1rem;
+    line-height: 1.6;
+    --bezel-color: rgba(0, 0, 0, 0.03);
+}
+
+body.app-style-dark {
+    --bezel-color: rgba(0, 0, 0, 0.25);
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    margin-top: 0;
+    margin-bottom: 1rem;
+    font-weight: 500;
+    line-height: 1.2;
+}
+
+h1 {
+    font-size: 1.6rem;
+}
+
+h2 {
+    font-size: 1.4rem;
+}
+
+h3 {
+    font-size: 1.2rem;
+}
+
+h4 {
+    font-size: 1.1rem;
+}
+
+h5 {
+    font-size: 1rem;
+}
+
+h6 {
+    font-size: 1rem;
+}
+
+p {
+    margin: 1rem 0;
+}
+
+hr {
+    box-sizing: content-box;
+    height: 0;
+    overflow: visible;
+    margin-top: 1.5rem;
+    margin-bottom: 1.5rem;
+    border: 0;
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.app-style-dark hr {
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+ol,
+ul {
+    padding-left: 2rem;
+    margin-top: 0;
+    margin-bottom: 1rem;
+}
+
+ol p,
+ul p {
+    margin: 0.3rem 0;
+}
+
+ol ol,
+ul ul,
+ol ul,
+ul ol {
+    margin-bottom: 0;
+}
+
+ul.task-list {
+    list-style-type: none;
+    padding: 0;
+}
+
+dl {
+    margin-top: 0;
+    margin-bottom: 1rem;
+}
+
+dt {
+    font-weight: 700;
+}
+
+dd {
+    margin-bottom: 0.5rem;
+    margin-left: 2rem;
+}
+
+.footnote {
+    font-size: 87.5%;
+}
+
+.footnote p {
+    margin: 0;
+}
+
+blockquote {
+    margin: 0 0 1rem;
+}
+
+dfn {
+    font-style: italic;
+}
+
+b,
+strong {
+    font-weight: bolder;
+}
+
+small {
+    font-size: 80%;
+}
+
+sub,
+sup {
+    position: relative;
+    font-size: 75%;
+    line-height: 0;
+    vertical-align: baseline;
+}
+
+sub {
+    bottom: -0.25em;
+}
+
+sup {
+    top: -0.5em;
+}
+
+a {
+    color: var(--accent-color);
+    text-decoration: none;
+    background-color: transparent;
+    -webkit-text-decoration-skip: objects;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+a:not([href]):not([tabindex]) {
+    color: inherit;
+    text-decoration: none;
+}
+
+a:not([href]):not([tabindex]):hover,
+a:not([href]):not([tabindex]):focus {
+    color: inherit;
+    text-decoration: none;
+}
+
+a:not([href]):not([tabindex]):focus {
+    outline: 0;
+}
+
+pre,
+code,
+kbd,
+samp {
+    font-family: ui-monospace, monospace;
+}
+
+pre {
+    margin: 1rem 0;
+    overflow: auto;
+}
+
+code {
+    color: #e83e8c;
+    word-break: break-word;
+}
+
+pre,
+code {
+    font-size: 87.5%;
+}
+
+pre code {
+    font-size: inherit;
+    color: inherit;
+    word-break: normal;
+}
+
+a > code {
+    color: inherit;
+}
+
+img {
+    vertical-align: middle;
+    border-style: none;
+}
+
+mark {
+    padding: 2px 4px;
+    background-color: #fcf8e3;
+    border-radius: 4px;
+}
+
+.app-style-dark mark {
+    background-color: rgba(255, 255, 0, 0.8);
+    color: #000;
+}
+
+table {
+    width: 100%;
+    max-width: 100%;
+    margin-bottom: 1rem;
+    border-collapse: collapse;
+    background-color: transparent;
+    --border-color: rgba(0, 0, 0, 0.09);
+    --hover-color: rgba(0, 0, 0, 0.03);
+}
+
+.app-style-dark table {
+    --border-color: rgba(255, 255, 255, 0.2);
+    --hover-color: rgba(255, 255, 255, 0.03);
+}
+
+table th,
+table td {
+    padding: 0.5rem;
+    vertical-align: top;
+    border-top: 1px solid var(--border-color);
+    border-bottom: 1px solid var(--border-color);
+}
+
+table thead th {
+    vertical-align: bottom;
+    border-bottom: 2px solid var(--border-color);
+}
+
+table tbody + tbody {
+    border-top: 2px solid var(--border-color);
+}
+
+table tbody tr:hover {
+    background-color: var(--hover-color);
+}
+
+.toc {
+    max-width: min(50%, 300px);
+    float: right;
+    margin: 0 0 20px 20px;
+    padding: 10px 0;
+    background-color: var(--bezel-color);
+    border-radius: 8px;
+}
+
+@media (max-width: 350px) {
+    .toc {
+        float: none;
+        margin: 1.5rem 0;
+        max-width: none;
+    }
+
+    .toc:first-child {
+        margin: 0 0 1.5rem;
+    }
+}
+
+.toc > ul {
+    margin: 0;
+}
+
+.toc ul {
+    list-style: none;
+    padding: 0;
+}
+
+.toc > ul > li:not(:last-child) {
+    padding-bottom: 5px;
+}
+
+.toc a {
+    display: block;
+    padding: 1px 15px 1px 13px;
+    border-left: 2px solid transparent;
+    font-weight: 600;
+    color: inherit;
+    opacity: 0.75;
+}
+
+.toc a:hover,
+.toc a:focus {
+    text-decoration: none;
+    opacity: 1;
+    border-left: 2px solid var(--accent-color);
+    color: var(--accent-color);
+}
+
+.toc ul ul a {
+    font-size: 90%;
+    font-weight: 500;
+    padding-left: 25px;
+    opacity: 0.85;
+}
+
+.toc ul ul ul a {
+    padding-left: 40px;
+    font-weight: 400;
+}
+
+.toc ul ul ul ul a {
+    padding-left: 55px;
+}
+
+.toc ul ul ul ul ul a {
+    padding-left: 70px;
+}
+
+.toc ul ul ul ul ul ul a {
+    padding-left: 85px;
+}
+
+.codehilite pre {
+    padding: 1rem 1.5rem;
+    background-color: var(--bezel-color);
+}
+
+blockquote {
+    border-left: 3px solid rgba(0, 0, 0, 0.1);
+    padding-left: 10px;
+}
+
+.app-style-dark blockquote {
+    border-color: rgba(255, 255, 255, 0.15);
+}
+
+        :root { font-size: 13.0px }
+:root { --accent-color: #337aff }
+
+body {
+    font-family: -apple-system, system-ui, sans-serif;
+    line-height: 1.5;
+    margin: 0;
+    padding: 16px 20px;
+    color: #d9d9d9;
+    print-color-adjust: exact;
+}
+
+
+
+
+
+
+
+html, body { background-color: #121212 }
+
+a { color: #337aff }
+
+pre, code, kbd, samp {
+    font-family: ui-monospace, monospace;
+    -webkit-font-smoothing: subpixel-antialiased !important;
+}
+
+/* prevent horizontal overflow */
+
+body { overflow-wrap: break-word }
+ul, ol { word-break: break-word }
+img { max-width: 100% !important }
+code { white-space: normal !important }
+pre { white-space: pre-wrap !important }
+
+/* supporting pre/code structure for code blocks */
+
+pre code {
+    white-space: pre-wrap !important;
+    display: contents !important;
+}
+
+/* supporting code block line numbers */
+
+[data-linenos]:before {
+    content: attr(data-linenos);
+    opacity: 0.4;
+}
+
+/* overscroll */
+
+body > *:nth-last-child(1 of :not(.sticky-toc)) {
+    margin-bottom: 0;
+}
+
+
+
+.mermaid:not([data-processed]),
+.mermaid-parse-error {
+    background-color: var(--bezel-color);
+    padding: 1rem 1.5rem;
+    margin: 1rem 0;
+    border-radius: 6px;
+    font-family: ui-monospace, monospace;
+    font-size: 87.5%;
+    white-space: pre-wrap;
+    -webkit-font-smoothing: subpixel-antialiased;
+}
+.mermaid-parse-error {
+    padding: 0;
+
+    .error-message {
+        padding: 0.8rem 1.5rem 1rem;
+        border-radius: 6px 6px 0 0;
+        color: rgba(255, 255, 255, 0.9);
+        background: #b8292a;
+    }
+    .error-source {
+        padding: 1rem 1.5rem;
+    }
+}
+.mermaid {
+    --mermaid-font-family: -apple-system, Helvetica, sans-serif;
+    .chart-title text,
+.titleText,
+text[class$="TitleText"],
+text[font-size="4ex"], /* timeline */
+svg[aria-roledescription="quadrantChart"] .title text,
+svg[aria-roledescription="sequence"] > text:last-child,
+svg[aria-roledescription="c4"] > text:last-child
+{
+    font-size: 1.2rem !important;
+    font-weight: 600 !important;
+}
+
+.edgeLabel .label span {
+    color: #bcbcbc !important;
+    background: #404040 !important;
+}
+
+.edgeLabel .label rect,
+.relationshipLabelBox {
+    opacity: 1.0 !important;
+    fill: #404040 !important;
+}
+
+.relationshipLabel {
+    fill: #bcbcbc;
+}
+
+svg[aria-roledescription="gantt"] {
+    .grid .tick line {
+        stroke: #626262;
+    }
+}
+
+svg[aria-roledescription="c4"] {
+    text[fill="#444444"] {
+        fill: currentcolor;
+    }
+    line[stroke="#444444"], path[stroke="#444444"] {
+        stroke: currentcolor;
+    }
+    rect[stroke="#444444"] {
+        stroke: #477ed8;
+    }
+}
+
+svg[aria-roledescription="journey"] {
+    circle.face, circle.face + g > * {
+        stroke: #1e1e1e !important;
+    }
+    circle.face + g > * {
+        fill: #1e1e1e !important;
+    }
+    rect.journey-section, rect.task {
+        stroke: transparent !important;
+    }
+}
+
+svg[aria-roledescription="quadrantChart"] {
+    .labels text, .quadrants text {
+        font-size: 1rem !important;
+    }
+    .data-points text {
+        font-size: 0.8rem !important;
+    }
+}
+
+svg[aria-roledescription="gitGraph"] {
+    .branchLabelBkg {
+        opacity: 0.3;
+    }
+    .commit-label-bkg {
+        opacity: 0.7 !important;
+    }
+    .commit-cherry-pick[fill] {
+        fill: #1e1e1e;
+    }
+    .commit-cherry-pick[stroke] {
+        stroke: #1e1e1e;
+    }
+}
+
+svg[aria-roledescription="block"] {
+    rect.cluster {
+        fill: #1d2737 !important;
+    }
+}
+
+svg[aria-roledescription="mindmap"] {
+    .section-root text {
+        fill: #d9d9d9 !important;
+    }
+}
+
+svg[aria-roledescription="classDiagram"] .divider,
+svg[aria-roledescription="requirement"] .req-title-line {
+    opacity: 0.3;
+}
+
+svg[aria-roledescription="xychart"] {
+    g[class^="bar-plot-"] {
+        opacity: 0.3;
+    }
+}
+
+svg[aria-roledescription="classDiagram"] {
+    .cluster rect {
+        stroke: #477ed8 !important;
+    }
+    .cluster-label text {
+        text-anchor: middle;
+    }
+}
+
+svg[aria-roledescription="sequence"] {
+    rect.rect[stroke="rgb(0,0,0, 0.5)"] {
+        stroke: #477ed8;
+    }
+}
+}
+
+.codehilite .kr { color: #fc5fa2 }
+.codehilite .kd { color: #fc5fa2 }
+.codehilite .sx { color: #fb6a5d }
+.codehilite .nb { color: #fc5fa2 }
+.codehilite .kc { color: #fc5fa2 }
+.codehilite .py { color: #42a0c0 }
+.codehilite .vi { color: #42a0c0 }
+.codehilite .no { color: #d1a8ff }
+.codehilite .mh { color: #d0bf6a }
+.codehilite .mf { color: #d0bf6a }
+.codehilite .p { color: #d9d9d9 }
+.codehilite .sh { color: #91a1b0 }
+.codehilite .k { color: #fc5fa2 }
+.codehilite .ch { color: #91a1b0 }
+.codehilite .pm { color: #d9d9d9 }
+.codehilite .ni { color: #d0bf6a }
+.codehilite .cs { color: #91a1b0 }
+.codehilite .ga { color: #ffffff }
+.codehilite .w { color: #d9d9d9 }
+.codehilite .mb { color: #d0bf6a }
+.codehilite .vm { color: #a266e7 }
+.codehilite .ges { color: #d0bf6a }
+.codehilite .vg { color: #a266e7 }
+.codehilite .na { color: #bf8455 }
+.codehilite .bp { color: #d1a8ff }
+.codehilite .nc { color: #9df1dd }
+.codehilite .nx { color: #d9d9d9 }
+.codehilite .gd { color: #6b7985 }
+.codehilite .ne { color: #d1a8ff }
+.codehilite .g { color: #d9d9d9 }
+.codehilite .ow { color: #fc5fa2 }
+.codehilite .l { color: #d0bf6a }
+.codehilite .dl { color: #fb6a5d }
+.codehilite .si { color: #d9d9d9 }
+.codehilite .gs { color: #d0bf6a }
+.codehilite .s1 { color: #fb6a5d }
+.codehilite .esc { color: #d9d9d9 }
+.codehilite .il { color: #d0bf6a }
+.codehilite .x { color: #d9d9d9 }
+.codehilite .cd { color: #5dd7ff }
+.codehilite .nv { color: #d9d9d9 }
+.codehilite .gr { color: #fb6a5d }
+.codehilite .ge { color: #fb6a5d }
+.codehilite .fm { color: #a266e7 }
+.codehilite .nl { color: #a266e7 }
+.codehilite .ld { color: #d0bf6a }
+.codehilite .s { color: #fb6a5d }
+.codehilite .gi { color: #42b545 }
+.codehilite .mi { color: #d0bf6a }
+.codehilite .cpf { color: #fb6a5d }
+.codehilite .gp { color: #42b545 }
+.codehilite .cm { color: #6b7985 }
+.codehilite .kt { color: #fc5fa2 }
+.codehilite .mo { color: #d0bf6a }
+.codehilite .sd { color: #91a1b0 }
+.codehilite .nf { color: #66b6a4 }
+.codehilite .s2 { color: #fb6a5d }
+.codehilite .c { color: #6b7985 }
+.codehilite .se { color: #d0bf6a }
+.codehilite .nd { color: #fc5fa2 }
+.codehilite .vc { color: #42a0c0 }
+.codehilite .sb { color: #d0bf6a }
+.codehilite .cp { color: #fd8e3e }
+.codehilite .gh { color: #f12ad1 }
+.codehilite .go { color: #818181 }
+.codehilite .gu { color: #f12ad1 }
+.codehilite .gt { color: #fb6a5d }
+.codehilite .sa { color: #fb6a5d }
+.codehilite .nt { color: #fc5fa2 }
+.codehilite .nn { color: #d9d9d9 }
+.codehilite .m { color: #d0bf6a }
+.codehilite .ss { color: #fb6a5d }
+.codehilite .sc { color: #d0bf6a }
+.codehilite .o { color: #d9d9d9 }
+.codehilite .kn { color: #fc5fa2 }
+.codehilite .err { color: #d9d9d9 }
+.codehilite .kp { color: #fc5fa2 }
+.codehilite .n { color: #d9d9d9 }
+.codehilite .sr { color: #fb6a5d }
+.codehilite .c1 { color: #6b7985 }
+.codehilite .hll {
+    display: block;
+    background-color: rgba(58, 49, 31, 1.000);
+}
+
+.codehilite {
+    position: relative;
+    overflow-x: hidden;
+    margin: 1rem 0;
+}
+
+.codehilite pre {
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+}
+
+.codehilite:hover .copy-button {
+    opacity: 1;
+}
+
+.codehilite .copy-button {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    background-color: rgba(41, 41, 41, 1.000);
+    border: 1px solid transparent;
+    border-radius: 6px;
+    padding: 8px 6px 7px;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.15s ease-in;
+    will-change: opacity;
+
+    svg {
+        display: block;
+        fill: rgba(217, 217, 217, 0.800);
+    }
+}
+
+.sticky-toc {
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    z-index: 1;
+    max-width: min(60%, 340px);
+    display: none;
+}
+
+@media (max-width: 350px) {
+    .sticky-toc {
+        max-width: calc(100% - 20px);
+    }
+}
+
+.sticky-toc .toc {
+    display: none;
+    max-width: none;
+    max-height: calc(100vh - 40px);
+    overflow-y: auto;
+    float: none;
+    margin: 0;
+}
+
+.hot-corner {
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    padding: 10px;
+    border-radius: 8px;
+    z-index: -1;
+    opacity: 1;
+}
+
+.hot-corner svg {
+    fill: rgba(217, 217, 217, 1.000);
+}
+
+.hot-corner svg,
+.hot-corner {
+    width: 16px;
+    height: 16px;
+}
+
+.sticky-toc .toc,
+.hot-corner {
+    background: rgba(32, 32, 32, 1.000);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    
+}
+
+.sticky-toc:hover .hot-corner {
+    opacity: 0;
+}
+
+.hot-corner:hover + .toc,
+.toc:hover {
+    display: block;
+}
+    </style>
+    
+    <!-- Mermaid -->
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+<script>
+    let mermaidConfig = {"fontFamily":"-apple-system, Helvetica, sans-serif","er":{"titleTopMargin":1,"diagramPadding":2,"fontSize":"1rem","minEntityHeight":50},"theme":"base","quadrantChart":{"pointTextPadding":8,"yAxisLabelPadding":0,"titlePadding":0,"quadrantTextTopPadding":6,"xAxisLabelPadding":0,"quadrantPadding":10},"fontSize":13,"requirement":{"fontSize":"1rem","rect_padding":14},"gitGraph":{"diagramPadding":2},"startOnLoad":true,"state":{"titleTopMargin":0},"flowchart":{"nodeSpacing":20,"padding":12,"subGraphTitleMargin":{"bottom":10},"diagramPadding":2},"timeline":{"padding":4},"xyChart":{"xAxis":{"titleFontSize":"1rem","labelFontSize":"1rem"},"yAxis":{"labelFontSize":"1rem","titleFontSize":"1rem"},"titleFontSize":"1.2rem"},"themeVariables":{"gitInv2":"#9238c2","pieStrokeColor":"#121212","noteBkgColor":"#38331d","git0":"#195ece","fillType0":"#343d4c","fillType3":"#4c3737","tagLabelFontSize":"0.8rem","compositeBackground":"#1d2737","relationLabelBackground":"#404040","actor0":"#cc2047","primaryBorderColor":"#477ed8","pieOpacity":"1.0","fillType1":"#3a3949","actor3":"#31ad39","actor5":"#5198ae","attributeBackgroundColorEven":"#1e2430","git5":"#cd7817","pie5":"#7c2a3d","sectionBkgColor2":"#1e1e1e","darkMode":true,"gitInv7":"#31ad39","excludeBkgColor":"rgba(255, 255, 255, 0.050)","cScaleInv6":"#ceaa18","sectionBkgColor":"#1e1e1e","pieTitleTextSize":"1.2rem","cScale5":"#4c4134","cScale2":"#44384b","background":"#1e1e1e","cScaleInv0":"#195ece","sequenceNumberColor":"#1e1e1e","pie1":"#27487d","pie8":"#326d36","pie6":"#7c5426","git3":"#cc2e2f","cScaleInv11":"#463eb7","cScaleInv10":"#195ece","cScaleInv2":"#9238c2","fillType6":"#4c4734","cScale11":"#3a3949","clusterBkg":"#1d2737","pie7":"#7d6c26","commitLabelColor":"#bcbcbc","lineColor":"#d9d9d9","cScaleInv9":"#5198ae","edgeLabelBackground":"#404040","faceColor":"#9e8725","clusterBorder":"#477ed8","actor4":"#4eb9b3","actor2":"#ceaa18","secondaryTextColor":"#d9d9d9","git7":"#31ad39","cScaleInv5":"#cd7817","cScaleInv7":"#31ad39","doneTaskBkgColor":"#223b23","tertiaryTextColor":"#d9d9d9","cScale9":"#3b4548","gitInv1":"#463eb7","tertiaryColor":"#1e2430","labelTextColor":"#d9d9d9","gitInv5":"#cd7817","commitLabelBackground":"#404040","git4":"#cc2047","pie3":"#603677","activeTaskBkgColor":"#1a51ab","tagLabelBorder":"#1b4b99","activationBkgColor":"#1d2b43","branchLabelColor":"#d9d9d9","gitInv4":"#cc2047","cScale3":"#4c3737","cScale1":"#3a3949","git6":"#ceaa18","primaryTextColor":"#d9d9d9","fontFamily":"-apple-system, Helvetica, sans-serif","fillType4":"#4c353a","primaryColor":"#1d2b43","activeTaskBorderColor":"#1a51ab","fillType7":"#374838","cScale8":"#3b4949","cScaleInv1":"#463eb7","pie2":"#3c3872","cScale10":"#343d4c","cScale6":"#4c4734","cScale0":"#343d4c","attributeBackgroundColorOdd":"#1e1e1e","secondaryColor":"#1d2737","gitInv6":"#ceaa18","noteBorderColor":"#99801a","gitInv0":"#195ece","cScaleInv4":"#cc2047","pie9":"#407370","altSectionBkgColor":"#1c3e76","gitInv3":"#cc2e2f","pie12":"#3c3872","cScale4":"#4c353a","cScaleInv8":"#4eb9b3","cScale7":"#374838","fontSize":"1rem","git2":"#9238c2","doneTaskBorderColor":"#2d9134","pieStrokeWidth":"1px","pieSectionTextSize":"1rem","errorBkgColor":"#cc2e2f","pieLegendTextSize":"1rem","actor1":"#cd7817","relationLabelColor":"#bcbcbc","commitLabelFontSize":"0.8rem","xyChart":{"xAxisLabelColor":"#d9d9d9","yAxisLineColor":"#d9d9d9","yAxisLabelColor":"#d9d9d9","yAxisTitleColor":"#d9d9d9","xAxisTickColor":"#d9d9d9","plotColorPalette":"#195ece,#463eb7,#9238c2,#cc2e2f,#cc2047,#cd7817,#ceaa18,#31ad39,#4eb9b3,#5198ae","titleColor":"#d9d9d9","xAxisTitleColor":"#d9d9d9","backgroundColor":"transparent","xAxisLineColor":"#d9d9d9","yAxisTickColor":"#d9d9d9"},"git1":"#463eb7","critBkgColor":"#41301d","noteTextColor":"#d9d9d9","pie11":"#27487d","gridColor":"#626262","pie10":"#42636d","fillType5":"#4c4134","labelBackgroundColor":"#404040","pie4":"#7c3131","critBorderColor":"#aa6619","activationBorderColor":"#477ed8","taskBorderColor":"#1a51ab","fillType2":"#44384b","cScaleInv3":"#cc2e2f","todayLineColor":"#195ece"},"c4":{"external_component_queueFontFamily":"-apple-system, Helvetica, sans-serif","external_system_bg_color":"#626262","external_componentFontFamily":"-apple-system, Helvetica, sans-serif","component_queue_bg_color":"#477ed8","external_component_db_border_color":"transparent","external_system_dbFontFamily":"-apple-system, Helvetica, sans-serif","external_containerFontFamily":"-apple-system, Helvetica, sans-serif","diagramMarginX":10,"external_systemFontFamily":"-apple-system, Helvetica, sans-serif","c4ShapeMargin":24,"external_component_dbFontFamily":"-apple-system, Helvetica, sans-serif","container_db_border_color":"transparent","external_person_bg_color":"#4b4b4b","component_queueFontFamily":"-apple-system, Helvetica, sans-serif","external_system_db_border_color":"transparent","external_component_queue_border_color":"transparent","external_container_queue_border_color":"transparent","external_system_queue_border_color":"transparent","external_container_queue_bg_color":"#838383","person_bg_color":"#1c3864","diagramMarginY":0,"external_person_border_color":"transparent","component_db_border_color":"transparent","component_border_color":"transparent","container_dbFontFamily":"-apple-system, Helvetica, sans-serif","external_component_bg_color":"#a5a5a5","system_db_bg_color":"#1b4891","system_border_color":"transparent","container_queue_bg_color":"#1a58bd","personFontFamily":"-apple-system, Helvetica, sans-serif","system_bg_color":"#1b4891","external_container_db_border_color":"transparent","external_container_db_bg_color":"#838383","messageFontFamily":"-apple-system, Helvetica, sans-serif","external_container_border_color":"transparent","external_component_queue_bg_color":"#a5a5a5","system_queueFontFamily":"-apple-system, Helvetica, sans-serif","container_db_bg_color":"#1a58bd","external_container_dbFontFamily":"-apple-system, Helvetica, sans-serif","system_db_border_color":"transparent","external_component_db_bg_color":"#a5a5a5","componentFontFamily":"-apple-system, Helvetica, sans-serif","container_border_color":"transparent","system_queue_border_color":"transparent","external_system_border_color":"transparent","container_bg_color":"#1a58bd","container_queueFontFamily":"-apple-system, Helvetica, sans-serif","system_dbFontFamily":"-apple-system, Helvetica, sans-serif","component_dbFontFamily":"-apple-system, Helvetica, sans-serif","boundaryFontFamily":"-apple-system, Helvetica, sans-serif","external_system_db_bg_color":"#626262","containerFontFamily":"-apple-system, Helvetica, sans-serif","external_component_border_color":"transparent","external_container_bg_color":"#838383","external_system_queueFontFamily":"-apple-system, Helvetica, sans-serif","component_bg_color":"#477ed8","person_border_color":"transparent","component_db_bg_color":"#477ed8","systemFontFamily":"-apple-system, Helvetica, sans-serif","container_queue_border_color":"transparent","external_system_queue_bg_color":"#626262","external_personFontFamily":"-apple-system, Helvetica, sans-serif","system_queue_bg_color":"#1b4891","component_queue_border_color":"transparent","external_container_queueFontFamily":"-apple-system, Helvetica, sans-serif"},"sequence":{"diagramMarginY":2,"width":100,"labelBoxWidth":40,"diagramMarginX":2,"height":50,"actorMargin":20}};
+    mermaid.initialize(mermaidConfig);
+</script>
+</head>
+<body class="app-style-dark app-theme-Mojave-Dark app-lang-en-GB">
+    <div class="toc">
+<ul>
+<li><a href="#the-galaxy-redshift-surveys">The galaxy redshift surveys</a><ul>
+<li><a href="#gantt-chart">Gantt Chart</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<h1 id="the-galaxy-redshift-surveys">The galaxy redshift surveys</h1>
+<p>In this document I provide the historical review of galaxy surveys. It descript the charateristics of each galaxy survey. This is useful for comparing how each survey suits scientific studies of astrophysics and cosmology. </p>
+<p>Below shows the timeline of when each survey was carried out (or is planed) for observation. Many of the past surveys has set the stepping stone for ongoing and upcoming survey. They have shaped the understanding of the evolution of the Universe and how galaxies formed at different cosmic epochs.</p>
+<p><a href="">Shelby+25</a></p>
+<h3 id="gantt-chart">Gantt Chart</h3>
+<div class="mermaid">%% Example with selection of syntaxes
+        gantt
+        dateFormat  YYYY-MM
+        title Survey Timeline
+        axisFormat %Y
+
+        section Spectroscopy
+        BOSS                :crit,      BOSS,       2009-09,        2014-03
+        eBOSS               :crit,      eBOSS,      after BOSS,     2019-03
+        HETDEX              :crit,      HETDEX,     2017-01,           6y
+        DESI                :crit,      DESI,       2021-01,           5y
+        GAMA                :crit,      GAMA,       2008-01,           2014-01
+
+
+
+        section Spec+Imaging
+        GALEX               :done,      GALEX,      2003-04,        2012-06
+        SuMIRE              :done,      SuMIRE,     2014-01,        10y
+        Euclid              :done,      Euclid,     2023-01,        6y
+        Roman               :done,      Roman,        2026-01,        5y
+        JADES               :done,      JADES,     2022-09,      2025-11     
+
+
+        section Imaging
+        KiDs                :active,      KiDs,       2011-01,        10y
+        DES                 :active,      DES,        2013-01,        6y
+        LSST(Rubin)         :active,        LSST,     2025-01,        10y
+        PAUS                :active,        PAUS,     2014-01,        5y
+        WISE                :active,        WISE,     2009-12,        3y
+        WISE(reactivated)   :active,        eWISE,     2013-01,       2025-11
+        CFHTLS              :active,        CFHTLS,     2003-01,      2009-01
+
+</div>
+<p><img alt="image" src="/Users/suteepornz/Documents/Suttikoon/Website/skoonkor.github.io/images/blogs/surveys.png" /></p>
+<p>The Supergalactic Plane Survey (<a href="https://articles.adsabs.harvard.edu/pdf/1991ApJS...75..241D">Dressler 1991</a>) </p>
+</body>
+</html>
