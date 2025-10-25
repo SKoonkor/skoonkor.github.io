@@ -102,11 +102,18 @@
       const input = inputField.value.trim();
       const correct = "1409"; // 🗝️ Change your password here
 
+      const hints = [
+          "Your important date",
+          "You or astronomers would celebrate on this day",
+          "Two stars collided, just like us ✨",
+          "You, happened"];
+
       if (input === correct) {
         localStorage.setItem("diaryAccess", "granted");
         window.location.href = "diary.html";
       } else {
-        alert("❌ The lock won’t budge. Try again.");
+        const randomHint = hints[Math.floor(Math.random()*hints.length)];
+          alert(`❌ The lock won’t budge. Try again.\n Hint: ${randomHint}`);
         inputField.value = ""; // Clear the input box after
         inputField.focus();
       }
