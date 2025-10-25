@@ -5,31 +5,126 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>My Diary</title>
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@600&family=Great+Vibes&family=Crimson+Pro:wght@400;500&display=swap');
+
     body {
-      font-family: Georgia, serif;
-      background-color: #f7f2e7;
-      color: #333;
+      margin: 0;
       padding: 40px;
-      line-height: 1.6;
+      background: radial-gradient(circle at center, #3e2f25 0%, #1c140f 100%);
+      color: #f5e3b3;
+      font-family: 'Crimson Pro', serif;
+      line-height: 1.7;
+      background-attachment: fixed;
+    }
+
+    .page {
+      background: #fdf7ec;
+      color: #2b1a0f;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 50px;
+      border-radius: 20px;
+      box-shadow: 0 0 40px rgba(0, 0, 0, 0.6);
+      position: relative;
+    }
+
+    .page::before {
+      content: "";
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: repeating-linear-gradient(
+        to bottom,
+        rgba(0, 0, 0, 0.03) 0px,
+        rgba(0, 0, 0, 0.03) 1px,
+        transparent 30px,
+        transparent 31px
+      );
+      border-radius: 20px;
+      pointer-events: none;
+    }
+
+    h1 {
+      font-family: 'Great Vibes', cursive;
+      font-size: 2.8rem;
+      text-align: center;
+      color: #6b4a2a;
+      margin-top: 0;
+      margin-bottom: 5px;
+    }
+
+    h2 {
+      font-family: 'Cinzel', serif;
+      font-size: 1.4rem;
+      color: #4d3521;
+      margin-top: 40px;
+    }
+
+    hr {
+      border: none;
+      height: 1px;
+      background: linear-gradient(to right, transparent, #a58a63, transparent);
+      margin: 25px 0;
+    }
+
+    .entry-date {
+      font-size: 0.95rem;
+      color: #7b664c;
+      font-style: italic;
+    }
+
+    .entry {
+      margin-bottom: 40px;
+    }
+
+    .back-btn {
+      display: inline-block;
+      margin-top: 30px;
+      padding: 8px 18px;
+      border-radius: 8px;
+      background: #b79b6f;
+      color: #2c1e14;
+      text-decoration: none;
+      font-family: 'Cinzel', serif;
+      transition: background 0.2s ease-in-out;
+    }
+
+    .back-btn:hover {
+      background: #d7be8b;
     }
   </style>
   <script>
-    // check if password access granted
+    // redirect if access not granted
     if (localStorage.getItem("diaryAccess") !== "granted") {
       window.location.href = "diary_lock.html";
     }
   </script>
 </head>
 <body>
-  <h1>My Personal Diary</h1>
-  <p><em>Welcome back, Suttikoon.</em></p>
+  <div class="page">
+    <h1>My Diary</h1>
+    <hr>
 
-  <hr>
+    <div class="entry">
+      <div class="entry-date">October 25, 2025</div>
+      <h2>The day I added a secret lock to my diary 🔒</h2>
+      <p>
+        Today I spent some time giving my personal diary a magical little lock — something that feels like an ancient journal with a brass clasp. 
+        It’s not just for privacy, but also for a touch of fun and nostalgia. 
+        The warm tones and old-paper texture make it feel like an adventure every time I open it.
+      </p>
+    </div>
 
-  <h2>Entry: October 25, 2025</h2>
-  <p>Today I worked on adding a password gate to my diary page. It’s simple but feels nice having a little privacy on my website...</p>
+    <div class="entry">
+      <div class="entry-date">October 26, 2025</div>
+      <h2>Reflections</h2>
+      <p>
+        I like how the aesthetic captures the feeling of an old traveler’s log — almost like writing under candlelight. 
+        I think I’ll keep adding small visual details: maybe page numbers, ink stains, or faint sketches in the corner...
+      </p>
+    </div>
 
-  <!-- Add more diary entries here -->
+    <a href="diary_lock.html" class="back-btn">Lock the Diary 🔐</a>
+  </div>
 </body>
 </html>
 
