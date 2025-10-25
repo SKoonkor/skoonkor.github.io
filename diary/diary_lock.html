@@ -3,55 +3,109 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Diary Access</title>
+  <title>Diary Lock</title>
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@600&family=Great+Vibes&display=swap');
+
     body {
-      font-family: sans-serif;
-      background-color: #111;
-      color: #fff;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
+      margin: 0;
       height: 100vh;
+      background: radial-gradient(circle at center, #3e2f25 0%, #1c140f 100%);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-family: 'Cinzel', serif;
+      color: #f5e3b3;
+      text-shadow: 0 0 8px rgba(0,0,0,0.6);
+    }
+
+    .lockbox {
+      background: rgba(40, 28, 20, 0.9);
+      border: 3px solid #b79b6f;
+      border-radius: 15px;
+      box-shadow: 0 0 30px rgba(0,0,0,0.7);
+      padding: 40px 60px;
       text-align: center;
+      max-width: 350px;
     }
-    input, button {
-      padding: 10px;
-      margin-top: 10px;
-      border-radius: 8px;
-      border: none;
-      font-size: 1rem;
+
+    h2 {
+      font-family: 'Great Vibes', cursive;
+      font-size: 2.2rem;
+      margin-bottom: 10px;
+      color: #f9e9c5;
     }
+
+    p {
+      font-size: 0.95rem;
+      color: #d4c4a1;
+      margin-bottom: 20px;
+    }
+
     input {
-      width: 150px;
+      padding: 10px;
+      font-size: 1.2rem;
+      width: 140px;
       text-align: center;
+      border: 2px solid #b79b6f;
+      border-radius: 10px;
+      background: #2c1e14;
+      color: #f9e9c5;
+      letter-spacing: 5px;
+      outline: none;
     }
+
+    input::placeholder {
+      color: #c4b08a;
+    }
+
     button {
-      background-color: #333;
-      color: #fff;
+      margin-top: 15px;
+      padding: 10px 25px;
+      font-size: 1rem;
+      font-family: 'Cinzel', serif;
+      background: #b79b6f;
+      border: none;
+      border-radius: 8px;
+      color: #2c1e14;
       cursor: pointer;
+      transition: all 0.2s ease-in-out;
     }
+
     button:hover {
-      background-color: #555;
+      background: #d7be8b;
+      transform: scale(1.05);
+    }
+
+    .glow {
+      animation: glow 2s ease-in-out infinite alternate;
+    }
+
+    @keyframes glow {
+      from { text-shadow: 0 0 5px #b79b6f; }
+      to { text-shadow: 0 0 15px #e6d3a4; }
     }
   </style>
 </head>
 <body>
-  <h2>Hi Humaira, there is something I'd like you to know </h2>
-  <input type="password" id="password" maxlength="4" placeholder="••••">
-  <button onclick="checkPassword()">Enter</button>
+  <div class="lockbox">
+    <h2 class="glow">Hi Humaira</h2>
+    <p>There's something I'd like you to know</p>
+    <input type="password" id="password" maxlength="4" placeholder="••••">
+    <br>
+    <button onclick="checkPassword()">Unlock</button>
+  </div>
 
   <script>
     function checkPassword() {
       const input = document.getElementById('password').value.trim();
-      const correct = "1409"; // 👈 Change this to your secret code
+      const correct = "1409"; // 🗝️ Change your password here
 
       if (input === correct) {
         localStorage.setItem("diaryAccess", "granted");
         window.location.href = "diary.html";
       } else {
-        alert("Wrong code! Try again.");
+        alert("❌ The lock won’t budge. Try again.");
       }
     }
   </script>
