@@ -41,7 +41,7 @@
     function checkPassword() {
       const input = document.getElementById('password').value;
       const hashed = btoa(input); // simple encoding
-      const storedHash = "c3V0dGlrZWVw"; // example: base64("suttikeep")
+      const storedHash = "suttikeep"; // example: base64("suttikeep")
 
       if (hashed === storedHash) {
         // store a flag in local storage

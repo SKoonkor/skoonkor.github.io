@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Diary</title>
+  <style>
+    body {
+      font-family: Georgia, serif;
+      background-color: #f7f2e7;
+      color: #333;
+      padding: 40px;
+      line-height: 1.6;
+    }
+  </style>
+  <script>
+    // check if password access granted
+    if (localStorage.getItem("diaryAccess") !== "granted") {
+      window.location.href = "diary_lock.html";
+    }
+  </script>
+</head>
+<body>
+  <h1>My Personal Diary</h1>
+  <p><em>Welcome back, Suttikoon.</em></p>
+
+  <hr>
+
+  <h2>Entry: October 25, 2025</h2>
+  <p>Today I worked on adding a password gate to my diary page. It’s simple but feels nice having a little privacy on my website...</p>
+
+  <!-- Add more diary entries here -->
+</body>
+</html>
+
