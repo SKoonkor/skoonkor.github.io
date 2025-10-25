@@ -98,7 +98,8 @@
 
   <script>
     function checkPassword() {
-      const input = document.getElementById('password').value.trim();
+      const inputField = document.getElementById('password');
+      const input = inputField.value.trim();
       const correct = "1409"; // 🗝️ Change your password here
 
       if (input === correct) {
@@ -106,6 +107,8 @@
         window.location.href = "diary.html";
       } else {
         alert("❌ The lock won’t budge. Try again.");
+        inputField.value = ""; // Clear the input box after
+        inputField.focus();
       }
     }
   </script>
