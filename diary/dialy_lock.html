@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Diary Access</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background-color: #111;
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+    }
+    input, button {
+      padding: 10px;
+      margin-top: 10px;
+      border-radius: 8px;
+      border: none;
+      font-size: 1rem;
+    }
+    button {
+      background-color: #333;
+      color: #fff;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #555;
+    }
+  </style>
+</head>
+<body>
+  <h2>Enter Password to Access Diary</h2>
+  <input type="password" id="password" placeholder="Enter password">
+  <button onclick="checkPassword()">Enter</button>
+
+  <script>
+    function checkPassword() {
+      const input = document.getElementById('password').value;
+      const hashed = btoa(input); // simple encoding
+      const storedHash = "c3V0dGlrZWVw"; // example: base64("suttikeep")
+
+      if (hashed === storedHash) {
+        // store a flag in local storage
+        localStorage.setItem("diaryAccess", "granted");
+        window.location.href = "diary.html";
+      } else {
+        alert("Incorrect password. Try again.");
+      }
+    }
+  </script>
+</body>
+</html>
+
