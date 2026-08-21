@@ -172,8 +172,16 @@ input, select, textarea {
 		-webkit-transition: color 0.35s ease-in-out, border-bottom-color 0.35s ease-in-out;
 		-ms-transition: color 0.35s ease-in-out, border-bottom-color 0.35s ease-in-out;
 		transition: color 0.35s ease-in-out, border-bottom-color 0.35s ease-in-out;
-		outline: 0;
 	}
+
+		a:focus-visible,
+		button:focus-visible,
+		input:focus-visible,
+		textarea:focus-visible,
+		select:focus-visible {
+			outline: 2px solid #E27689;
+			outline-offset: 2px;
+		}
 
 		a:hover {
 			color: #E27689;
@@ -216,11 +224,9 @@ input, select, textarea {
 	    justify-content: center; /* Centers the content horizontally */
 	    align-items: center; /* Centers the content vertically */
 	    flex-direction: column; /* Stacks the header and footer vertically */
-	    height: 100vh; /* Full viewport height */
-	    background-image: url("images/seqB_037a.jpg"); /* Background image */
-	    background-size: cover; /* Cover the entire section */
-	    background-position: center; /* Centers the background image */
-	    background-repeat: no-repeat; /* Ensures no repeat */
+	    min-height: 100vh; /* Full viewport height */
+	    /* No background here: the parent section.one paints the hero image. This rule
+	       used to point at a path that resolved to assets/css/images/ and 404'd. */
 	    text-align: center; /* Centers text inside the section */
 	    padding: 0; /* No padding needed */
 	    margin: 0; /* No margin needed */
@@ -2052,8 +2058,19 @@ input, select, textarea {
 			line-height: inherit;
 		}
 
+		/* Visually hidden, but still announced by screen readers. `display: none` here
+		   removed the element from the accessibility tree, leaving every social link
+		   with no accessible name at all. */
 		.icon > .label {
-			display: none;
+			position: absolute;
+			width: 1px;
+			height: 1px;
+			margin: -1px;
+			padding: 0;
+			overflow: hidden;
+			clip-path: inset(50%);
+			white-space: nowrap;
+			border: 0;
 		}
 
 		.icon.solid:before {
@@ -2281,18 +2298,28 @@ input, select, textarea {
 
 			#main > section.one {
 				display: flex;
-				justify-containt: centre;
-				align-item: center;
+				justify-content: center;
+				align-items: center;
 				flex-direction: column;
-				height: 100vh;
-				background-color: #81918E;
-				background-image: url("../../images/seqB_037a.jpg");
+				min-height: 100vh;
+				background-color: #2b1f38;
+				/* Dark scrim over the cosmic-web image so the white hero text stays legible
+				   regardless of which part of the density field lands behind it. */
+				background-image: linear-gradient(rgba(20, 12, 30, 0.55), rgba(20, 12, 30, 0.55)), url("../../images/hero.webp");
 				background-size: cover;
 				background-position: center;
 				background-repeat: no-repeat;
 				text-align: center;
 				margin: 0;
 				padding: 0;
+			}
+
+			@media screen and (max-width: 800px) {
+
+				#main > section.one {
+					background-image: linear-gradient(rgba(20, 12, 30, 0.55), rgba(20, 12, 30, 0.55)), url("../../images/hero-small.webp");
+				}
+
 			}
 
 			#main > section.two {
@@ -2801,7 +2828,8 @@ input, select, textarea {
 
 
 
-#cv {
+/* ID selectors are case-sensitive: the element is id="CV", so #cv never matched. */
+#CV {
 	margin: 0 auto;
 	padding: 20px;
 	max-width: 1000px; /* Limit the max width on larger screens */
@@ -2815,11 +2843,7 @@ input, select, textarea {
 }
 
 /* Individual columns */
-.cv-topic, {
-	padding: 10px;
-	font-size: 1.1rem;
-}
-.cv-details, .cv-years {
+.cv-topic, .cv-details, .cv-years {
 	padding: 10px;
 	font-size: 1.1rem;
 }
@@ -2860,4 +2884,90 @@ input, select, textarea {
 /* Optional: Add spacing between rows */
 .cv-row:last-child {
 	border-bottom: none;
+}
+
+/* Replaces the deprecated align="left" attribute. */
+.text-left {
+	text-align: left;
+}
+
+/* Captioned figures */
+figure.image.featured {
+	display: block;
+	margin: 0 0 2em 0;
+}
+
+	figure.image.featured img {
+		display: block;
+		width: 100%;
+		height: auto;
+	}
+
+	figure.image.featured figcaption {
+		margin-top: 0.75em;
+		font-size: 0.85em;
+		line-height: 1.5;
+		color: #999;
+		text-align: left;
+	}
+
+/* Material list */
+.material-list {
+	list-style: none;
+	padding: 0;
+	margin: 2em 0 0 0;
+	text-align: left;
+}
+
+	.material-list li {
+		padding: 1.25em 0;
+		border-top: 1px solid rgba(0, 0, 0, 0.1);
+	}
+
+		.material-list li:last-child {
+			border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+		}
+
+		.material-list a {
+			display: block;
+			font-weight: 600;
+			font-size: 1.1em;
+		}
+
+		.material-list span {
+			display: block;
+			margin-top: 0.25em;
+			font-size: 0.9em;
+			color: #999;
+		}
+
+/* On a phone the three flex columns give .cv-years ~50px for "Oct. 2025 - Present".
+   Stack them instead, with the date first so it reads as a heading for the entry. */
+@media screen and (max-width: 736px) {
+
+	#CV {
+		padding: 20px 0;
+	}
+
+	.cv-row {
+		flex-direction: column;
+		padding: 15px 0;
+	}
+
+	.cv-topic, .cv-details, .cv-years {
+		padding: 2px 0;
+	}
+
+	.cv-topic:empty {
+		display: none;
+	}
+
+	.cv-years {
+		order: -1;
+		text-align: left;
+		padding-right: 0;
+		font-size: 0.9rem;
+		color: #888;
+	}
+
 }

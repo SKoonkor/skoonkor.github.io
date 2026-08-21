@@ -102,7 +102,7 @@
 		// Toggle.
 			$(
 				'<div id="headerToggle">' +
-					'<a href="#header" class="toggle"></a>' +
+					'<a href="#header" class="toggle" aria-label="Open menu"></a>' +
 				'</div>'
 			)
 				.appendTo($body);
@@ -112,6 +112,7 @@
 				.panel({
 					delay: 500,
 					hideOnClick: true,
+					hideOnEscape: true,
 					hideOnSwipe: true,
 					resetScroll: true,
 					resetForms: true,
@@ -125,23 +126,29 @@
 
 
 document.addEventListener("DOMContentLoaded", function() {
-    // Get all toggle buttons
-    const toggleButtons = document.querySelectorAll(".toggle-description");
 
-    toggleButtons.forEach(button => {
+    document.querySelectorAll(".research-item").forEach((item, i) => {
+
+        const button = item.querySelector(".toggle-description");
+        const description = item.querySelector(".research-description");
+
+        if (!button || !description) return;
+
+        // Wire up the disclosure semantics so screen readers announce the state.
+        // Look the description up from the .research-item rather than relying on
+        // the button's previous sibling, so moving the button doesn't break this.
+        const id = description.id || ("research-description-" + (i + 1));
+        description.id = id;
+        button.setAttribute("aria-controls", id);
+        button.setAttribute("aria-expanded", description.classList.contains("show") ? "true" : "false");
+
         button.addEventListener("click", function() {
-            const descriptionContent = this.previousElementSibling; // Select the .research-description-content
-
-            // Toggle 'show' class on the description content
-            descriptionContent.classList.toggle("show");
-
-            // Update button text based on visibility
-            if (descriptionContent.classList.contains("show")) {
-                this.textContent = "Show Less";
-            } else {
-                this.textContent = "Show More";
-            }
+            const shown = description.classList.toggle("show");
+            button.setAttribute("aria-expanded", shown ? "true" : "false");
+            button.textContent = shown ? "Show Less" : "Show More";
         });
+
     });
+
 });
 
