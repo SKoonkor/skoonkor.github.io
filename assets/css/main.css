@@ -2133,7 +2133,7 @@ input, select, textarea {
 		}
 
 			#header .icons a {
-				color: #41484c;
+				color: #8b959b;
 				-moz-transition: color 0.35s ease-in-out;
 				-webkit-transition: color 0.35s ease-in-out;
 				-ms-transition: color 0.35s ease-in-out;
@@ -2767,21 +2767,35 @@ input, select, textarea {
 }
 
 /* Responsive adjustments for smaller screens */
-@media (max-width: 768px) {
-	
+@media screen and (max-width: 768px) {
+
 	.research-item {
 		flex-direction: column;
-		text-align: center;
+		/* Stretch, not center: with align-items:center the stacked children shrink to
+		   their content width and overflow the viewport instead of wrapping. */
+		align-items: stretch;
+		padding: 15px;
 		}
-	
+
 	/* This ensures the reverse layout stacks vertically as well */
 		.research-item.reverse {
 		flex-direction: column;
 		}
-	
+
 	.research-image,
 	.research-description {
+		flex: 0 0 auto;
+		width: 100%;
 		max-width: 100%; /* Full width on smaller screens */
+		min-width: 0;    /* Allow the flex item to shrink below its content size */
+		}
+
+	.research-description h3 {
+		font-size: 1.4rem;
+		}
+
+	.research-description p {
+		font-size: 1rem;
 		}
 }
 
@@ -2790,40 +2804,34 @@ input, select, textarea {
 
 
 
-/* Description visibility by default */
-.research-description-content {
-	display: block; /* Show on larger screens */
-	}
-
+/* The full abstract is collapsed at every width. The plain-language hook above it
+   carries the meaning; the abstract is there for readers who want the detail.
+   Previously the button only appeared below 768px, so desktop visitors met ~900
+   words of unbroken journal prose in one scroll section. */
 .research-description-content p {
-	display: block; /* Show on larger screens */
-	}
+	display: none;
+}
+
+.research-description.show .research-description-content p {
+	display: block;
+}
 
 .toggle-description {
-	display: none; /* Hide the button by default */
-	}
-
-/* On small screens, hide only the paragraph in the description */
-@media (max-width: 768px) {
-    .research-description-content p {
-        display: none; /* Hide the paragraph text by default */
-    }
-
-    .research-description.show p {
-        display: block; /* Show paragraph text when 'show' class is added */
-    }
-
-    .toggle-description {
-        display: block; /* Show the toggle button on small screens */
-        margin-top: 5px;
-        background-color: #8fa1b5;
-        color: #fff;
-        border: none;
-        padding: 8px 12px;
-        border-radius: 5px;
-        cursor: pointer;
-    }
+	display: inline-block;
+	margin-top: 0.5em;
+	background-color: #8fa1b5;
+	color: #fff;
+	border: none;
+	padding: 8px 14px;
+	border-radius: 5px;
+	font-size: 0.8em;
+	letter-spacing: 0.05em;
+	cursor: pointer;
 }
+
+	.toggle-description:hover {
+		background-color: #9fb1c5;
+	}
 
 
 
@@ -2911,6 +2919,131 @@ figure.image.featured {
 		text-align: left;
 	}
 
+/* Hero copy */
+.intro-role {
+	margin: 0 0 1em 0;
+	font-size: 0.8em;
+	letter-spacing: 0.2em;
+	text-transform: uppercase;
+	opacity: 0.75;
+}
+
+.intro-lede {
+	max-width: 34em;
+	margin: 0 auto;
+}
+
+/* A plain-language lead-in above each research abstract. */
+.research-hook {
+	margin: 0 0 0.75em 0;
+	font-size: 1.05em;
+	line-height: 1.5;
+	color: #777;
+}
+
+.research-meta {
+	margin: 0 0 1em 0;
+	font-size: 0.85em;
+	color: #aaa;
+}
+
+	.research-meta a {
+		border-bottom-color: rgba(0, 0, 0, 0.15);
+	}
+
+/* Publications */
+.publication-list {
+	list-style: none;
+	counter-reset: pub;
+	padding: 0;
+	margin: 2em 0 0 0;
+	text-align: left;
+}
+
+	.publication-list li {
+		position: relative;
+		counter-increment: pub;
+		padding: 1.25em 0 1.25em 3em;
+		border-top: 1px solid rgba(0, 0, 0, 0.1);
+	}
+
+		.publication-list li:last-child {
+			border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+		}
+
+		.publication-list li:before {
+			content: counter(pub) ".";
+			position: absolute;
+			left: 0;
+			top: 1.25em;
+			width: 2.25em;
+			text-align: right;
+			color: #bbb;
+		}
+
+	.pub-authors,
+	.pub-title,
+	.pub-venue,
+	.pub-links {
+		display: block;
+	}
+
+	.pub-authors {
+		font-size: 0.9em;
+		color: #999;
+		line-height: 1.5;
+	}
+
+	.pub-title {
+		margin: 0.2em 0;
+		font-weight: 600;
+		color: #666;
+		line-height: 1.4;
+	}
+
+	.pub-venue {
+		font-size: 0.9em;
+		color: #999;
+	}
+
+	.pub-links {
+		margin-top: 0.5em;
+	}
+
+		.pub-links a {
+			display: inline-block;
+			margin-right: 0.5em;
+			padding: 0.2em 0.7em;
+			border-bottom: 0;
+			border: 1px solid rgba(0, 0, 0, 0.15);
+			border-radius: 3px;
+			font-size: 0.8em;
+		}
+
+			.pub-links a:hover {
+				border-color: #E27689;
+			}
+
+	.pub-subhead {
+		margin-top: 2.5em;
+		text-align: left;
+	}
+
+@media screen and (max-width: 736px) {
+
+	.publication-list li {
+		padding-left: 0;
+	}
+
+		.publication-list li:before {
+			position: static;
+			display: inline;
+			width: auto;
+			margin-right: 0.4em;
+		}
+
+}
+
 /* Material list */
 .material-list {
 	list-style: none;
@@ -2956,6 +3089,11 @@ figure.image.featured {
 
 	.cv-topic, .cv-details, .cv-years {
 		padding: 2px 0;
+	}
+
+	.cv-topic {
+		text-align: left;
+		margin-top: 0.5em;
 	}
 
 	.cv-topic:empty {
