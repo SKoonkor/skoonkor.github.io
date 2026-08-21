@@ -2933,6 +2933,12 @@ figure.image.featured {
 	margin: 0 auto;
 }
 
+.intro-contact {
+	margin-top: 1.5em;
+	font-size: 0.8em;
+	opacity: 0.8;
+}
+
 /* A plain-language lead-in above each research abstract. */
 .research-hook {
 	margin: 0 0 0.75em 0;
