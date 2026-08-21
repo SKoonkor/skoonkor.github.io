@@ -48,8 +48,16 @@ LOGZSOL = [0.0]
 IMF_TYPE = 2                         # Kroupa (2001) -- thesis 2.1
 AGE_STRIDE = 1                       # ship every age; the sample is small enough
 
-TRUTH_LOGZSOL = [0.0]
-TRUTH_AGES_GYR = [0.0002, 0.01, 1.0, 13.0]   # the four ages of thesis Fig. 4.5
+#: True spectra are shipped for every age the age slider can reach, so the demo
+#: can always draw the real curve behind the reconstruction -- without it the
+#: visitor has nothing to judge the rebuild against. Quantised to int16 with a
+#: per-spectrum scale, this costs ~2 KB each rather than ~5 KB as float32.
+TRUTH_N_AGES = 16
+#: The PCA is fitted over the thesis's full age range (up to 10^1.3 = 20 Gyr), but
+#: the demo only offers ages up to the age of the Universe. The 17.8 Gyr SSP sits
+#: at the edge of the FSPS grid and reconstructs an order of magnitude worse than
+#: any other; it is also not a population that exists.
+AGE_SHIP_MAX_GYR = 13.8
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 OUT = ROOT / "data" / "pca-sed"
@@ -262,28 +270,25 @@ def main():
     (OUT / "components.i16").write_bytes(b"".join(comp_blobs))
 
     # Shipped SSP subset (PCA used every age; the sliders step through these).
-    keep = [i for i, m in enumerate(meta)
-            if i % AGE_STRIDE == 0 or m["age_gyr"] > 12.0]
-    keep = sorted(set(keep))
+    keep = sorted({i for i, m in enumerate(meta)
+                   if i % AGE_STRIDE == 0 and m["age_gyr"] <= AGE_SHIP_MAX_GYR})
+    # Evenly spaced in log age across the shipped set.
+    sel = np.unique(np.linspace(0, len(keep) - 1, TRUTH_N_AGES).round().astype(int))
+    t_idx = [keep[j] for j in sel]
+    truth_ids = {meta[i]["id"] for i in t_idx}
+    t_arr = np.asarray([Xn[i] for i in t_idx])
+    t_scales = t_arr.max(axis=1)
+    t_q = np.rint(t_arr / t_scales[:, None] * 32767.0).astype("<i2")
+    (OUT / "truth.i16").write_bytes(t_q.tobytes())
+
     coeff_rows = []
     for i in keep:
         row = np.concatenate([band_data[b][3][i][:k_used[b]] for b in range(len(BANDS))])
         coeff_rows.append(row.astype("<f4"))
     (OUT / "coeffs.f32").write_bytes(np.asarray(coeff_rows).tobytes())
 
-    truth_ids = set()
-    for lz in TRUTH_LOGZSOL:
-        for age in TRUTH_AGES_GYR:
-            cand = min((m for m in meta if abs(m["logzsol"] - lz) < 1e-9),
-                       key=lambda m: abs(np.log10(m["age_gyr"]) - np.log10(age)))
-            truth_ids.add(cand["id"])
-    t_idx = [i for i in keep if meta[i]["id"] in truth_ids]
-    (OUT / "truth.f32").write_bytes(
-        np.asarray([Xn[i] for i in t_idx], dtype="<f4").tobytes())
-
     # --- JSON ---------------------------------------------------------------
-    ref = keep[int(np.argmin([abs(meta[i]["logzsol"]) + abs(np.log10(meta[i]["age_gyr"]))
-                              for i in keep]))]
+    ref = min(t_idx, key=lambda i: abs(np.log10(meta[i]["age_gyr"])))
     gn = 12
     g_rec = np.empty(N_LAM)
     for b, (name, mean_b, V_b, C_b, _) in enumerate(band_data):
@@ -321,8 +326,9 @@ def main():
         "coeffs_bin": {"file": "coeffs.f32", "dtype": "float32",
                        "shape": [len(keep), int(sum(k_used))],
                        "band_order": [b[0] for b in BANDS]},
-        "truth_bin": {"file": "truth.f32", "dtype": "float32",
+        "truth_bin": {"file": "truth.i16", "dtype": "int16",
                       "shape": [len(t_idx), N_LAM],
+                      "scales": [float(f"{v:.8g}") for v in t_scales],
                       "ids": [meta[i]["id"] for i in t_idx]},
         "ssps": [{"id": meta[i]["id"], "age_gyr": float(f"{meta[i]['age_gyr']:.6g}"),
                   "logzsol": meta[i]["logzsol"], "eta": float(f"{eta[i]:.7g}"),

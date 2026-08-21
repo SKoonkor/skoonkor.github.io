@@ -25,7 +25,7 @@ def load():
     acc = json.loads((DATA / "accuracy.json").read_text())
     comp = np.frombuffer((DATA / "components.i16").read_bytes(), dtype="<i2")
     coef = np.frombuffer((DATA / "coeffs.f32").read_bytes(), dtype="<f4")
-    truth = np.frombuffer((DATA / "truth.f32").read_bytes(), dtype="<f4")
+    truth = np.frombuffer((DATA / "truth.i16").read_bytes(), dtype="<i2")
     return basis, ssps, acc, comp, coef, truth
 
 
@@ -110,7 +110,8 @@ def main():
     # targets are a p95 over ALL 106 SSPs, so these four sit above it by
     # construction; assert they stay in the same ballpark rather than under it.
     t_ids = ssps["truth_bin"]["ids"]
-    t = truth.reshape(len(t_ids), n_lam).astype(np.float64)
+    t = (truth.reshape(len(t_ids), n_lam).astype(np.float64)
+         * np.asarray(ssps["truth_bin"]["scales"])[:, None] / 32767.0)
     id_to_row = {s["id"]: i for i, s in enumerate(ssps["ssps"])}
     floor = 1e-4
     for target in ("5.0", "1.0"):
@@ -126,8 +127,8 @@ def main():
             e = np.percentile(np.abs(r[m] / true[m] - 1.0) * 100, 95)
             per.append(f"{tid.split('_')[-1]}:{e:.2f}%")
             worst = max(worst, e)
-        check(f"N={n} (global p95 {target}%) holds extremes under {float(target)*5:.0f}%",
-              worst <= float(target) * 5, "  ".join(per))
+        check(f"N={n} (global p95 {target}%) holds shipped spectra under {float(target)*5:.0f}%",
+              worst <= float(target) * 5, "  ".join(per[:6]) + (" ..." if len(per) > 6 else ""))
 
     print("\nGlobal accuracy curve in accuracy.json")
     p95 = np.asarray(acc["frac_err_pct"]["p95"])
