@@ -2957,6 +2957,25 @@ figure.image.featured {
 		border-bottom-color: rgba(0, 0, 0, 0.15);
 	}
 
+/* Link from a research item through to its interactive version. */
+.research-try {
+	margin: 0 0 1em 0;
+}
+
+	.research-try a {
+		display: inline-block;
+		padding: 0.45em 1em;
+		border: 1px solid rgba(226, 118, 137, 0.5);
+		border-radius: 4px;
+		font-size: 0.85em;
+		color: #E27689;
+	}
+
+		.research-try a:hover {
+			background: rgba(226, 118, 137, 0.1);
+			border-color: #E27689;
+		}
+
 /* Publications */
 .publication-list {
 	list-style: none;
