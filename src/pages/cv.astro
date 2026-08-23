@@ -1,7 +1,12 @@
 ---
+import { existsSync } from "node:fs";
 import PageTitle from "@/components/PageTitle.astro";
 import PageLayout from "@/layouts/Base.astro";
 import { cv, cvPdfPath } from "@/data/cv";
+
+// The download button appears by itself once a PDF is dropped at this path in
+// public/. Rendering it unconditionally would ship a link to a 404.
+const hasPdf = existsSync(new URL(`../../public${cvPdfPath}`, import.meta.url));
 
 const meta = {
 	description:
@@ -15,14 +20,20 @@ const meta = {
 
 	<div data-pagefind-body>
 		<p class="mb-12 print:hidden">
-			<a
-				class="border-muted/40 hover:border-accent hover:text-accent rounded-sm border px-2.5 py-1 text-xs transition-colors"
-				href={cvPdfPath}
-				download
-			>
-				Download PDF
-			</a>
-			<span class="text-muted ms-2 text-xs">or print this page</span>
+			{
+				hasPdf && (
+					<a
+						class="border-muted/40 hover:border-accent hover:text-accent me-2 rounded-sm border px-2.5 py-1 text-xs transition-colors"
+						href={cvPdfPath}
+						download
+					>
+						Download PDF
+					</a>
+				)
+			}
+			<span class="text-muted text-xs">
+				{hasPdf ? "or print this page" : "Print this page for a PDF copy."}
+			</span>
 		</p>
 
 		{

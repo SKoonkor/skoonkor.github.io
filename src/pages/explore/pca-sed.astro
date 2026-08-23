@@ -78,12 +78,14 @@ const meta = {
 							calculation unaffordable.
 						</p>
 						<p>
-							Keeping <strong><span data-fill="nFor1">87</span></strong> numbers instead of
-							<strong><span data-fill="nlam">1200</span></strong> reproduces the spectrum to
-							better than 1 per cent &mdash; about
-							<strong><span data-fill="ratio">14</span>&times;</strong> less to compute and
-							store. That is the difference between a calculation you can run across a
-							whole model universe and one you cannot.
+							{/* Kept on one line: Astro trims the newline between a text node and an
+							    element, which silently closed the gap in "instead of 1200". */}
+							Keeping <strong><span data-fill="nFor1">87</span></strong> numbers instead of <strong
+								><span data-fill="nlam">1200</span></strong
+							> reproduces the spectrum to better than 1 per cent &mdash; about <strong
+								><span data-fill="ratio">14</span>&times;</strong
+							> less to compute and store. That is the difference between a calculation you can
+							run across a whole model universe and one you cannot.
 						</p>
 					</div>
 
