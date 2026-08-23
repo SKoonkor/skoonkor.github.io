@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 530" role="img" aria-label="Timeline of major galaxy surveys from 2003 to 2035." style="max-width:100%;height:auto;font-family:ui-monospace,monospace">
+<style>.lbl{font-size:11px;fill:currentColor;opacity:.75}.sec{font-size:11px;fill:currentColor;font-weight:600;letter-spacing:.05em;text-transform:uppercase;opacity:.55}.yr{font-size:10px;fill:currentColor;opacity:.45}.gl{stroke:currentColor;opacity:.12}</style>
+<line class="gl" x1="202.1" y1="24" x2="202.1" y2="514" />
+<text class="yr" x="202.1" y="18" text-anchor="middle">2005</text>
+<line class="gl" x1="292.4" y1="24" x2="292.4" y2="514" />
+<text class="yr" x="292.4" y="18" text-anchor="middle">2010</text>
+<line class="gl" x1="382.8" y1="24" x2="382.8" y2="514" />
+<text class="yr" x="382.8" y="18" text-anchor="middle">2015</text>
+<line class="gl" x1="473.1" y1="24" x2="473.1" y2="514" />
+<text class="yr" x="473.1" y="18" text-anchor="middle">2020</text>
+<line class="gl" x1="563.4" y1="24" x2="563.4" y2="514" />
+<text class="yr" x="563.4" y="18" text-anchor="middle">2025</text>
+<line class="gl" x1="653.7" y1="24" x2="653.7" y2="514" />
+<text class="yr" x="653.7" y="18" text-anchor="middle">2030</text>
+<line class="gl" x1="744.0" y1="24" x2="744.0" y2="514" />
+<text class="yr" x="744.0" y="18" text-anchor="middle">2035</text>
+<text class="sec" x="16" y="55">Spectroscopy</text>
+<text class="lbl" x="158" y="77" text-anchor="end">BOSS</text>
+<rect x="287.9" y="66" width="81.3" height="14" rx="3" fill="#E27689" opacity="0.75" />
+<text class="lbl" x="158" y="99" text-anchor="end">eBOSS</text>
+<rect x="369.2" y="88" width="90.3" height="14" rx="3" fill="#E27689" opacity="0.75" />
+<text class="lbl" x="158" y="121" text-anchor="end">HETDEX</text>
+<rect x="418.9" y="110" width="108.4" height="14" rx="3" fill="#E27689" opacity="0.75" />
+<text class="lbl" x="158" y="143" text-anchor="end">DESI</text>
+<rect x="491.1" y="132" width="90.3" height="14" rx="3" fill="#E27689" opacity="0.75" />
+<text class="lbl" x="158" y="165" text-anchor="end">GAMA</text>
+<rect x="256.3" y="154" width="108.4" height="14" rx="3" fill="#E27689" opacity="0.75" />
+<text class="sec" x="16" y="197">Spectroscopy + imaging</text>
+<text class="lbl" x="158" y="219" text-anchor="end">GALEX</text>
+<rect x="170.5" y="208" width="167.1" height="14" rx="3" fill="#8ebebc" opacity="0.75" />
+<text class="lbl" x="158" y="241" text-anchor="end">SuMIRe</text>
+<rect x="364.7" y="230" width="180.6" height="14" rx="3" fill="#8ebebc" opacity="0.75" />
+<text class="lbl" x="158" y="263" text-anchor="end">Euclid</text>
+<rect x="527.2" y="252" width="108.4" height="14" rx="3" fill="#8ebebc" opacity="0.75" />
+<text class="lbl" x="158" y="285" text-anchor="end">Roman</text>
+<rect x="581.4" y="274" width="90.3" height="14" rx="3" fill="#8ebebc" opacity="0.75" />
+<text class="lbl" x="158" y="307" text-anchor="end">JADES</text>
+<rect x="522.7" y="296" width="56.9" height="14" rx="3" fill="#8ebebc" opacity="0.75" />
+<text class="sec" x="16" y="339">Imaging</text>
+<text class="lbl" x="158" y="361" text-anchor="end">KiDS</text>
+<rect x="310.5" y="350" width="180.6" height="14" rx="3" fill="#d8a657" opacity="0.75" />
+<text class="lbl" x="158" y="383" text-anchor="end">DES</text>
+<rect x="346.6" y="372" width="108.4" height="14" rx="3" fill="#d8a657" opacity="0.75" />
+<text class="lbl" x="158" y="405" text-anchor="end">LSST (Rubin)</text>
+<rect x="563.4" y="394" width="180.6" height="14" rx="3" fill="#d8a657" opacity="0.75" />
+<text class="lbl" x="158" y="427" text-anchor="end">PAUS</text>
+<rect x="364.7" y="416" width="90.3" height="14" rx="3" fill="#d8a657" opacity="0.75" />
+<text class="lbl" x="158" y="449" text-anchor="end">WISE</text>
+<rect x="290.6" y="438" width="54.2" height="14" rx="3" fill="#d8a657" opacity="0.75" />
+<text class="lbl" x="158" y="471" text-anchor="end">WISE (reactivated)</text>
+<rect x="346.6" y="460" width="233.0" height="14" rx="3" fill="#d8a657" opacity="0.75" />
+<text class="lbl" x="158" y="493" text-anchor="end">CFHTLS</text>
+<rect x="166.0" y="482" width="108.4" height="14" rx="3" fill="#d8a657" opacity="0.75" />
+</svg>

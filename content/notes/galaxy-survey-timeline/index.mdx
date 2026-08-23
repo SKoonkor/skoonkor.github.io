@@ -1,0 +1,46 @@
+---
+title: "The galaxy survey timeline"
+description: "A visual history of the redshift and imaging surveys that mapped the Universe, from CFHTLS and GALEX through to Euclid, Rubin and Roman."
+publishDate: "2025-09-22"
+tags: ["surveys", "cosmology"]
+---
+
+import { Image } from "astro:assets";
+import surveys from "./surveys.png";
+import timeline from "./timeline.svg?raw";
+
+Galaxy surveys are how we turn the sky into a catalogue. Each one trades off area against depth
+against wavelength coverage, and each generation has set the stepping stone for the next. This is a
+rough map of when the major ones ran, or are planned to run.
+
+I have split them three ways: surveys that measure spectra and so get precise redshifts, surveys
+that image the sky in broad bands, and the ones that do both.
+
+## Timeline
+
+<figure class="my-8">
+	<Fragment set:html={timeline} />
+	<figcaption class="text-muted mt-3 text-xs leading-relaxed">
+		Approximate operating spans of the major galaxy surveys. Future end dates are nominal.
+	</figcaption>
+</figure>
+
+## Sky coverage and depth
+
+The other axis that matters is how much sky a survey covers and how faint it goes. Those two pull
+against each other for any fixed amount of telescope time, which is why the surveys above occupy
+such different niches rather than simply superseding one another.
+
+<figure class="my-8">
+	<Image
+		src={surveys}
+		alt="Sky coverage plotted against limiting depth for the major galaxy surveys, showing the trade-off between area and depth."
+		widths={[480, 768, 1000]}
+		sizes="(min-width: 768px) 768px, 100vw"
+		loading="lazy"
+	/>
+</figure>
+
+The Supergalactic Plane Survey
+([Dressler 1991](https://articles.adsabs.harvard.edu/pdf/1991ApJS...75..241D)) is a good example of
+how early this work started, long before any of the surveys plotted above.
