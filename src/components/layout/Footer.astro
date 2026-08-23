@@ -18,7 +18,12 @@ const year = new Date().getFullYear();
 			>.
 		</span>
 	</div>
-	<nav aria-label="Footer" class="sm:divide-muted flex gap-x-2 sm:gap-x-0 sm:divide-x">
+	{/* flex-wrap: five nav items do not fit on a 390px screen, and without it the
+	    footer pushed every page 11px wider than the viewport. */}
+	<nav
+		aria-label="Footer"
+		class="sm:divide-muted flex flex-wrap justify-center gap-x-2 sm:gap-x-0 sm:divide-x"
+	>
 		{
 			menuLinks.map((link) => (
 				<a class="hover:text-global-text px-4 py-2 hover:underline sm:py-0" href={link.path}>
