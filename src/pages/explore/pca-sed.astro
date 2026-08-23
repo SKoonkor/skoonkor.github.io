@@ -1,0 +1,191 @@
+---
+import PageTitle from "@/components/PageTitle.astro";
+import PageLayout from "@/layouts/Base.astro";
+import "@/styles/explore.css";
+
+const meta = {
+	description:
+		"An interactive reconstruction of stellar population spectra from principal components. Drag a slider and watch a featureless curve turn into a real galaxy spectrum.",
+	title: "Rebuilding starlight",
+	ogImage: "/images/PCA.webp",
+};
+---
+
+<PageLayout meta={meta}>
+	<PageTitle
+		title="Rebuilding starlight"
+		subtitle="How much of a star's light fits in a handful of numbers?"
+	/>
+
+	<p class="explore-status" data-status hidden></p>
+
+				<div
+				class="demo-pca-sed"
+				data-demo
+				style="--demo-bg:#16121d; --demo-recon:#E27689; --demo-truth:rgb(255 255 255 / 0.35);
+				       --demo-axis:rgb(255 255 255 / 0.22); --demo-text:rgb(255 255 255 / 0.55);
+				       --demo-good:#8ebebc; --demo-warn:#d8a657;"
+			>
+
+					<div class="demo-chart">
+						<canvas data-canvas role="img"
+							aria-label="Spectrum of a simple stellar population, reconstructed from principal components."></canvas>
+					</div>
+
+					<canvas class="demo-residual" data-residual role="img"
+						aria-label="Reconstruction error against wavelength, as a percentage."></canvas>
+
+					<div class="demo-legend">
+						<span class="k-recon">rebuilt from components</span>
+						<span class="k-truth">the real spectrum</span>
+					</div>
+
+					<p class="visually-hidden" data-live aria-live="polite"></p>
+
+					<div class="demo-controls">
+
+						<div class="demo-control">
+							<label for="slider-n">Ingredients used</label>
+							<input type="range" id="slider-n" data-slider-n min="3" max="130" step="1" />
+							<p class="demo-readout">
+								<strong data-n>12</strong> ingredients &middot;
+								<strong data-accuracy>--</strong> of the light is right
+							</p>
+							<div class="demo-meter"><i data-bar></i></div>
+						</div>
+
+						<div class="demo-control">
+							<label for="slider-age">How long ago were these stars born?</label>
+							<input type="range" id="slider-age" data-slider-age min="0" max="10" step="1" />
+							<p class="demo-readout"><strong data-age-label>--</strong> ago</p>
+							<div class="demo-swatch-row">
+								<div class="demo-swatch" data-swatch aria-hidden="true"></div>
+								<p class="demo-swatch-note">
+									The colour these stars would actually look to your eye,
+									worked out from the rebuilt spectrum.
+								</p>
+							</div>
+						</div>
+
+					</div>
+
+					<div class="demo-why">
+						<h2>Why this matters</h2>
+						<p>
+							A galaxy is millions of these batches of stars added together, and a
+							simulated universe holds millions of galaxies. Working out the light of
+							every one of them, wavelength by wavelength, is the step that makes the
+							calculation unaffordable.
+						</p>
+						<p>
+							{/* Kept on one line: Astro trims the newline between a text node and an
+							    element, which silently closed the gap in "instead of 1200". */}
+							Keeping <strong><span data-fill="nFor1">87</span></strong> numbers instead of <strong
+								><span data-fill="nlam">1200</span></strong
+							> reproduces the spectrum to better than 1 per cent &mdash; about <strong
+								><span data-fill="ratio">14</span>&times;</strong
+							> less to compute and store. That is the difference between a calculation you can
+							run across a whole model universe and one you cannot.
+						</p>
+					</div>
+
+					<button type="button" class="demo-toggle" data-toggle-deep aria-expanded="false">
+						Astronomer mode
+					</button>
+
+					<div class="demo-deep">
+
+						<h2>The detail</h2>
+
+						<p>
+							Principal component analysis is applied to
+							<span data-fill="nSsps">106</span> simple stellar population spectra from
+							FSPS with a Kroupa (2001) IMF, at solar metallicity, spanning 0.1 Myr to
+							20 Gyr. Each spectrum is reconstructed as
+							<em>f</em>(&lambda;) = &eta;&#8202;[&#8202;<em>x̄</em>(&lambda;) +
+							&Sigma;<sub>j</sub> &alpha;<sub>j</sub><em>v</em><sub>j</sub>(&lambda;)&#8202;].
+						</p>
+
+						<p>
+							The analysis runs separately on three wavelength bands. A single
+							whole-range basis reproduces the optical almost perfectly but cannot
+							reach the far ultraviolet, where an old population emits about
+							10<sup>&minus;4</sup> of its peak flux. The residual panel greys out
+							the region below the Lyman break, where there is so little light that
+							a percentage error stops meaning anything.
+						</p>
+
+						<table class="demo-facts">
+							<tr>
+								<th>Components in use</th>
+								<td data-alloc>&mdash;</td>
+							</tr>
+							<tr>
+								<th>95th-percentile error, per band</th>
+								<td data-perband>&mdash;</td>
+							</tr>
+							<tr>
+								<th>Components for &lt; 5 % error</th>
+								<td><span data-fill="nFor5">58</span> &mdash; the thesis reports 68</td>
+							</tr>
+							<tr>
+								<th>Components for &lt; 1 % error</th>
+								<td><span data-fill="nFor1">87</span> &mdash; the thesis reports 85</td>
+							</tr>
+							<tr>
+								<th>Wavelength grid</th>
+								<td>
+									<span data-fill="nlam">1200</span> log-spaced bins over
+									1000&ndash;30&#8202;000 &#8491;, decimated from the FSPS native
+									<span data-fill="nlamNative">4842</span>
+								</td>
+							</tr>
+							<tr>
+								<th>Normalisation</th>
+								<td>
+									L<sup>2</sup> norm, on linear flux. A logarithmic normalisation
+									reconstructs better, and the thesis shows this, then rejects it:
+									a composite stellar population is a <em>linear</em> superposition
+									of these spectra, so a log-space basis cannot be summed and the
+									compression buys nothing in the galaxy formation model it exists
+									to serve.
+								</td>
+							</tr>
+						</table>
+
+						<p>
+							Method and results follow the MSc thesis,
+							<a href="https://etheses.durham.ac.uk/13823/" target="_blank" rel="noopener">Application
+							of Principal Component Analysis to Galaxy Spectral Energy Distributions</a>
+							(Durham, 2020). The basis here is regenerated from scratch rather than
+							taken from the original analysis, so the component counts differ slightly.
+						</p>
+
+						<div class="demo-downloads">
+							<a href="/data/pca-sed/README.md">Data notes</a>
+							<a href="/data/pca-sed/basis.json">basis.json</a>
+							<a href="/data/pca-sed/accuracy.json">accuracy.json</a>
+							<a href="/data/pca-sed/ssps.json">ssps.json</a>
+							<a href="https://github.com/SKoonkor/skoonkor.github.io/blob/main/tools/build_pca_sed.py" target="_blank" rel="noopener">build script</a>
+						</div>
+
+					</div>
+
+				</div>
+
+				<noscript>
+					<p>
+						This page rebuilds galaxy spectra in your browser, so it needs JavaScript.
+						The static version of the result is below.
+					</p>
+					<p><img src="/images/PCA.webp" width="804" height="782" alt="Reconstructed stellar population spectra compared with the originals, with residuals." /></p>
+				</noscript>
+
+</PageLayout>
+
+<script>
+	import { init } from "@/scripts/explore/pca-sed.js";
+
+	const root = document.querySelector<HTMLElement>("[data-demo]");
+	if (root) void init(root);
+</script>

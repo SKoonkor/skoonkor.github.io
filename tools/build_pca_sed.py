@@ -60,7 +60,7 @@ TRUTH_N_AGES = 16
 AGE_SHIP_MAX_GYR = 13.8
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
-OUT = ROOT / "data" / "pca-sed"
+OUT = ROOT / "public" / "data" / "pca-sed"
 
 
 def log_grid():

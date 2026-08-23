@@ -1,3 +1,11 @@
+# build
+dist/
+.astro/
+node_modules/
+
+# tooling
 .DS_Store
 __pycache__/
 *.pyc
+.env
+.env.production

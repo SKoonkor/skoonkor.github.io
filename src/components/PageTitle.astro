@@ -1,0 +1,43 @@
+---
+/**
+ * The page heading, pinned to the top of the viewport instead of scrolling away.
+ *
+ * Must be the first child of <main>. <body> is the centred column and is not
+ * itself a scroll container, so a sticky descendant sticks to the viewport at
+ * exactly the column width.
+ *
+ * Nothing on the way up to <body> may gain `overflow-x: hidden` -- sticky dies
+ * inside any overflow ancestor, silently and only on some pages. Use
+ * `overflow-x: clip` instead, which clips without creating a scroll container.
+ */
+interface Props {
+	title: string;
+	/** Shown under the sticky bar, unclipped. For full academic titles. */
+	subtitle?: string | undefined;
+	class?: string | undefined;
+}
+
+const { title, subtitle, class: className } = Astro.props;
+---
+
+<div
+	class:list={[
+		// -mx-4/px-4 cancels body's own padding so the opaque background reaches
+		// the column edges; without it, prose scrolling past in the outer 1rem
+		// shows through beside the title.
+		"bg-global-bg sticky top-0 z-20 -mx-4 px-4 pt-4 pb-2 sm:-mx-8 sm:px-8",
+		// body's pt-16 is above the header and gone once this sticks.
+		// A soft fade below the bar so prose does not guillotine on a hard edge.
+		"after:from-global-bg after:pointer-events-none after:absolute after:inset-x-0",
+		"after:top-full after:h-6 after:bg-gradient-to-b after:to-transparent",
+		subtitle ? "mb-6" : "mb-12",
+		className,
+	]}
+>
+	<h1 class="title line-clamp-2">{title}</h1>
+</div>
+{
+	subtitle && (
+		<p class="text-muted mb-12 text-base leading-relaxed text-pretty">{subtitle}</p>
+	)
+}

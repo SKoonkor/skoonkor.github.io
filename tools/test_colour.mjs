@@ -20,7 +20,7 @@ import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
-const src = await readFile(path.join(here, '..', 'assets', 'js', 'explore', 'pca-sed.js'), 'utf8');
+const src = await readFile(path.join(here, '..', 'src', 'scripts', 'explore', 'pca-sed.js'), 'utf8');
 
 // Lift the pure colour helpers out of the module: they need no DOM and no imports.
 const START = 'function pwGauss';

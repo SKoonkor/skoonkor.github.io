@@ -1,0 +1,95 @@
+---
+/**
+ * The cosmic web, evolving in the page margins as you scroll.
+ *
+ * Left and right bands show the outer slices of the same IllustrisTNG frame, so
+ * together with the content column they read as one continuous image. Scrolling
+ * from the top of the page to the bottom advances cosmic time from z = 10 to
+ * z = 0.4; the redshift readout and scale bar burned into the frames come along
+ * for free.
+ *
+ * Decoration only: aria-hidden, pointer-events none, and hidden entirely below
+ * 1100px, on reduced-motion, in print, and on constrained connections.
+ *
+ * The <script> below must carry no attributes other than src -- Astro skips
+ * bundling any script that has one, which would silently leave this unprocessed.
+ */
+---
+
+<div class="cw" aria-hidden="true">
+	<canvas class="cw-band cw-band--left" data-cw-left></canvas>
+	<canvas class="cw-band cw-band--right" data-cw-right></canvas>
+</div>
+
+<style>
+	.cw {
+		position: fixed;
+		inset: 0;
+		z-index: -1;
+		pointer-events: none;
+		/* Guarantees the bands can never invalidate layout in the content column. */
+		contain: strict;
+	}
+
+	.cw-band {
+		position: absolute;
+		inset-block: 0;
+		/* Whatever the centred column leaves over. 48rem is Base.astro's max-w-3xl. */
+		inline-size: max(0px, calc((100vw - 48rem) / 2));
+		block-size: 100%;
+		opacity: 0.55;
+		/* Static frame, so the margins are never empty: covers no-JS, reduced
+		   motion, slow connections and the moments before the first decode. */
+		background-image: url("/cosmic-web/static.avif");
+		background-repeat: no-repeat;
+		background-size: 200% 100%;
+	}
+
+	.cw-band--left {
+		inset-inline-start: 0;
+		background-position: left center;
+		/* Fade toward the text, not toward the page edge. */
+		mask-image: linear-gradient(to right, black 55%, transparent 100%);
+	}
+
+	.cw-band--right {
+		inset-inline-end: 0;
+		background-position: right center;
+		mask-image: linear-gradient(to left, black 55%, transparent 100%);
+	}
+
+	/* The frames are bright structure on black: right at home in dark mode, but
+	   dark smudges on white. Inverting in light mode reads as a plate negative. */
+	:global(html[data-theme="light"]) .cw-band,
+	:global(html:not([data-theme="dark"])) .cw-band {
+		filter: invert(1);
+		opacity: 0.4;
+	}
+
+	/* Below this the margins have collapsed and there is nothing to draw into.
+	   The JS checks the same breakpoint before fetching anything. */
+	@media (max-width: 1099px), (max-height: 599px) {
+		.cw {
+			display: none;
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.cw-band {
+			/* Static frame stays; the script never boots. */
+			opacity: 0.35;
+		}
+	}
+
+	@media print {
+		.cw {
+			display: none;
+		}
+	}
+</style>
+
+<script>
+	import { initCosmicBands } from "@/scripts/cosmic-bands";
+
+	void initCosmicBands();
+</script>

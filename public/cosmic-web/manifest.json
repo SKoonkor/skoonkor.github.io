@@ -1,0 +1,13 @@
+{
+	"frames": 90,
+	"proxyFrames": 24,
+	"stripWidth": 480,
+	"stripHeight": 1080,
+	"packedWidth": 960,
+	"proxyWidth": 320,
+	"proxyHeight": 360,
+	"zStart": 10.0,
+	"zEnd": 0.07,
+	"source": "IllustrisTNG TNG300, most massive cluster, gas density",
+	"sourceUrl": "https://www.tng-project.org/media/"
+}

@@ -5,6 +5,14 @@
 *.JPG binary
 *.png binary
 *.webp binary
+*.avif binary
 *.woff binary
 *.woff2 binary
 *.ttf binary
+*.mp4 binary
+
+# Demo basis payloads: int16 / float32 arrays read with fetchBuffer().
+# Without these, an accidental CRLF normalisation corrupts them and the
+# demo's golden test fires.
+*.i16 binary
+*.f32 binary

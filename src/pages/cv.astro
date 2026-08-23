@@ -1,0 +1,85 @@
+---
+import { existsSync } from "node:fs";
+import PageTitle from "@/components/PageTitle.astro";
+import PageLayout from "@/layouts/Base.astro";
+import { cv, cvPdfPath } from "@/data/cv";
+
+// The download button appears by itself once a PDF is dropped at this path in
+// public/. Rendering it unconditionally would ship a link to a 404.
+const hasPdf = existsSync(new URL(`../../public${cvPdfPath}`, import.meta.url));
+
+const meta = {
+	description:
+		"Curriculum vitae of Suttikoon Koonkor: postdoctoral researcher at NARIT, PhD Durham University.",
+	title: "CV",
+};
+---
+
+<PageLayout meta={meta}>
+	<PageTitle title="CV" />
+
+	<div data-pagefind-body>
+		<p class="mb-12 print:hidden">
+			{
+				hasPdf && (
+					<a
+						class="border-muted/40 hover:border-accent hover:text-accent me-2 rounded-sm border px-2.5 py-1 text-xs transition-colors"
+						href={cvPdfPath}
+						download
+					>
+						Download PDF
+					</a>
+				)
+			}
+			<span class="text-muted text-xs">
+				{hasPdf ? "or print this page" : "Print this page for a PDF copy."}
+			</span>
+		</p>
+
+		{
+			cv.map(({ group, entries }) => (
+				<section class="mb-14">
+					<h2 class="title border-muted/25 mb-6 border-b pb-2 text-base">{group}</h2>
+					<ul class="space-y-7" role="list">
+						{entries.map((entry) => (
+							<li class="grid gap-1 sm:grid-cols-[1fr_10rem] sm:gap-6">
+								<div>
+									<p class="text-base leading-snug">
+										{entry.href ? (
+											<a class="cactus-link" href={entry.href} rel="noreferrer" target="_blank">
+												{entry.role}
+											</a>
+										) : (
+											entry.role
+										)}
+										{entry.badge && (
+											<span class="text-muted ms-2 align-middle text-[0.65rem] tracking-wide uppercase">
+												{entry.badge}
+											</span>
+										)}
+									</p>
+									{entry.org && <p class="text-muted mt-0.5 text-xs">{entry.org}</p>}
+									{entry.detail?.map((d) => (
+										<p class="text-muted mt-0.5 text-xs leading-relaxed text-pretty">{d}</p>
+									))}
+								</div>
+								<p class="text-muted order-first text-xs sm:order-none sm:text-right">
+									{entry.period}
+								</p>
+							</li>
+						))}
+					</ul>
+				</section>
+			))
+		}
+	</div>
+</PageLayout>
+
+<style>
+	/* "Save as PDF" from the browser should produce a clean document. */
+	@media print {
+		:global(#main) {
+			padding-block-start: 0;
+		}
+	}
+</style>
