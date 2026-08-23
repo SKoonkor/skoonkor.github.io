@@ -1,4 +1,38 @@
 /*
+ * The interactive demos under /explore/.
+ *
+ * The chart panel stays dark in both site themes, deliberately: it is a figure,
+ * and the CIE-derived colour swatch is calibrated against a dark ground -- on
+ * white, young hot populations wash out. Everything is scoped to .demo-* or
+ * .explore-cards so it cannot leak into the rest of the site, and the canvas
+ * colours come from the custom properties set on [data-demo] so the panel can
+ * follow a theme later without touching the drawing code.
+ */
+
+.demo-pca-sed {
+	background: var(--demo-bg, #16121d);
+	color: rgb(255 255 255 / 0.72);
+	border-radius: 8px;
+	padding: 1.5rem;
+	margin-block: 1rem 0;
+}
+
+	.demo-pca-sed a {
+		color: inherit;
+		border-bottom-color: rgb(255 255 255 / 0.28);
+	}
+
+	.demo-pca-sed a:hover {
+		color: var(--demo-recon, #E27689);
+	}
+
+	.demo-pca-sed h2 {
+		color: #fff;
+		font-size: 1.05em;
+		margin-bottom: 0.6em;
+	}
+
+/*
  * Shell for the /explore/ demos.
  *
  * Loaded after main.css. The demo pages do not use Prologue's fixed sidebar, so
@@ -6,58 +40,18 @@
  * to a demo is namespaced under its own root class.
  */
 
-body.explore {
-	background: #16121d;
-	color: rgba(255, 255, 255, 0.72);
-}
 
-	body.explore a {
-		color: inherit;
-		border-bottom-color: rgba(255, 255, 255, 0.28);
-	}
 
-		body.explore a:hover {
-			color: #E27689;
-		}
 
-.explore-wrap {
-	max-width: 1000px;
-	margin: 0 auto;
-	padding: 2em 1.5em 5em;
-}
 
-.explore-back {
-	display: inline-block;
-	margin-bottom: 3em;
-	font-size: 0.75em;
-	letter-spacing: 0.15em;
-	text-transform: uppercase;
-	border-bottom: 0;
-	opacity: 0.65;
-}
 
-	.explore-back:hover {
-		opacity: 1;
-	}
 
-.explore-hero {
-	margin-bottom: 2.5em;
-}
 
-	.explore-hero h1 {
-		font-size: 2.4em;
-		line-height: 1.15;
-		font-weight: 300;
-		color: #fff;
-		letter-spacing: -0.02em;
-		margin-bottom: 0.4em;
-	}
 
-	.explore-hero .lede {
-		max-width: 34em;
-		font-size: 1.05em;
-		line-height: 1.6;
-	}
+
+
+
+
 
 .explore-status {
 	margin: 1em 0;
@@ -365,13 +359,8 @@ body.explore {
 
 @media screen and (max-width: 736px) {
 
-	.explore-wrap {
-		padding: 1.5em 1em 4em;
-	}
+	
 
-	.explore-hero h1 {
-		font-size: 1.7em;
-	}
 
 	.demo-controls {
 		grid-template-columns: 1fr;

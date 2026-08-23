@@ -16,8 +16,10 @@ import {
 } from './common.js';
 
 export const CONFIG = {
-	dataDir: '../data/pca-sed',
-	// Palette. Kept here so the whole demo can be re-themed in one place.
+	dataDir: '/data/pca-sed',
+	// Fallbacks only. The live values are read from CSS custom properties on the
+	// demo root by readPalette(), because a canvas cannot inherit CSS and the
+	// panel needs to be able to follow a theme.
 	colours: {
 		recon: '#E27689',
 		truth: 'rgba(255, 255, 255, 0.35)',
@@ -27,6 +29,20 @@ export const CONFIG = {
 		warn: '#d8a657',
 	},
 };
+
+/** Resolve the canvas palette from CSS custom properties set on `root`. */
+function readPalette(root) {
+	const cs = getComputedStyle(root);
+	const pick = (name, fallback) => cs.getPropertyValue(name).trim() || fallback;
+	return {
+		recon: pick('--demo-recon', CONFIG.colours.recon),
+		truth: pick('--demo-truth', CONFIG.colours.truth),
+		axis: pick('--demo-axis', CONFIG.colours.axis),
+		text: pick('--demo-text', CONFIG.colours.text),
+		good: pick('--demo-good', CONFIG.colours.good),
+		warn: pick('--demo-warn', CONFIG.colours.warn),
+	};
+}
 
 /* ------------------------------------------------------------------ colour --
  * Turning the spectrum into the colour a human eye would actually see is the
@@ -341,22 +357,31 @@ function drawResidual(canvas, d, recon, truth) {
 
 export async function init(root) {
 	const $ = (sel) => root.querySelector(sel);
-	const status = $('[data-status]');
+	// The banner sits outside [data-demo] in the page markup, so it has to be
+	// looked up from the document rather than from the demo root.
+	const status = $('[data-status]') || document.querySelector('[data-status]');
+
+	CONFIG.colours = readPalette(root);
 
 	let d;
 	try {
 		d = await loadData(CONFIG.dataDir);
 	} catch (err) {
-		status.textContent = 'Could not load the spectral data. ' + err.message;
-		status.hidden = false;
+		if (status) {
+			status.textContent = 'Could not load the spectral data. ' + err.message;
+			status.hidden = false;
+		}
+		console.error('[pca-sed]', err);
 		return;
 	}
 
 	const golden = checkGolden(d);
 	if (!golden) {
-		status.textContent = 'The spectral basis failed its self-check, so the numbers '
-			+ 'below may be wrong. Please let me know if you see this.';
-		status.hidden = false;
+		if (status) {
+			status.textContent = 'The spectral basis failed its self-check, so the numbers '
+				+ 'below may be wrong. Please let me know if you see this.';
+			status.hidden = false;
+		}
 	}
 
 	const n = d.basis.grid.n;

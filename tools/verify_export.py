@@ -16,7 +16,7 @@ import sys
 
 import numpy as np
 
-DATA = pathlib.Path(__file__).resolve().parent.parent / "data" / "pca-sed"
+DATA = pathlib.Path(__file__).resolve().parent.parent / "public" / "data" / "pca-sed"
 
 
 def load():

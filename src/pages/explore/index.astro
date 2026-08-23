@@ -1,0 +1,92 @@
+---
+import { getCollection } from "astro:content";
+import FormattedDate from "@/components/FormattedDate.astro";
+import PageTitle from "@/components/PageTitle.astro";
+import PageLayout from "@/layouts/Base.astro";
+import { collectionDateSort } from "@/utils/date";
+import "@/styles/explore.css";
+
+const notes = (await getCollection("post", ({ data }) => !data.draft)).sort(collectionDateSort);
+
+const meta = {
+	description:
+		"Interactive versions of my astrophysics research, plus notes and references worth sharing.",
+	title: "Explore",
+};
+
+const demos: { href?: string; title: string; blurb: string }[] = [
+	{
+		href: "/explore/pca-sed/",
+		title: "Rebuilding starlight",
+		blurb:
+			"The spectrum of a billion stars takes over a thousand numbers to write down. Find out how few you really need — and why that matters for simulating a universe.",
+	},
+	{
+		title: "Counting galaxies",
+		blurb:
+			"How many galaxies of each brightness does the Universe contain, and how has that changed over the last three quarters of cosmic time?",
+	},
+	{
+		title: "Weighing dark matter",
+		blurb:
+			"Dark matter clumps into halos. Counting how many of each mass exist is a way to test what dark energy is doing.",
+	},
+];
+---
+
+<PageLayout meta={meta}>
+	<PageTitle title="Explore" />
+
+	<div data-pagefind-body>
+		<p class="mb-10 text-base leading-relaxed text-pretty">
+			Some of my research, turned into something you can actually play with. Everything here runs in
+			your browser, from the same numbers behind the papers.
+		</p>
+
+		<ul class="explore-cards" role="list">
+			{
+				demos.map(({ href, title, blurb }) => (
+					<li class={href ? undefined : "soon"}>
+						{href ? (
+							<a href={href}>
+								<h2>{title}</h2>
+								<p>{blurb}</p>
+							</a>
+						) : (
+							<div class="block h-full p-6">
+								<h2>{title} &middot; coming soon</h2>
+								<p>{blurb}</p>
+							</div>
+						)}
+					</li>
+				))
+			}
+		</ul>
+
+		{
+			notes.length > 0 && (
+				<section class="mt-20">
+					<h2 class="title mb-6 text-xl">Written</h2>
+					<ul class="space-y-4" role="list">
+						{notes.map((note) => (
+							<li class="grid gap-1 sm:grid-cols-[auto_1fr]">
+								<FormattedDate
+									class="text-muted min-w-30 font-semibold"
+									date={note.data.publishDate}
+								/>
+								<div>
+									<a class="cactus-link" href={`/explore/notes/${note.id}/`}>
+										{note.data.title}
+									</a>
+									<p class="text-muted mt-0.5 text-xs leading-relaxed text-pretty">
+										{note.data.description}
+									</p>
+								</div>
+							</li>
+						))}
+					</ul>
+				</section>
+			)
+		}
+	</div>
+</PageLayout>
