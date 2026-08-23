@@ -13,8 +13,8 @@
 interface Props {
 	title: string;
 	/** Shown under the sticky bar, unclipped. For full academic titles. */
-	subtitle?: string;
-	class?: string;
+	subtitle?: string | undefined;
+	class?: string | undefined;
 }
 
 const { title, subtitle, class: className } = Astro.props;

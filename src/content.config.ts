@@ -79,7 +79,7 @@ const research = defineCollection({
 				// Human citation line, e.g. "Koonkor et al., MNRAS, 2026".
 				venue: z.string(),
 				links: z
-					.array(z.object({ label: z.string(), href: z.string().url() }))
+					.array(z.object({ label: z.string(), href: z.url() }))
 					.default([]),
 				// Path to an interactive version, if one exists.
 				demo: z.string().optional(),
