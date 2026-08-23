@@ -1,0 +1,54 @@
+---
+import type { Publication } from "@/data/publications";
+
+interface Props {
+	items: Publication[];
+	/** Continues the numbering across two lists (papers, then theses). */
+	start?: number;
+}
+
+const { items, start = 1 } = Astro.props;
+---
+
+<ol class="space-y-6" role="list" start={start}>
+	{
+		items.map((pub, i) => (
+			<li class="grid gap-x-3 sm:grid-cols-[2ch_1fr]">
+				<span class="text-muted hidden text-xs sm:block sm:pt-1 sm:text-right">
+					{start + i}.
+				</span>
+				<div>
+					<p class="text-muted text-xs leading-relaxed">
+						{pub.authors.map(({ name, self }, j) => (
+							<>
+								{j > 0 && ", "}
+								{self ? <strong class="text-global-text font-semibold">{name}</strong> : name}
+							</>
+						))}
+						{pub.etAl && ", et al."}
+					</p>
+					<p class="mt-1 text-base leading-snug text-pretty">{pub.title}</p>
+					<p class="text-muted mt-1 text-xs">
+						{pub.status === "accepted" && "Accepted, "}
+						{pub.status === "submitted" && "Submitted, "}
+						<em>{pub.venue}</em>, {pub.year}
+					</p>
+					{pub.links.length > 0 && (
+						<p class="mt-2 flex flex-wrap gap-x-2 gap-y-1">
+							{pub.links.map(({ label, href }) => (
+								<a
+									class="border-muted/40 hover:border-accent hover:text-accent rounded-sm border px-2 py-0.5 text-xs transition-colors"
+									href={href}
+									rel="noreferrer"
+									target="_blank"
+								>
+									{label}
+								</a>
+							))}
+						</p>
+					)}
+				</div>
+			</li>
+		))
+	}
+</ol>

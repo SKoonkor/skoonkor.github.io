@@ -1,0 +1,38 @@
+---
+import { Icon } from "astro-icon/components";
+
+/**
+ * Icons come from @iconify-json/mdi, the only pack installed.
+ * https://www.astroicon.dev/guides/customization/
+ */
+const socialLinks: {
+	friendlyName: string;
+	link: string;
+	name: string;
+}[] = [
+	{ friendlyName: "Email", link: "mailto:suttikoon@narit.or.th", name: "mdi:email-outline" },
+	{ friendlyName: "ORCID", link: "https://orcid.org/0009-0009-9864-4691", name: "mdi:account-badge-outline" },
+	{ friendlyName: "GitHub", link: "https://www.github.com/SKoonkor", name: "mdi:github" },
+	{ friendlyName: "X", link: "https://x.com/pondsuttikoon", name: "mdi:twitter" },
+	{ friendlyName: "Instagram", link: "https://www.instagram.com/suttikoonkoonkor", name: "mdi:instagram" },
+	{ friendlyName: "Facebook", link: "https://www.facebook.com/suttikoon.koonkor", name: "mdi:facebook" },
+];
+---
+
+<ul class="flex flex-wrap items-center gap-x-3 gap-y-2" role="list">
+	{
+		socialLinks.map(({ friendlyName, link, name }) => (
+			<li class="flex">
+				<a
+					class="text-muted hover:text-link inline-block transition-colors"
+					href={link}
+					rel={link.startsWith("mailto:") ? undefined : "noreferrer"}
+					target={link.startsWith("mailto:") ? undefined : "_blank"}
+				>
+					<Icon aria-hidden="true" class="h-6 w-6" focusable="false" name={name} />
+					<span class="sr-only">{friendlyName}</span>
+				</a>
+			</li>
+		))
+	}
+</ul>
