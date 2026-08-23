@@ -1,36 +1,116 @@
 ---
+import { Image } from "astro:assets";
+import PageTitle from "@/components/PageTitle.astro";
+import SocialList from "@/components/SocialList.astro";
 import PageLayout from "@/layouts/Base.astro";
+import delphys from "@/assets/images/DELPHYS_workshop.webp";
+import vienna from "@/assets/images/vienna.webp";
 
 const meta = {
-	description: "I'm a starter theme for Astro.build",
+	description:
+		"Postdoctoral researcher at NARIT, working on the connection between galaxies and dark matter. Previously ICC Durham and Khon Kaen University.",
 	title: "About",
 };
 ---
 
 <PageLayout meta={meta}>
-	<h1 class="title mb-12">About</h1>
-	<div class="prose prose-sm prose-cactus max-w-none">
-		<p>
-			Hi, I’m a starter Astro. I’m particularly great for getting you started with your own blogging
-			website.
-		</p>
-		<p>Here are my some of my awesome built in features:</p>
-		<ul class="list-inside list-disc" role="list">
-			<li>I'm ultra fast as I'm a static site</li>
-			<li>I'm fully responsive</li>
-			<li>I come with a light and dark mode</li>
-			<li>I'm easy to customise and add additional content</li>
-			<li>I have Tailwind CSS styling</li>
-			<li>Shiki code syntax highlighting</li>
-			<li>Satori for auto generating OG images for blog posts</li>
-		</ul>
-		<p>
-			Clone or fork my <a
-				class="cactus-link inline-block"
-				href="https://github.com/chrismwilliams/astro-cactus"
-				rel="noreferrer"
-				target="_blank">repo</a
-			> if you like me!
-		</p>
+	<PageTitle title="About" />
+
+	<div data-pagefind-body>
+		<Image
+			class="mb-10 rounded-sm"
+			src={vienna}
+			alt="Suttikoon Koonkor in Vienna."
+			widths={[480, 768]}
+			sizes="(min-width: 768px) 768px, 100vw"
+			loading="eager"
+		/>
+
+		<div class="prose prose-sm prose-cactus max-w-none">
+			<p>
+				I am currently a Postdoctoral Researcher at the National Astronomical Research Institute of
+				Thailand (NARIT). I received a PhD in Astrophysics (2021&ndash;2025) and an MSc in Physics by
+				Research (2019&ndash;2020) from the <a
+					href="https://www.icc.dur.ac.uk/"
+					rel="noreferrer"
+					target="_blank">Institute for Computational Cosmology, Durham University</a
+				>, UK, and a BSc in Physics from Khon Kaen University, Thailand.
+			</p>
+			<p>
+				Throughout my Masters and PhD, I was awarded a fully-funded scholarship from NARIT, under the
+				Office of the Civil Service Commission of Thailand (OCSC) scholarship scheme. As an
+				undergraduate, I received a scholarship under the Development and Promotion of Science and
+				Technology Talents Project (DPST).
+			</p>
+			<p>
+				My research focuses on bridging the connection between the &lsquo;light&rsquo; and the
+				&lsquo;darkness&rsquo; of our Universe. In particular, I study how stars and galaxies (the
+				<em>light</em>) relate to dark matter (the <em>darkness</em>), by attempting to build a model
+				Universe from scratch using our knowledge of gravity governed by dark matter and the physics
+				of gas in stars and galaxies, with the help of high-performance computing facilities.
+			</p>
+			<p>
+				Apart from stars, galaxies and the Universe, I also enjoy playing football (a goalkeeper for
+				Ustinov College Men's Football team), painting and drawing, photography, and lifting weights.
+			</p>
+		</div>
+
+		<figure class="mt-12">
+			<Image
+				class="rounded-sm"
+				src={delphys}
+				alt="Group photograph of the participants at the DELPHYS workshop."
+				widths={[480, 768, 1024]}
+				sizes="(min-width: 768px) 768px, 100vw"
+				loading="lazy"
+			/>
+			<figcaption class="text-muted mt-3 text-xs leading-relaxed">
+				Participants at the DELPHYS workshop, where I presented work on the galaxy luminosity
+				function.
+			</figcaption>
+		</figure>
+
+		<section class="mt-20">
+			<h2 class="title mb-6 text-xl" id="outreach">Outreach</h2>
+			<div class="prose prose-sm prose-cactus max-w-none">
+				<p>
+					I still remember seeing stars through a telescope during a summer camp when I was in
+					primary school, nine years old at the time. It was my first experience of observing the
+					Universe in a way I had never seen before. It brought me joy, not only because it was
+					something new, but because it sparked a sense of curiosity that stayed with me. That
+					feeling faded for a while &mdash; I was a child who enjoyed playing with friends, as we are
+					supposed to do &mdash; but it returned later, when I had to decide what I wanted to pursue
+					as a career. I made that decision in secondary school, and I still can't quite believe it
+					is the choice I've held to since so young an age. From that point on, I knew I wanted to
+					become an astronomer.
+				</p>
+				<p>
+					Looking back, I strongly believe that without that summer camp and the opportunity to look
+					through a telescope, I might not be doing what I do today &mdash; something I truly enjoy.
+					That experience shaped my belief that giving people, especially younger generations,
+					opportunities to try new things allows them to discover their interests and potential. For
+					this reason, I take part in outreach whenever possible, and I am always among the first to
+					volunteer when the chance comes.
+				</p>
+				<p>
+					Throughout my degrees, I have served as a demonstrator at several astronomy camps, some of
+					them in remote mountain locations. There is nothing more rewarding than being asked a
+					question that reflects genuine curiosity. These questions, particularly from very young
+					students, challenge me to rethink concepts and to make sure I truly understand what I am
+					explaining.
+				</p>
+				<p>
+					An opportunity is what I value the most. What people do with it, once given, is up to them.
+				</p>
+			</div>
+		</section>
+
+		<section class="mt-20">
+			<h2 class="title mb-6 text-xl">Get in touch</h2>
+			<p class="mb-4 text-sm">
+				<a class="cactus-link" href="mailto:suttikoon@narit.or.th">suttikoon@narit.or.th</a>
+			</p>
+			<SocialList />
+		</section>
 	</div>
 </PageLayout>
