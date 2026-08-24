@@ -2,6 +2,7 @@
 import { getCollection } from "astro:content";
 import FormattedDate from "@/components/FormattedDate.astro";
 import PageTitle from "@/components/PageTitle.astro";
+import { demos } from "@/data/demos";
 import PageLayout from "@/layouts/Base.astro";
 import { collectionDateSort } from "@/utils/date";
 import "@/styles/explore.css";
@@ -13,26 +14,6 @@ const meta = {
 		"Interactive versions of my astrophysics research, plus notes and references worth sharing.",
 	title: "Explore",
 };
-
-const demos: { href?: string; title: string; blurb: string }[] = [
-	{
-		href: "/explore/pca-sed/",
-		title: "Rebuilding starlight",
-		blurb:
-			"The spectrum of a billion stars takes over a thousand numbers to write down. Find out how few you really need — and why that matters for simulating a universe.",
-	},
-	{
-		href: "/explore/galaxy-lf/",
-		title: "Counting galaxies",
-		blurb:
-			"How many galaxies of each brightness does the Universe contain, and how has that changed over the last three quarters of cosmic time?",
-	},
-	{
-		title: "Weighing dark matter",
-		blurb:
-			"Dark matter clumps into halos. Counting how many of each mass exist is a way to test what dark energy is doing.",
-	},
-];
 ---
 
 <PageLayout meta={meta}>

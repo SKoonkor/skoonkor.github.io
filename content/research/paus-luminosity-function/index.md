@@ -6,6 +6,7 @@ order: 1
 publishDate: "2026-01-15"
 kind: "paper"
 venue: "Koonkor et al., MNRAS, 2026"
+demo: "/explore/galaxy-lf/"
 links:
   - label: "Journal"
     href: "https://doi.org/10.1093/mnras/stag362"

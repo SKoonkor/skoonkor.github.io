@@ -2,6 +2,7 @@
 import { getCollection } from "astro:content";
 import PageTitle from "@/components/PageTitle.astro";
 import SocialList from "@/components/SocialList.astro";
+import { liveDemos } from "@/data/demos";
 import { latestPaper } from "@/data/publications";
 import PageLayout from "@/layouts/Base.astro";
 
@@ -110,11 +111,15 @@ const featured = research.slice(0, 3);
 			Some of my research, turned into something you can actually play with. Everything runs in your
 			browser, from the same numbers behind the papers.
 		</p>
-		<p class="mt-3">
-			<a class="cactus-link text-base" href="/explore/pca-sed/">Rebuilding starlight</a>
-			<span class="text-muted text-sm">
-				&nbsp;&mdash; how few numbers does a galaxy's spectrum really need?
-			</span>
-		</p>
+		{
+			liveDemos.map(({ href, title, tagline }) => (
+				<p class="mt-3">
+					<a class="cactus-link text-base" href={href}>
+						{title}
+					</a>
+					{tagline && <span class="text-muted text-sm">&nbsp;&mdash; {tagline}</span>}
+				</p>
+			))
+		}
 	</section>
 </PageLayout>
