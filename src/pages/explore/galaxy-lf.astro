@@ -1,0 +1,142 @@
+---
+import PageTitle from "@/components/PageTitle.astro";
+import PageLayout from "@/layouts/Base.astro";
+import "@/styles/explore.css";
+
+const meta = {
+	description:
+		"An interactive galaxy luminosity function from the PAU Survey. Choose a band and a redshift slice, and see what photometric-redshift outliers do to the bright end.",
+	title: "Counting galaxies",
+	ogImage: "/images/PCA.webp",
+};
+---
+
+<PageLayout meta={meta}>
+	<PageTitle
+		title="Counting galaxies"
+		subtitle="How many galaxies of each brightness does the Universe contain, and how has that changed?"
+	/>
+
+	<p class="explore-status" data-status hidden></p>
+
+	<div class="demo-lf" data-demo>
+		{/*
+			Controls come first: this demo is a comparison, and the reader needs to
+			see what they can change before they look at the plot. Buttons are
+			written by the script from lf.json, so a band or a slice can never be
+			offered that the data does not have.
+		*/}
+		<div class="demo-chips">
+			<div class="demo-chips__row">
+				<span class="demo-chips__label" id="lf-band-label">Band</span>
+				<div class="demo-chips__set" data-chips="band" role="group" aria-labelledby="lf-band-label"></div>
+			</div>
+			<div class="demo-chips__row">
+				<span class="demo-chips__label" id="lf-z-label">Redshift</span>
+				<div class="demo-chips__set" data-chips="z" role="group" aria-labelledby="lf-z-label"></div>
+			</div>
+			<div class="demo-chips__row">
+				<span class="demo-chips__label" id="lf-pz-label">Photo-<i>z</i> errors</span>
+				<div class="demo-chips__set" data-chips="pz" role="group" aria-labelledby="lf-pz-label"></div>
+			</div>
+		</div>
+
+		<div class="demo-chart demo-chart--lf">
+			<canvas data-canvas role="img"
+				aria-label="Galaxy luminosity function: number density of galaxies against absolute magnitude, comparing the PAU Survey measurement with the GALFORM lightcone."
+			></canvas>
+			<div class="demo-legend" data-legend></div>
+		</div>
+
+		<p class="visually-hidden" data-live aria-live="polite"></p>
+
+		<p class="demo-caption" data-caption></p>
+
+		<div class="demo-why">
+			<h2>Why this matters</h2>
+			<p>
+				The luminosity function is the census: how many galaxies there are of each
+				brightness, in a given volume. Run it at several epochs and you can watch
+				the population build up. It is one of the sharpest tests a model of galaxy
+				formation has to pass, which is why the GALFORM prediction is drawn here
+				next to the measurement rather than somewhere else.
+			</p>
+			<p>
+				The catch is that PAU measures distances from photometry, not spectra. Most
+				of those redshifts are good; a few are badly wrong. Switch between the two
+				photo-<i>z</i> models and watch the bright end: the Gaussian assumption keeps
+				the lightcone close to its own truth, while the realistic model, which has
+				outliers, scatters faint nearby galaxies into the luminous bins and lifts
+				the bright end well above it. That excess is not galaxies. It is mistakes.
+			</p>
+		</div>
+
+		<div class="demo-deep">
+			<h2>The detail</h2>
+
+			<p>
+				Measured with the 1/V<sub>max</sub> estimator on an <i>i</i>-band selected
+				sample, <i>i</i><sub>AB</sub> &le; 23, over 31 deg<sup>2</sup> in the PAUS
+				W1 and W3 fields. Absolute magnitudes are <i>M</i> &minus; 5&thinsp;log<sub
+					>10</sub
+				>&thinsp;<i>h</i>, from per-band random-forest k-corrections trained on the
+				GALFORM lightcone. W1 and W3 are shown separately rather than combined, so
+				that the scatter between two independent patches of sky stays visible.
+			</p>
+
+			<p>
+				Error bars are the total 1&sigma;: a Monte-Carlo over flux errors and
+				photo-<i>z</i> (<span data-fill="mc">500</span> realisations) added in
+				quadrature to a delete-one jackknife over
+				<span data-fill="jk">64</span> equal-area regions, which is what carries the
+				uncertainty from large-scale structure. Shaded bands are the 16th to 84th
+				percentile of the lightcone under each photo-<i>z</i> model.
+			</p>
+
+			<p>
+				The dashed line is the completeness limit, and it is a property of the
+				survey rather than of the galaxies. Because the sample is selected on
+				observed <i>i</i>-band magnitude, at each redshift there is an absolute
+				magnitude below which PAUS stops seeing galaxies at all. Fainter than that
+				line the measurement is a lower limit, not a census. It is set where the
+				<i>i</i>&thinsp;&le;&thinsp;23 selected lightcone first drops below 90 per
+				cent of the full sample.
+			</p>
+
+			<p>
+				Method, tables and figures follow <a
+					href="https://doi.org/10.1093/mnras/stag362"
+					rel="noopener"
+					target="_blank">Koonkor et al. (2026)</a
+				>, <i>MNRAS</i> <strong>547</strong>(3), 1&ndash;24. The numbers plotted here
+				are the paper's own tables, repackaged for the browser; the paper is the
+				authoritative version.
+			</p>
+
+			<div class="demo-downloads">
+				<a href="/data/luminosity-function/README.md">Data notes</a>
+				<a href="/data/luminosity-function/lf.json">lf.json</a>
+				<a href="https://arxiv.org/abs/2511.16042" rel="noopener" target="_blank">arXiv:2511.16042</a>
+				<a
+					href="https://github.com/SKoonkor/skoonkor.github.io/blob/main/tools/build_lf_data.py"
+					rel="noopener"
+					target="_blank">build script</a
+				>
+			</div>
+		</div>
+	</div>
+
+	<noscript>
+		<p>
+			This demo plots the luminosity function in your browser, so it needs JavaScript.
+			The figure from the paper is on the <a class="cactus-link" href="/research/paus-luminosity-function/">research page</a>.
+		</p>
+	</noscript>
+</PageLayout>
+
+<script>
+	import { init } from "@/scripts/explore/luminosity-function.js";
+
+	const root = document.querySelector<HTMLElement>("[data-demo]");
+	if (root) void init(root);
+</script>

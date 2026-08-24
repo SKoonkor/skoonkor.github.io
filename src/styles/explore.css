@@ -363,6 +363,128 @@
 	border: 0;
 }
 
+/* --- luminosity function demo --------------------------------------------- */
+/*
+ * Shares the .demo-* conventions above. The five series colours are FIXED rather
+ * than theme tokens, for the same reason --demo-good and --demo-warn are: they
+ * are data identities. The site accent is red in light mode and green in dark,
+ * which would collide with the outlier band and the W1 points respectively, and
+ * a legend whose colours swap meaning between themes is worse than one that does
+ * not follow the theme at all. Each is picked to hold up on either ground.
+ */
+
+.demo-lf {
+	--demo-text: var(--color-muted);
+	--demo-axis: var(--color-muted);
+	--demo-line: color-mix(in oklab, var(--color-muted) 25%, transparent);
+	--demo-surface: color-mix(in oklab, var(--color-muted) 6%, transparent);
+
+	--lf-truth: var(--color-global-text);
+	--lf-gauss: oklch(62% 0.16 295);          /* violet -- the tidy assumption */
+	--lf-bcnz: oklch(65% 0.19 25);            /* red    -- reality, with outliers */
+	--lf-w1: oklch(60% 0.15 150);             /* green  -- PAUS W1 */
+	--lf-w3: oklch(55% 0.17 40);              /* orange -- PAUS W3 */
+	--lf-incomplete: color-mix(in oklab, var(--color-muted) 10%, transparent);
+
+	margin-block: 1.5rem 0;
+	opacity: 0;
+	transition: opacity 0.4s ease-in-out;
+}
+
+	.demo-lf.is-ready {
+		opacity: 1;
+	}
+
+	.demo-lf h2 {
+		font-size: 1rem;
+		color: var(--color-accent-2);
+		margin-bottom: 0.6em;
+	}
+
+	.demo-lf p {
+		line-height: 1.65;
+	}
+
+	.demo-lf a {
+		text-decoration: underline;
+		text-underline-offset: 2px;
+	}
+
+/* --- chip controls -------------------------------------------------------- */
+
+.demo-chips {
+	display: flex;
+	flex-direction: column;
+	gap: 0.6rem;
+	margin-bottom: 1rem;
+}
+
+	.demo-chips__row {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: baseline;
+		gap: 0.5rem 0.75rem;
+	}
+
+	.demo-chips__label {
+		flex: 0 0 5.5rem;
+		font-size: 0.7rem;
+		letter-spacing: 0.14em;
+		text-transform: uppercase;
+		color: var(--color-muted);
+	}
+
+	.demo-chips__set {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.35rem;
+	}
+
+.demo-chip {
+	padding: 0.25rem 0.6rem;
+	border: 1px solid var(--demo-line);
+	border-radius: 4px;
+	background: none;
+	color: var(--color-muted);
+	font: inherit;
+	font-size: 0.78rem;
+	line-height: 1.4;
+	cursor: pointer;
+	transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+
+	.demo-chip:hover {
+		border-color: var(--color-accent);
+		color: var(--color-accent);
+	}
+
+	.demo-chip[aria-pressed="true"] {
+		border-color: var(--color-accent);
+		color: var(--color-accent-2);
+		background: color-mix(in oklab, var(--color-accent) 12%, transparent);
+	}
+
+/* --- the panel ------------------------------------------------------------ */
+
+.demo-chart--lf {
+	aspect-ratio: 4 / 3;
+	min-height: 340px;
+}
+
+.demo-caption {
+	margin-top: 0.75rem;
+	font-size: 0.78rem;
+	line-height: 1.5;
+	color: var(--color-muted);
+}
+
+/* The legend is written by the script, so its rows vary with the photo-z mode. */
+.demo-lf .demo-legend .k-truth::before { border-top: 2px solid var(--lf-truth); }
+.demo-lf .demo-legend .k-gauss::before { border-top: 7px solid var(--lf-gauss); opacity: 0.55; }
+.demo-lf .demo-legend .k-bcnz::before  { border-top: 7px solid var(--lf-bcnz);  opacity: 0.55; }
+.demo-lf .demo-legend .k-w1::before    { border-top: 4px dotted var(--lf-w1); }
+.demo-lf .demo-legend .k-w3::before    { border-top: 4px dotted var(--lf-w3); }
+
 /* --- hub ------------------------------------------------------------------ */
 
 .explore-cards {

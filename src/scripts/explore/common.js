@@ -86,3 +86,79 @@ export function formatAge(gyr) {
 export function prefersReducedMotion() {
 	return window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 }
+
+/* ------------------------------------------------------------------- theme --
+ * A canvas cannot inherit CSS, so the drawing colours are handed to it through
+ * --demo-* custom properties on the demo root and re-read whenever the theme
+ * changes. Shared rather than copied into each demo, because the timing below is
+ * subtle enough that a second copy would be a second place to get it wrong.
+ */
+
+/**
+ * Read a palette from CSS custom properties on `root`.
+ *
+ * `names` maps the keys you want onto property names, e.g.
+ * `{ recon: '--demo-recon' }`. Values are the computed (already var()-resolved)
+ * colours, so they follow the active theme.
+ */
+export function readPalette(root, names, fallbacks = {}) {
+	const cs = getComputedStyle(root);
+	const out = {};
+	for (const [key, prop] of Object.entries(names)) {
+		out[key] = cs.getPropertyValue(prop).trim() || fallbacks[key] || '#888';
+	}
+	return out;
+}
+
+/**
+ * Keep a canvas in step with the site theme.
+ *
+ * Returns a teardown function. `apply(palette)` should store the palette and
+ * redraw.
+ *
+ * Sampling once when data-theme flips is NOT enough, and fails in a way that
+ * looks like nothing is wrong: the theme tokens are @property-registered colours
+ * with a transition on <html>, so at the instant the attribute changes their
+ * computed value is still the OLD colour. The canvas repaints in the palette it
+ * already had and then never repaints again -- a red plot left on a dark page.
+ *
+ * A fixed window is not enough either. Measured in headless Chrome, a 360ms loop
+ * gave up when the transition had moved about 10 per cent: neither when the
+ * transition starts nor how often rAF fires is ours to decide. So watch the
+ * resolved colour and stop once it has actually stopped moving. Self-correcting
+ * whatever the timing, and with transitions disabled it settles in three frames.
+ */
+export function followTheme(root, names, apply, fallbacks = {}) {
+	let raf = 0;
+
+	const settle = () => {
+		cancelAnimationFrame(raf);
+		const t0 = performance.now();
+		let last = '';
+		let stable = 0;
+		const step = () => {
+			const palette = readPalette(root, names, fallbacks);
+			apply(palette);
+			const now = Object.values(palette).join('|');
+			stable = now === last ? stable + 1 : 0;
+			last = now;
+			if (stable < 3 && performance.now() - t0 < 2000) {
+				raf = requestAnimationFrame(step);
+			}
+		};
+		raf = requestAnimationFrame(step);
+	};
+
+	// Both paths matter: the site's toggle stamps data-theme on <html>, and a
+	// visitor who has never used it follows the OS setting instead.
+	const mo = new MutationObserver(settle);
+	mo.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+	const mq = window.matchMedia('(prefers-color-scheme: dark)');
+	mq.addEventListener('change', settle);
+
+	return () => {
+		cancelAnimationFrame(raf);
+		mo.disconnect();
+		mq.removeEventListener('change', settle);
+	};
+}

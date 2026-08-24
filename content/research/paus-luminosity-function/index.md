@@ -13,8 +13,8 @@ links:
     href: "https://arxiv.org/abs/2511.16042"
 figure:
   src: "./figure.webp"
-  alt: "Galaxy luminosity function measured from the PAU Survey: number density of galaxies plotted against absolute i-band magnitude, in bins of redshift from the present day out to z = 2, with the GALFORM model prediction overlaid."
-  caption: "The i-band luminosity function in four redshift bins, from the present day out to z = 2. Red and blue points are the two PAUS fields; the shaded bands are the GALFORM lightcone predictions."
+  alt: "Galaxy luminosity function measured from the PAU Survey: number density of galaxies plotted against absolute i-band magnitude, in eight panels covering redshift 0.05 to 2, with the GALFORM lightcone prediction overlaid in each."
+  caption: "The i-band luminosity function in eight redshift slices, from the present day out to z = 2. Green and dark red points are the two PAUS fields, W1 and W3; the black line is the GALFORM lightcone and the shaded bands are that lightcone seen through two models of the photometric-redshift errors. [Try it interactively](/explore/galaxy-lf/)."
 tags: ["paus", "luminosity function", "galaxy formation", "machine learning"]
 ---
 

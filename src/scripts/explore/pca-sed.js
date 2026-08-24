@@ -12,7 +12,7 @@
 
 import {
 	fetchJSON, fetchBuffer, rafThrottle, readState, writeState,
-	fitCanvas, formatAge, prefersReducedMotion,
+	fitCanvas, formatAge, prefersReducedMotion, readPalette, followTheme,
 } from './common.js';
 
 export const CONFIG = {
@@ -30,19 +30,15 @@ export const CONFIG = {
 	},
 };
 
-/** Resolve the canvas palette from CSS custom properties set on `root`. */
-function readPalette(root) {
-	const cs = getComputedStyle(root);
-	const pick = (name, fallback) => cs.getPropertyValue(name).trim() || fallback;
-	return {
-		recon: pick('--demo-recon', CONFIG.colours.recon),
-		truth: pick('--demo-truth', CONFIG.colours.truth),
-		axis: pick('--demo-axis', CONFIG.colours.axis),
-		text: pick('--demo-text', CONFIG.colours.text),
-		good: pick('--demo-good', CONFIG.colours.good),
-		warn: pick('--demo-warn', CONFIG.colours.warn),
-	};
-}
+/** Which CSS custom property backs each drawing colour. */
+const PALETTE = {
+	recon: '--demo-recon',
+	truth: '--demo-truth',
+	axis: '--demo-axis',
+	text: '--demo-text',
+	good: '--demo-good',
+	warn: '--demo-warn',
+};
 
 /* ------------------------------------------------------------------ colour --
  * Turning the spectrum into the colour a human eye would actually see is the
@@ -517,7 +513,7 @@ export async function init(root) {
 	// looked up from the document rather than from the demo root.
 	const status = $('[data-status]') || document.querySelector('[data-status]');
 
-	CONFIG.colours = readPalette(root);
+	CONFIG.colours = readPalette(root, PALETTE, CONFIG.colours);
 
 	let d;
 	try {
@@ -657,46 +653,10 @@ export async function init(root) {
 
 	window.addEventListener('resize', render);
 
-	// The canvas cannot inherit CSS, so a theme change has to be pushed into it.
-	// Both paths matter: the site's toggle stamps data-theme on <html>, and a
-	// visitor who has never used it follows the OS setting instead.
-	//
-	// Sampling once when data-theme flips is not enough, and fails in a way that
-	// looks like nothing is wrong. The theme tokens are @property-registered
-	// colours with a 300ms transition on <html>, so at the moment the attribute
-	// changes their computed value is still the OLD colour: the plot repaints in
-	// the palette it already had and then never repaints again. That is the bug
-	// where a red spectrum sits on a dark page.
-	//
-	// Nor is a fixed 300ms window enough. Measured in headless Chrome, the
-	// transition had moved only ~10% by the time a 360ms loop gave up -- when the
-	// transition starts, and how often rAF fires, are both outside our control.
-	// So watch the resolved colour instead and stop once it has actually stopped
-	// moving. Self-correcting whatever the timing, and with transitions disabled
-	// it settles in three frames.
-	let settleRaf = 0;
-	function refollowTheme() {
-		cancelAnimationFrame(settleRaf);
-		const t0 = performance.now();
-		let last = '';
-		let stable = 0;
-		const step = () => {
-			CONFIG.colours = readPalette(root);
-			render();
-			const now = CONFIG.colours.recon + CONFIG.colours.text;
-			stable = now === last ? stable + 1 : 0;
-			last = now;
-			// Three identical frames, or two seconds, whichever comes first.
-			if (stable < 3 && performance.now() - t0 < 2000) {
-				settleRaf = requestAnimationFrame(step);
-			}
-		};
-		settleRaf = requestAnimationFrame(step);
-	}
-
-	new MutationObserver(refollowTheme)
-		.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
-	window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', refollowTheme);
+	followTheme(root, PALETTE, (palette) => {
+		CONFIG.colours = palette;
+		render();
+	}, CONFIG.colours);
 
 	root.classList.add('is-ready');
 
