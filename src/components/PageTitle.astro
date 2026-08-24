@@ -1,16 +1,19 @@
 ---
-import { siteConfig } from "@/site.config";
+import { menuLinks, siteConfig } from "@/site.config";
 
 /**
  * The page heading, pinned to the top of the viewport instead of scrolling away.
  *
- * Once it sticks, the site name slides in ahead of the label, so the bar reads
- * "Suttikoon Koonkor | Research" -- a breadcrumb rather than a bare word.
+ * On the five main nav pages the site name slides in ahead of the heading once
+ * the bar sticks, so it reads "Suttikoon Koonkor | Research" -- a breadcrumb
+ * rather than a bare word -- and the bar is held to one line.
  *
- * `stuckLabel` exists because prefixing the page's own <h1> is not viable: the
- * longest research title makes a 76-character string, which needs a 7.8px font
- * to fit a 390px phone. Detail pages therefore show their section instead, and
- * keep the full title as the (unstuck) heading above.
+ * Everywhere else the bar just sticks, carrying the page's own heading
+ * unprefixed and free to wrap. Which of the two a page gets is derived from
+ * menuLinks rather than passed in, so there is no second list to keep in step.
+ * That also settles the case the prefix could never handle: the longest research
+ * title is 76 characters, and "Suttikoon Koonkor | " in front of it needs a
+ * 7.8px font to fit a 390px phone.
  *
  * Must be the first child of <main>. <body> is the centred column and is not
  * itself a scroll container, so a sticky descendant sticks to the viewport at
@@ -23,17 +26,17 @@ interface Props {
 	title: string;
 	/** Shown under the sticky bar, unclipped. For full academic titles. */
 	subtitle?: string | undefined;
-	/** What the bar says once stuck. Defaults to `title`. */
-	stuckLabel?: string | undefined;
 	class?: string | undefined;
 }
 
-const { title, subtitle, stuckLabel, class: className } = Astro.props;
+const { title, subtitle, class: className } = Astro.props;
 
-const label = stuckLabel ?? title;
+// Routes are directory-style, so normalise the trailing slash on both sides.
+const here = Astro.url.pathname.replace(/\/*$/, "/");
+const isMainPage = menuLinks.some((l) => l.path.replace(/\/*$/, "/") === here);
 // On the home page the heading is already the site name; prefixing it would just
 // say it twice.
-const showPrefix = label !== siteConfig.title;
+const showPrefix = isMainPage && title !== siteConfig.title;
 ---
 
 <div
@@ -46,6 +49,8 @@ const showPrefix = label !== siteConfig.title;
 		// A soft fade below the bar so prose does not guillotine on a hard edge.
 		"after:from-global-bg after:pointer-events-none after:absolute after:inset-x-0",
 		"after:top-full after:h-6 after:bg-gradient-to-b after:to-transparent",
+		// Only the breadcrumb pages get held to one line -- see the style block.
+		showPrefix && "page-title--breadcrumb",
 		subtitle ? "mb-6" : "mb-12",
 		className,
 	]}
@@ -59,7 +64,7 @@ const showPrefix = label !== siteConfig.title;
 				</span>
 			)
 		}
-		<span class="page-title__label" data-title-label data-stuck-label={label}>{title}</span>
+		<span class="page-title__label" data-title-label>{title}</span>
 	</h1>
 </div>
 {subtitle && <p class="text-muted mb-12 text-base leading-relaxed text-pretty">{subtitle}</p>}
@@ -83,9 +88,10 @@ const showPrefix = label !== siteConfig.title;
 			opacity 0.24s ease-in;
 	}
 
-	/* Stuck: hold one line and ellipsise anything too long. The size itself is
-	   set inline by the script -- see the note there. */
-	.page-title.is-stuck .page-title__h1 {
+	/* Stuck, breadcrumb pages only: hold one line and ellipsise anything too long.
+	   Subpages deliberately do not get this -- their headings are full article
+	   titles, and wrapping is better than truncating them. */
+	.page-title--breadcrumb.is-stuck .page-title__h1 {
 		white-space: nowrap;
 		overflow: hidden;
 		text-overflow: ellipsis;
@@ -104,12 +110,9 @@ const showPrefix = label !== siteConfig.title;
 	// real height (a zero-area element never reports as intersecting) and still
 	// latched inconsistently between pages.
 	const bar = document.querySelector<HTMLElement>("[data-page-title]");
-	const label = document.querySelector<HTMLElement>("[data-title-label]");
 	const prefix = document.querySelector<HTMLElement>(".page-title__prefix");
 
 	if (bar) {
-		const pageTitle = label?.textContent ?? "";
-		const stuckLabel = label?.dataset.stuckLabel ?? pageTitle;
 		let stuck: boolean | null = null;
 
 		// One rect read per scroll event, and an early return unless the state
@@ -129,10 +132,6 @@ const showPrefix = label !== siteConfig.title;
 				// max-width animates; width:auto does not. 24ch clears the site name.
 				prefix.style.maxWidth = next ? "24ch" : "";
 				prefix.style.opacity = next ? "1" : "";
-			}
-			// Detail pages swap their long heading for the section name.
-			if (label && stuckLabel !== pageTitle) {
-				label.textContent = next ? stuckLabel : pageTitle;
 			}
 			publishHeight();
 		};

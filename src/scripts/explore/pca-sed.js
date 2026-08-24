@@ -228,11 +228,48 @@ export const bandLabel = (name) => BAND_LABELS[name] || name;
 const FONT = (px) => `${px}px ui-monospace, SFMono-Regular, Menlo, monospace`;
 
 /**
- * Height of the strip above the plot that holds the band names, in CSS pixels.
- * fitCanvas applies a devicePixelRatio transform, so canvas units are CSS units
- * and .demo-legend can be offset by this same number to sit clear of them.
+ * Horizontal padding of the plot area, in CSS pixels, shared by the spectrum
+ * panel, the residual panel and the brace header above them. The left pad
+ * carries the 1e-n labels and the rotated axis title.
+ *
+ * These live here rather than inside each draw function because the header is a
+ * separate SVG element: if it computed its own mapping, its braces would drift
+ * away from the dashed dividers on the canvas, by an amount too small to notice
+ * and large enough to be wrong.
  */
-const BAND_STRIP_H = 26;
+const PAD_L = 64;
+const PAD_R = 12;
+
+/** The chart's log-wavelength mapping, as a function of the drawable width. */
+function xScale(d, plotW) {
+	const lam = d.lam;
+	const lx0 = Math.log10(lam[0]);
+	const lx1 = Math.log10(lam[lam.length - 1]);
+	return (l) => PAD_L + plotW * (Math.log10(l) - lx0) / (lx1 - lx0);
+}
+
+/**
+ * An over-brace spanning x0..x1, tip pointing up, drawn as four quarter-arcs:
+ * out of each end, then two meeting at a point in the middle. Depth is 2r, so
+ * the whole thing occupies y from yTop to yTop + 2r.
+ */
+function bracePath(x0, x1, yTop, r) {
+	const cx = (x0 + x1) / 2;
+	const yBot = yTop + 2 * r;
+	r = Math.max(1, Math.min(r, (x1 - x0) / 4));
+	return [
+		`M${x0.toFixed(2)},${yBot.toFixed(2)}`,
+		`a${r},${r} 0 0 1 ${r},${-r}`,
+		`L${(cx - r).toFixed(2)},${(yTop + r).toFixed(2)}`,
+		`a${r},${r} 0 0 0 ${r},${-r}`,
+		`a${r},${r} 0 0 0 ${r},${r}`,
+		`L${(x1 - r).toFixed(2)},${(yTop + r).toFixed(2)}`,
+		`a${r},${r} 0 0 1 ${r},${r}`,
+	].join(' ');
+}
+
+/** SVG geometry for the header, in CSS pixels. */
+const HDR = { h: 54, countY: 20, nameY: 36, braceY: 42, r: 6 };
 
 /** Å, formatted the way the axis ticks are: 1000, 2000 ... 30 000. */
 function formatAngstrom(a) {
@@ -240,13 +277,12 @@ function formatAngstrom(a) {
 }
 
 /**
- * The dashed dividers between the three PCA bands, plus their names along the
- * top of the plot. These are the single most load-bearing annotation on the
- * figure: the whole point of the method is that the analysis is done per band,
- * and without them the reader cannot see where one basis stops and the next
- * begins.
+ * The dashed dividers between the three PCA bands. The single most load-bearing
+ * annotation on the figure: the whole point of the method is that the analysis
+ * is done per band, and without them the reader cannot see where one basis stops
+ * and the next begins. The names sit above them, on the brace header.
  */
-function drawBandDividers(ctx, d, X, padT, h, c, withNames) {
+function drawBandDividers(ctx, d, X, padT, h, c) {
 	ctx.save();
 	ctx.strokeStyle = c.axis;
 	ctx.globalAlpha = 0.85;
@@ -260,34 +296,15 @@ function drawBandDividers(ctx, d, X, padT, h, c, withNames) {
 		ctx.stroke();
 	}
 	ctx.restore();
-
-	if (!withNames) return;
-	ctx.save();
-	ctx.fillStyle = c.text;
-	ctx.font = FONT(10);
-	ctx.textAlign = 'center';
-	ctx.textBaseline = 'middle';
-	for (const band of d.bands) {
-		// Clamp to the plot: the outer bands run off the axis, so their midpoint
-		// is not where their visible middle is.
-		const xa = Math.max(X(band.lamLo), X(d.lam[0]));
-		const xb = Math.min(X(band.lamHi), X(d.lam[d.lam.length - 1]));
-		ctx.fillText(bandLabel(band.name), (xa + xb) / 2, padT / 2);
-	}
-	ctx.restore();
 }
 
 function drawSpectrum(canvas, d, recon, truth) {
 	const [W, H] = fitCanvas(canvas);
 	const ctx = canvas.getContext('2d');
 	const c = CONFIG.colours;
-	// Left pad carries the 1e-n labels and the rotated axis title; the bottom
-	// carries the ribbon, the tick labels and the axis title, in that order.
-	//
-	// padT reserves a strip above the plot for the band names, so they cannot
-	// collide with the legend. The legend is DOM, positioned just below that
-	// strip -- see BAND_STRIP_H and .demo-legend in explore.css.
-	const padL = 64, padR = 12, padT = BAND_STRIP_H, padB = 52;
+	// The bottom pad carries the ribbon, the tick labels and the axis title, in
+	// that order.
+	const padL = PAD_L, padR = PAD_R, padT = 12, padB = 52;
 	const w = W - padL - padR, h = H - padT - padB;
 	ctx.clearRect(0, 0, W, H);
 	if (w <= 0 || h <= 0) return;
@@ -333,7 +350,7 @@ function drawSpectrum(canvas, d, recon, truth) {
 	}
 	ctx.globalAlpha = 1;
 
-	drawBandDividers(ctx, d, X, padT, h, c, true);
+	drawBandDividers(ctx, d, X, padT, h, c);
 
 	// Visible-spectrum ribbon along the axis: tells a lay visitor, without a
 	// word of text, which part of the range their eye can actually see.
@@ -383,7 +400,7 @@ function drawResidual(canvas, d, recon, truth) {
 	const [W, H] = fitCanvas(canvas);
 	const ctx = canvas.getContext('2d');
 	const c = CONFIG.colours;
-	const padL = 64, padR = 12, padT = 10, padB = 26;
+	const padL = PAD_L, padR = PAD_R, padT = 10, padB = 26;
 	const w = W - padL - padR, h = H - padT - padB;
 	ctx.clearRect(0, 0, W, H);
 	if (w <= 0 || h <= 0 || !truth) return;
@@ -408,7 +425,7 @@ function drawResidual(canvas, d, recon, truth) {
 	ctx.beginPath(); ctx.moveTo(padL, Y(0)); ctx.lineTo(padL + w, Y(0)); ctx.stroke();
 
 	// The same band dividers as the panel above, so the two read as one figure.
-	drawBandDividers(ctx, d, X, padT, h, c, false);
+	drawBandDividers(ctx, d, X, padT, h, c);
 
 	ctx.fillStyle = c.text;
 	ctx.font = FONT(10);
@@ -441,6 +458,55 @@ function drawResidual(canvas, d, recon, truth) {
 		if (!started) { ctx.moveTo(x, y); started = true; } else ctx.lineTo(x, y);
 	}
 	ctx.stroke();
+}
+
+/**
+ * The brace header: a count and a band name over a brace spanning the stretch of
+ * the plot that band covers.
+ *
+ * Sized from `chartEl` rather than from the SVG's own width so the two cannot
+ * disagree -- they are the same width in the layout, but only one of them is the
+ * thing the braces have to line up with.
+ */
+function drawBandHeader(svg, chartEl, d, alloc) {
+	const w = Math.round(chartEl.getBoundingClientRect().width);
+	if (!(w > PAD_L + PAD_R)) return;
+	const X = xScale(d, w - PAD_L - PAD_R);
+
+	svg.setAttribute('viewBox', `0 0 ${w} ${HDR.h}`);
+	svg.setAttribute('width', String(w));
+	svg.setAttribute('height', String(HDR.h));
+
+	const ns = 'http://www.w3.org/2000/svg';
+	const parts = [];
+	svg.replaceChildren();
+	d.bands.forEach((band, i) => {
+		const x0 = X(band.lamLo);
+		const x1 = X(band.lamHi);
+		const cx = (x0 + x1) / 2;
+
+		const brace = document.createElementNS(ns, 'path');
+		brace.setAttribute('d', bracePath(x0, x1, HDR.braceY, HDR.r));
+		brace.setAttribute('class', 'demo-bands__brace');
+		svg.appendChild(brace);
+
+		const count = document.createElementNS(ns, 'text');
+		count.setAttribute('x', cx.toFixed(1));
+		count.setAttribute('y', String(HDR.countY));
+		count.setAttribute('class', 'demo-bands__n');
+		count.textContent = alloc[i];
+		svg.appendChild(count);
+
+		const name = document.createElementNS(ns, 'text');
+		name.setAttribute('x', cx.toFixed(1));
+		name.setAttribute('y', String(HDR.nameY));
+		name.setAttribute('class', 'demo-bands__name');
+		name.textContent = bandLabel(band.name);
+		svg.appendChild(name);
+
+		parts.push(`${alloc[i]} for ${bandLabel(band.name)}`);
+	});
+	svg.setAttribute('aria-label', `Components in use: ${parts.join(', ')}.`);
 }
 
 /* -------------------------------------------------------------------- init -- */
@@ -478,6 +544,8 @@ export async function init(root) {
 	const recon = new Float64Array(n);
 	const reconEl = $('[data-canvas]');
 	const residEl = $('[data-residual]');
+	const bandsSvg = $('[data-bands-svg]');
+	const chartEl = $('.demo-chart');
 
 	// Ages, ascending. Only ages with a shipped true spectrum are reachable, so
 	// the reconstruction always has something to be judged against.
@@ -539,14 +607,12 @@ export async function init(root) {
 		const sw = $('[data-swatch]');
 		if (sw) sw.style.background = spectrumToCSS(d.lam, recon);
 
-		// Per-band component counts, above the chart. These move with the slider:
-		// the allocation across the three bands is not proportional, and watching
-		// the UV take the lion's share is the point.
-		const alloc = d.basis.allocation[String(state.n)];
-		d.bands.forEach((band, i) => {
-			const el = root.querySelector(`[data-band-n="${i}"]`);
-			if (el) el.textContent = alloc[i];
-		});
+		// The brace header, above the chart. It moves with the slider: the
+		// allocation across the three bands is not proportional, and watching the
+		// UV take the lion's share is the point.
+		if (bandsSvg && chartEl) {
+			drawBandHeader(bandsSvg, chartEl, d, d.basis.allocation[String(state.n)]);
+		}
 
 		const live = $('[data-live]');
 		if (live) {
@@ -589,25 +655,45 @@ export async function init(root) {
 		if (v !== undefined) el.textContent = v;
 	});
 
-	// Band names and wavelength ranges never change; only the counts do.
-	d.bands.forEach((band, i) => {
-		const nameEl = root.querySelector(`[data-band-name="${i}"]`);
-		const rangeEl = root.querySelector(`[data-band-range="${i}"]`);
-		if (nameEl) nameEl.textContent = bandLabel(band.name);
-		if (rangeEl) {
-			rangeEl.textContent = `${formatAngstrom(band.lamLo)}\u2013${formatAngstrom(band.lamHi)} \u212B`;
-		}
-	});
-
 	window.addEventListener('resize', render);
 
 	// The canvas cannot inherit CSS, so a theme change has to be pushed into it.
 	// Both paths matter: the site's toggle stamps data-theme on <html>, and a
 	// visitor who has never used it follows the OS setting instead.
+	//
+	// Sampling once when data-theme flips is not enough, and fails in a way that
+	// looks like nothing is wrong. The theme tokens are @property-registered
+	// colours with a 300ms transition on <html>, so at the moment the attribute
+	// changes their computed value is still the OLD colour: the plot repaints in
+	// the palette it already had and then never repaints again. That is the bug
+	// where a red spectrum sits on a dark page.
+	//
+	// Nor is a fixed 300ms window enough. Measured in headless Chrome, the
+	// transition had moved only ~10% by the time a 360ms loop gave up -- when the
+	// transition starts, and how often rAF fires, are both outside our control.
+	// So watch the resolved colour instead and stop once it has actually stopped
+	// moving. Self-correcting whatever the timing, and with transitions disabled
+	// it settles in three frames.
+	let settleRaf = 0;
 	function refollowTheme() {
-		CONFIG.colours = readPalette(root);
-		render();
+		cancelAnimationFrame(settleRaf);
+		const t0 = performance.now();
+		let last = '';
+		let stable = 0;
+		const step = () => {
+			CONFIG.colours = readPalette(root);
+			render();
+			const now = CONFIG.colours.recon + CONFIG.colours.text;
+			stable = now === last ? stable + 1 : 0;
+			last = now;
+			// Three identical frames, or two seconds, whichever comes first.
+			if (stable < 3 && performance.now() - t0 < 2000) {
+				settleRaf = requestAnimationFrame(step);
+			}
+		};
+		settleRaf = requestAnimationFrame(step);
 	}
+
 	new MutationObserver(refollowTheme)
 		.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
 	window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', refollowTheme);

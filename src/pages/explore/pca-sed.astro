@@ -21,27 +21,13 @@ const meta = {
 
 	<div class="demo-pca-sed" data-demo>
 		{/*
-			Per-band component counts, above the chart and aligned with the dashed
-			band dividers drawn on it. Filled from basis.json so the wavelength
-			ranges and the counts can never drift from the basis in use.
+			Per-band component counts, braced over the stretch of the plot each band
+			covers. Drawn as SVG by the script, from the same log-wavelength mapping the
+			chart uses, so the braces cannot drift away from the dashed dividers below
+			them. The label is written by the script too -- a screen reader gets one
+			sentence rather than six loose numbers and words.
 		*/}
-		<ul class="demo-bands" data-bands>
-			<li>
-				<span class="demo-bands__n" data-band-n="0">&mdash;</span>
-				<span class="demo-bands__name" data-band-name="0">&mdash;</span>
-				<span class="demo-bands__range" data-band-range="0">&mdash;</span>
-			</li>
-			<li>
-				<span class="demo-bands__n" data-band-n="1">&mdash;</span>
-				<span class="demo-bands__name" data-band-name="1">&mdash;</span>
-				<span class="demo-bands__range" data-band-range="1">&mdash;</span>
-			</li>
-			<li>
-				<span class="demo-bands__n" data-band-n="2">&mdash;</span>
-				<span class="demo-bands__name" data-band-name="2">&mdash;</span>
-				<span class="demo-bands__range" data-band-range="2">&mdash;</span>
-			</li>
-		</ul>
+		<div class="demo-bands"><svg data-bands-svg role="img" aria-label=""></svg></div>
 
 		<div class="demo-chart">
 			<canvas data-canvas role="img"

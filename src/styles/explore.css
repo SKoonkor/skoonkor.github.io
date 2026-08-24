@@ -69,47 +69,48 @@
 
 /* --- per-band component counts -------------------------------------------- */
 /*
- * Sits directly above the chart and lines up with the dashed dividers drawn on
- * it, so the three counts read as a key to the bands rather than as a stray
- * statistic. Contents are written by the script from basis.json.
+ * No box: a count and a band name over a brace spanning that band's stretch of
+ * the plot. Everything is the plot's own text colour, so the header reads as
+ * part of the figure rather than as a separate widget.
+ *
+ * The SVG's contents and viewBox are written by the script -- see
+ * drawBandHeader() -- because the brace ends have to land on the same
+ * wavelengths as the dashed dividers drawn on the canvas below.
  */
 
 .demo-bands {
-	display: grid;
-	grid-template-columns: repeat(3, 1fr);
-	gap: 0.75rem;
-	margin: 0 0 0.75rem;
-	padding: 0;
-	list-style: none;
+	/* Roughly the brace depth, matching the gap in the design. */
+	margin-bottom: 0.5rem;
 }
 
-	.demo-bands li {
-		padding: 0.55rem 0.7rem;
-		border: 1px solid var(--demo-line);
-		border-radius: 6px;
-		background: var(--demo-surface);
-		text-align: center;
+	.demo-bands svg {
+		display: block;
+		width: 100%;
+		height: auto;
+		overflow: visible;
+	}
+
+	.demo-bands__brace {
+		fill: none;
+		stroke: var(--color-muted);
+		stroke-width: 1.25;
+		stroke-linecap: round;
+	}
+
+	.demo-bands__n,
+	.demo-bands__name {
+		fill: var(--color-muted);
+		text-anchor: middle;
+		font-family: inherit;
 	}
 
 	.demo-bands__n {
-		display: block;
-		font-size: 1.35rem;
-		line-height: 1.1;
-		color: var(--color-accent);
+		font-size: 19px;
 		font-variant-numeric: tabular-nums;
 	}
 
 	.demo-bands__name {
-		display: block;
-		margin-top: 0.15rem;
-		font-size: 0.8rem;
-		color: var(--color-global-text);
-	}
-
-	.demo-bands__range {
-		display: block;
-		font-size: 0.7rem;
-		color: var(--color-muted);
+		font-size: 11px;
 	}
 
 /* --- the figure ------------------------------------------------------------ */
@@ -145,20 +146,15 @@
  * painted onto the canvas so it stays crisp at any device pixel ratio and can
  * use the page's own type.
  *
- * The 26px offset clears the band-name strip the chart reserves at the top of
- * the canvas (BAND_STRIP_H in pca-sed.js); without it the legend lands on top of
- * the near-IR label. The tinted background is because the spectrum itself runs
- * high on the right at most ages, and the text has to stay readable over it.
+ * No background: on a young population the spectrum runs high on the right and
+ * will cross this text. That is accepted -- the band names it used to collide
+ * with now live above the chart, so there is nothing left for a plate to
+ * separate it from.
  */
 .demo-legend {
 	position: absolute;
-	inset-block-start: 26px;
+	inset-block-start: 0.6rem;
 	inset-inline-end: 0.55rem;
-	padding: 0.3rem 0.5rem;
-	border-radius: 4px;
-	/* Opaque, and mixed to exactly the composite of --demo-surface over the page
-	   background, so it hides the curve behind it without showing an edge. */
-	background: color-mix(in oklab, var(--color-global-bg) 94%, var(--color-muted));
 	display: flex;
 	flex-direction: column;
 	align-items: flex-end;
@@ -428,22 +424,6 @@
 		aspect-ratio: 4 / 3;
 	}
 
-	.demo-bands {
-		gap: 0.4rem;
-	}
-
-		.demo-bands li {
-			padding: 0.45rem 0.3rem;
-		}
-
-		.demo-bands__n {
-			font-size: 1.1rem;
-		}
-
-		.demo-bands__range {
-			font-size: 0.62rem;
-		}
-
 	.demo-facts th {
 		width: auto;
 		white-space: normal;
@@ -453,7 +433,6 @@
 	   full size takes two thirds of that. */
 	.demo-legend {
 		font-size: 0.6rem;
-		padding: 0.25rem 0.4rem;
 		gap: 0.15rem;
 	}
 

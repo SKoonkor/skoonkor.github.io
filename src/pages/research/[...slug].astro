@@ -30,13 +30,12 @@ const { demo, figure, hook, links, shortTitle, title, venue } = entry.data;
 >
 	{/*
 		The heading carries the short title with the full academic one below it.
-		Once stuck the bar falls back to the section name: prefixing the site name
-		onto a 56-character paper title makes a string no phone can render.
+		This is not a main nav page, so the bar keeps that same short title when it
+		sticks -- unprefixed, and free to wrap. See PageTitle.astro.
 	*/}
 	<PageTitle
 		title={shortTitle ?? title}
 		subtitle={shortTitle ? title : undefined}
-		stuckLabel="Research"
 	/>
 
 	<article data-pagefind-body>
