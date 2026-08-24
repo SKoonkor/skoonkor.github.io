@@ -2,14 +2,13 @@
 import { getCollection } from "astro:content";
 import PageTitle from "@/components/PageTitle.astro";
 import SocialList from "@/components/SocialList.astro";
-import { papers } from "@/data/publications";
+import { latestPaper } from "@/data/publications";
 import PageLayout from "@/layouts/Base.astro";
 
 const research = (await getCollection("research", ({ data }) => !data.draft)).sort(
 	(a, b) => a.data.order - b.data.order,
 );
 const featured = research.slice(0, 3);
-const latestPaper = papers[0];
 ---
 
 <PageLayout meta={{ title: "Home" }}>
@@ -69,8 +68,13 @@ const latestPaper = papers[0];
 					{latestPaper.etAl && ", et al."}
 				</p>
 				<p class="mt-1 mb-1 text-base leading-snug text-pretty">{latestPaper.title}</p>
+				{/* Same status and optional-year handling as PublicationList: without it
+				    an accepted paper would be presented here as though it were out. */}
 				<p class="text-muted text-xs">
-					<em>{latestPaper.venue}</em>, {latestPaper.year}
+					{latestPaper.status === "accepted" && "Accepted, "}
+					{latestPaper.status === "submitted" && "Submitted, "}
+					<em>{latestPaper.venue}</em>
+					{latestPaper.year && `, ${latestPaper.year}`}
 					{latestPaper.links.map(({ label, href }) => (
 						<>
 							{" · "}

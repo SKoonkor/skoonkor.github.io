@@ -1,9 +1,13 @@
 /**
  * Publications and theses.
  *
- * Deliberately a typed array rather than a content collection: five items with
- * no bodies, no slugs and no detail pages would otherwise mean five markdown
- * files with empty front matter, to produce one <ol>.
+ * Deliberately a typed array rather than a content collection: a handful of items
+ * with no bodies, no slugs and no detail pages would otherwise mean a markdown
+ * file each with empty front matter, to produce one <ol>.
+ *
+ * Order matters. Citable work leads and anything still in preparation goes last,
+ * because Research renders this array as-is and Home takes the first entry that
+ * has reached at least "submitted" -- see latestPaper below.
  *
  * Authors are objects rather than a pre-formatted string so that the component
  * renders the emphasis on `self` and this data never needs `set:html`.
@@ -17,21 +21,14 @@ export type Publication = {
 	etAl?: boolean;
 	title: string;
 	venue: string;
-	year: number;
-	status?: "accepted" | "submitted";
+	/** Absent while a paper is still in preparation and has no year yet. */
+	year?: number;
+	/** Omitted once a paper is out. Drives both the label and what Home may feature. */
+	status?: "accepted" | "submitted" | "in-preparation";
 	links: { label: string; href: string }[];
 };
 
 export const papers: Publication[] = [
-	{
-		authors: [{ name: "S. Koonkor", self: true }, { name: "C. M. Baugh" }],
-		etAl: true,
-		title:
-			"The galaxy spectrum synthesis in cosmological simulation using the principal component analyses",
-		venue: "In preparation; manuscript available on request",
-		year: 2026,
-		links: [],
-	},
 	{
 		authors: [
 			{ name: "S. Koonkor", self: true },
@@ -91,7 +88,28 @@ export const papers: Publication[] = [
 			{ label: "arXiv:2311.10469", href: "https://arxiv.org/abs/2311.10469" },
 		],
 	},
+	{
+		authors: [{ name: "S. Koonkor", self: true }, { name: "C. M. Baugh" }],
+		etAl: true,
+		title:
+			"The galaxy spectrum synthesis in cosmological simulation using the principal component analyses",
+		venue: "manuscript available on request",
+		status: "in-preparation",
+		links: [],
+	},
 ];
+
+/**
+ * What Home features.
+ *
+ * `papers[0]` used to be read directly by the page, which meant the front page
+ * headlined whatever sat first in the array -- for a while, a paper still in
+ * preparation. Deriving it here instead keeps the rule with the data: lead with
+ * work that exists, not work that is coming.
+ */
+export const latestPaper: Publication | undefined = papers.find(
+	(p) => p.status !== "in-preparation",
+);
 
 export const theses: Publication[] = [
 	{

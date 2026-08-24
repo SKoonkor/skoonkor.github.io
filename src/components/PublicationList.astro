@@ -28,10 +28,14 @@ const { items, start = 1 } = Astro.props;
 						{pub.etAl && ", et al."}
 					</p>
 					<p class="mt-1 text-base leading-snug text-pretty">{pub.title}</p>
+					{/* year is optional: a paper in preparation has none, and a bare
+					    trailing comma would be the giveaway. */}
 					<p class="text-muted mt-1 text-xs">
 						{pub.status === "accepted" && "Accepted, "}
 						{pub.status === "submitted" && "Submitted, "}
-						<em>{pub.venue}</em>, {pub.year}
+						{pub.status === "in-preparation" && "In preparation, "}
+						<em>{pub.venue}</em>
+						{pub.year && `, ${pub.year}`}
 					</p>
 					{pub.links.length > 0 && (
 						<p class="mt-2 flex flex-wrap gap-x-2 gap-y-1">
