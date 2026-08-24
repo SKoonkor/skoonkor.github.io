@@ -118,9 +118,12 @@ function drawPanel(canvas, d, state) {
 		ctx.fillStyle = c.text;
 		ctx.font = FONT(9);
 		ctx.textAlign = 'left';
-		ctx.textBaseline = 'top';
-		// Label to the right of the line, on the trustworthy side.
-		ctx.fillText('complete ▶', xc + 5, padT + 4);
+		ctx.textBaseline = 'bottom';
+		// Bottom of the line, not the top: the line marches brightward with
+		// redshift, and at the far slices the top of it sits under the legend.
+		// The foot of the panel is reliably empty, because that is where the
+		// luminosity function has fallen away.
+		ctx.fillText('complete ▶', xc + 5, padT + h - 5);
 		ctx.restore();
 	}
 
@@ -311,15 +314,6 @@ export async function init(root) {
 		() => state.band,
 		(v) => { state.band = v; },
 	);
-	buildChips(
-		'z',
-		zKeys.map((k) => {
-			const s = sliceOf(k);
-			return { id: k, label: `${s.zLo}–${s.zHi}` };
-		}),
-		() => state.z,
-		(v) => { state.z = v; },
-	);
 	buildChips('pz', PZ_MODES, () => state.pz, (v) => { state.pz = v; });
 
 	/* --- legend ----------------------------------------------------------- */
@@ -380,6 +374,29 @@ export async function init(root) {
 		const v = map[el.dataset.fill];
 		if (v !== undefined) el.textContent = v;
 	});
+
+	/* --- redshift slider --------------------------------------------------- */
+
+	const zSlider = $('[data-z-slider]');
+	const zReadout = $('[data-z-readout]');
+	const labelFor = (k) => {
+		const sl = sliceOf(k);
+		return `${sl.zLo} – ${sl.zHi}`;
+	};
+	if (zSlider) {
+		zSlider.max = String(zKeys.length - 1);
+		zSlider.value = String(zKeys.indexOf(state.z));
+		const syncSlider = () => {
+			state.z = zKeys[Number(zSlider.value)];
+			// Without this the control announces its index. The reader wants the
+			// redshift range, which is the only thing the number stands for.
+			zSlider.setAttribute('aria-valuetext', `redshift ${labelFor(state.z)}`);
+			if (zReadout) zReadout.textContent = labelFor(state.z);
+			render();
+		};
+		zSlider.addEventListener('input', syncSlider);
+		syncSlider();
+	}
 
 	window.addEventListener('resize', render);
 	colours = readPalette(root, PALETTE);

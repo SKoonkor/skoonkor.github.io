@@ -464,6 +464,52 @@
 		background: color-mix(in oklab, var(--color-accent) 12%, transparent);
 	}
 
+/* --- redshift slider ------------------------------------------------------ */
+/*
+ * Snapped to the eight slices by step=1 on an index, so it cannot land between
+ * two datasets. The scale row carries the two endpoints and the current range,
+ * which is what the index actually means.
+ */
+
+/* The row aligns on baselines, which for a two-line control puts the label
+   beside the scale text and leaves the track floating above it. */
+.demo-chips__row--slider {
+	align-items: center;
+}
+
+.demo-zslider {
+	flex: 1 1 18rem;
+	min-width: 12rem;
+	max-width: 32rem;
+}
+
+	.demo-zslider input[type="range"] {
+		display: block;
+		width: 100%;
+		margin: 0;
+		accent-color: var(--color-accent);
+		background: none;
+		border: 0;
+		height: 22px;
+		cursor: pointer;
+	}
+
+	.demo-zslider__scale {
+		display: flex;
+		justify-content: space-between;
+		align-items: baseline;
+		gap: 0.75rem;
+		margin: 0.1rem 0 0;
+		font-size: 0.66rem;
+		color: var(--color-muted);
+		font-variant-numeric: tabular-nums;
+	}
+
+		.demo-zslider__scale [data-z-readout] {
+			font-size: 0.82rem;
+			color: var(--color-accent-2);
+		}
+
 /* --- the panel ------------------------------------------------------------ */
 
 .demo-chart--lf {

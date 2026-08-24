@@ -31,9 +31,23 @@ const meta = {
 				<span class="demo-chips__label" id="lf-band-label">Band</span>
 				<div class="demo-chips__set" data-chips="band" role="group" aria-labelledby="lf-band-label"></div>
 			</div>
-			<div class="demo-chips__row">
-				<span class="demo-chips__label" id="lf-z-label">Redshift</span>
-				<div class="demo-chips__set" data-chips="z" role="group" aria-labelledby="lf-z-label"></div>
+			{/*
+				A slider rather than eight buttons: the redshift slices are ordered and
+				evenly spaced, so dragging through them shows the population building up
+				in a way that clicking between chips does not. Snapped to the eight
+				slices -- there is no data in between. aria-valuetext is set by the
+				script so a screen reader hears "0.4 to 0.6" rather than "2".
+			*/}
+			<div class="demo-chips__row demo-chips__row--slider">
+				<label class="demo-chips__label" for="lf-z">Redshift</label>
+				<div class="demo-zslider">
+					<input type="range" id="lf-z" data-z-slider min="0" max="7" step="1" />
+					<p class="demo-zslider__scale" aria-hidden="true">
+						<span>z = 0.05</span>
+						<span data-z-readout>0.05 – 0.2</span>
+						<span>z = 2</span>
+					</p>
+				</div>
 			</div>
 			<div class="demo-chips__row">
 				<span class="demo-chips__label" id="lf-pz-label">Photo-<i>z</i> errors</span>
