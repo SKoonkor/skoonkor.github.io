@@ -24,6 +24,15 @@ export type Publication = {
 
 export const papers: Publication[] = [
 	{
+		authors: [{ name: "S. Koonkor", self: true }, { name: "C. M. Baugh" }],
+		etAl: true,
+		title:
+			"The galaxy spectrum synthesis in cosmological simulation using the principal component analyses",
+		venue: "In preparation; manuscript available on request",
+		year: 2026,
+		links: [],
+	},
+	{
 		authors: [
 			{ name: "S. Koonkor", self: true },
 			{ name: "C. M. Baugh" },
@@ -38,7 +47,7 @@ export const papers: Publication[] = [
 		etAl: true,
 		title:
 			"The PAU Survey: the i-band galaxy luminosity function from the present-day to z = 2",
-		venue: "Monthly Notices of the Royal Astronomical Society",
+		venue: "Monthly Notices of the Royal Astronomical Society, 547(3), 1\u201324",
 		year: 2026,
 		links: [
 			{ label: "Journal", href: "https://doi.org/10.1093/mnras/stag362" },

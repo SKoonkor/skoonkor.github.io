@@ -28,8 +28,16 @@ const { demo, figure, hook, links, shortTitle, title, venue } = entry.data;
 		articleDate: entry.data.publishDate.toISOString(),
 	}}
 >
-	{/* The sticky bar carries the short title; the full academic title sits below it, unclipped. */}
-	<PageTitle title={shortTitle ?? title} subtitle={shortTitle ? title : undefined} />
+	{/*
+		The heading carries the short title with the full academic one below it.
+		Once stuck the bar falls back to the section name: prefixing the site name
+		onto a 56-character paper title makes a string no phone can render.
+	*/}
+	<PageTitle
+		title={shortTitle ?? title}
+		subtitle={shortTitle ? title : undefined}
+		stuckLabel="Research"
+	/>
 
 	<article data-pagefind-body>
 		<p class="text-muted -mt-6 mb-8 text-xs">{venue}</p>

@@ -104,8 +104,15 @@
 		Longhand -block-start on purpose: the shorthand also sets -end, which is
 		irrelevant here.
 	*/
+	/*
+		Fallback only. PageTitle.astro measures the bar and overwrites this with the
+		real height, because it varies: 56px for a one-line title, 88px for a
+		two-line one on a phone, and less again once the bar shrinks on sticking.
+		The old fixed 4.5rem left two-line mobile titles with zero clearance, so an
+		anchored heading landed underneath the fade.
+	*/
 	:root {
-		--page-title-h: 4.5rem;
+		--page-title-h: 3.5rem;
 	}
 
 	:target,

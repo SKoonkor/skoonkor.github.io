@@ -1,20 +1,22 @@
 ---
 import { Image } from "astro:assets";
+import CVList from "@/components/CVList.astro";
 import PageTitle from "@/components/PageTitle.astro";
 import SocialList from "@/components/SocialList.astro";
 import PageLayout from "@/layouts/Base.astro";
+import { outreach } from "@/data/cv";
 import delphys from "@/assets/images/DELPHYS_workshop.webp";
 import vienna from "@/assets/images/vienna.webp";
 
 const meta = {
 	description:
-		"Postdoctoral researcher at NARIT, working on the connection between galaxies and dark matter. Previously ICC Durham and Khon Kaen University.",
-	title: "About",
+		"Why I take part in astronomy outreach, and the camps, festivals and school visits I have been part of since 2014.",
+	title: "Outreach",
 };
 ---
 
 <PageLayout meta={meta}>
-	<PageTitle title="About" />
+	<PageTitle title="Outreach" />
 
 	<div data-pagefind-body>
 		<Image
@@ -25,35 +27,6 @@ const meta = {
 			sizes="(min-width: 768px) 768px, 100vw"
 			loading="eager"
 		/>
-
-		<div class="prose prose-sm prose-cactus max-w-none">
-			<p>
-				I am currently a Postdoctoral Researcher at the National Astronomical Research Institute of
-				Thailand (NARIT). I received a PhD in Astrophysics (2021&ndash;2025) and an MSc in Physics by
-				Research (2019&ndash;2020) from the <a
-					href="https://www.icc.dur.ac.uk/"
-					rel="noreferrer"
-					target="_blank">Institute for Computational Cosmology, Durham University</a
-				>, UK, and a BSc in Physics from Khon Kaen University, Thailand.
-			</p>
-			<p>
-				Throughout my Masters and PhD, I was awarded a fully-funded scholarship from NARIT, under the
-				Office of the Civil Service Commission of Thailand (OCSC) scholarship scheme. As an
-				undergraduate, I received a scholarship under the Development and Promotion of Science and
-				Technology Talents Project (DPST).
-			</p>
-			<p>
-				My research focuses on bridging the connection between the &lsquo;light&rsquo; and the
-				&lsquo;darkness&rsquo; of our Universe. In particular, I study how stars and galaxies (the
-				<em>light</em>) relate to dark matter (the <em>darkness</em>), by attempting to build a model
-				Universe from scratch using our knowledge of gravity governed by dark matter and the physics
-				of gas in stars and galaxies, with the help of high-performance computing facilities.
-			</p>
-			<p>
-				Apart from stars, galaxies and the Universe, I also enjoy playing football (a goalkeeper for
-				Ustinov College Men's Football team), painting and drawing, photography, and lifting weights.
-			</p>
-		</div>
 
 		<figure class="mt-12">
 			<Image
@@ -70,8 +43,7 @@ const meta = {
 			</figcaption>
 		</figure>
 
-		<section class="mt-20">
-			<h2 class="title mb-6 text-xl" id="outreach">Outreach</h2>
+		<section class="mt-16" id="outreach">
 			<div class="prose prose-sm prose-cactus max-w-none">
 				<p>
 					I still remember seeing stars through a telescope during a summer camp when I was in
@@ -103,6 +75,12 @@ const meta = {
 					An opportunity is what I value the most. What people do with it, once given, is up to them.
 				</p>
 			</div>
+		</section>
+
+		<section class="mt-20">
+			<h2 class="title mb-6 text-xl">Where I have been</h2>
+			{/* Same array the CV renders, so the two pages cannot drift apart. */}
+			<CVList entries={outreach} compact />
 		</section>
 
 		<section class="mt-20">

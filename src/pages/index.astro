@@ -15,15 +15,43 @@ const latestPaper = papers[0];
 <PageLayout meta={{ title: "Home" }}>
 	<PageTitle title="Suttikoon Koonkor" />
 
-	<section>
+	{/* data-pagefind-body: without it Home is not indexed at all, and this bio
+	    used to be searchable only through the About page it came from. */}
+	<section data-pagefind-body>
 		<p class="text-muted mb-6 text-xs tracking-[0.2em] uppercase">
 			Postdoctoral Researcher in Astrophysics &middot; NARIT
 		</p>
-		<p class="mb-4 text-base leading-relaxed text-pretty">
-			I study how galaxies &mdash; the <em>light</em> &mdash; trace the dark matter they formed in.
-			Welcome to my corner of the internet: a space for someone wandering the Universe with a great
-			deal of curiosity.
-		</p>
+
+		<div class="mb-6 space-y-4 text-base leading-relaxed text-pretty">
+			<p>
+				I am currently a Postdoctoral Researcher at the National Astronomical Research Institute of
+				Thailand (NARIT). I received a PhD in Astrophysics (2021&ndash;2025) and an MSc in Physics by
+				Research (2019&ndash;2020) from the <a
+					class="cactus-link"
+					href="https://www.icc.dur.ac.uk/"
+					rel="noreferrer"
+					target="_blank">Institute for Computational Cosmology, Durham University</a
+				>, UK, and a BSc in Physics from Khon Kaen University, Thailand.
+			</p>
+			<p>
+				Throughout my Masters and PhD, I was awarded a fully-funded scholarship from NARIT, under the
+				Office of the Civil Service Commission of Thailand (OCSC) scholarship scheme. As an
+				undergraduate, I received a scholarship under the Development and Promotion of Science and
+				Technology Talents Project (DPST).
+			</p>
+			<p>
+				My research focuses on bridging the connection between the &lsquo;light&rsquo; and the
+				&lsquo;darkness&rsquo; of our Universe. In particular, I study how stars and galaxies (the
+				<em>light</em>) relate to dark matter (the <em>darkness</em>), by attempting to build a model
+				Universe from scratch using our knowledge of gravity governed by dark matter and the physics
+				of gas in stars and galaxies, with the help of high-performance computing facilities.
+			</p>
+			<p>
+				Apart from stars, galaxies and the Universe, I also enjoy playing football (a goalkeeper for
+				Ustinov College Men's Football team), painting and drawing, photography, and lifting weights.
+			</p>
+		</div>
+
 		<SocialList />
 	</section>
 

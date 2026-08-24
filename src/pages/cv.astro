@@ -1,8 +1,9 @@
 ---
 import { existsSync } from "node:fs";
+import CVList from "@/components/CVList.astro";
 import PageTitle from "@/components/PageTitle.astro";
 import PageLayout from "@/layouts/Base.astro";
-import { cv, cvPdfPath } from "@/data/cv";
+import { contact, cv, cvPdfPath, outreach, referees, skills } from "@/data/cv";
 
 // The download button appears by itself once a PDF is dropped at this path in
 // public/. Rendering it unconditionally would ship a link to a 404.
@@ -19,59 +20,74 @@ const meta = {
 	<PageTitle title="CV" />
 
 	<div data-pagefind-body>
-		<p class="mb-12 print:hidden">
-			{
-				hasPdf && (
-					<a
-						class="border-muted/40 hover:border-accent hover:text-accent me-2 rounded-sm border px-2.5 py-1 text-xs transition-colors"
-						href={cvPdfPath}
-						download
-					>
-						Download PDF
-					</a>
-				)
-			}
-			<span class="text-muted text-xs">
-				{hasPdf ? "or print this page" : "Print this page for a PDF copy."}
-			</span>
-		</p>
+		<section class="mb-12">
+			<p class="text-muted text-xs leading-relaxed">
+				{contact.institution}<br />
+				{contact.address}<br />
+				<a class="cactus-link" href={`mailto:${contact.email}`}>{contact.email}</a>
+			</p>
+			<p class="mt-6 print:hidden">
+				{
+					hasPdf && (
+						<a
+							class="border-muted/40 hover:border-accent hover:text-accent me-2 rounded-sm border px-2.5 py-1 text-xs transition-colors"
+							href={cvPdfPath}
+							download
+						>
+							Download PDF
+						</a>
+					)
+				}
+				<span class="text-muted text-xs">
+					{hasPdf ? "or print this page" : "Print this page for a PDF copy."}
+				</span>
+			</p>
+		</section>
 
 		{
 			cv.map(({ group, entries }) => (
 				<section class="mb-14">
 					<h2 class="title border-muted/25 mb-6 border-b pb-2 text-base">{group}</h2>
-					<ul class="space-y-7" role="list">
-						{entries.map((entry) => (
-							<li class="grid gap-1 sm:grid-cols-[1fr_10rem] sm:gap-6">
-								<div>
-									<p class="text-base leading-snug">
-										{entry.href ? (
-											<a class="cactus-link" href={entry.href} rel="noreferrer" target="_blank">
-												{entry.role}
-											</a>
-										) : (
-											entry.role
-										)}
-										{entry.badge && (
-											<span class="text-muted ms-2 align-middle text-[0.65rem] tracking-wide uppercase">
-												{entry.badge}
-											</span>
-										)}
-									</p>
-									{entry.org && <p class="text-muted mt-0.5 text-xs">{entry.org}</p>}
-									{entry.detail?.map((d) => (
-										<p class="text-muted mt-0.5 text-xs leading-relaxed text-pretty">{d}</p>
-									))}
-								</div>
-								<p class="text-muted order-first text-xs sm:order-none sm:text-right">
-									{entry.period}
-								</p>
-							</li>
-						))}
-					</ul>
+					<CVList entries={entries} compact={group === "Conferences & Workshops"} />
 				</section>
 			))
 		}
+
+		<section class="mb-14">
+			<h2 class="title border-muted/25 mb-6 border-b pb-2 text-base">Activities & Outreach</h2>
+			<CVList entries={outreach} compact />
+		</section>
+
+		<section class="mb-14">
+			<h2 class="title border-muted/25 mb-6 border-b pb-2 text-base">Key Skills</h2>
+			<dl class="space-y-2">
+				{
+					skills.map(({ label, items }) => (
+						<div class="grid gap-x-4 sm:grid-cols-[9rem_1fr]">
+							<dt class="text-sm">{label}</dt>
+							<dd class="text-muted text-xs leading-relaxed">{items}</dd>
+						</div>
+					))
+				}
+			</dl>
+		</section>
+
+		<section class="mb-14">
+			<h2 class="title border-muted/25 mb-6 border-b pb-2 text-base">References</h2>
+			<ul class="space-y-3" role="list">
+				{
+					referees.map(({ name, role, org }) => (
+						<li>
+							<p class="text-base leading-snug">{name}</p>
+							<p class="text-muted mt-0.5 text-xs">
+								{role} &middot; {org}
+							</p>
+						</li>
+					))
+				}
+			</ul>
+			<p class="text-muted mt-4 text-xs">Contact details available on request.</p>
+		</section>
 	</div>
 </PageLayout>
 

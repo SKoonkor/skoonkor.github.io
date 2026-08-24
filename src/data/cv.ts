@@ -1,7 +1,11 @@
 /**
- * The CV, as structured data rather than a content collection: thirteen rows
- * with no bodies and no detail pages. Keeping it typed also makes the print
- * stylesheet and any future PDF generation straightforward.
+ * The CV, as structured data rather than a content collection: entries with no
+ * bodies and no detail pages. Keeping it typed also makes the print stylesheet
+ * and the LaTeX build straightforward.
+ *
+ * Source of truth is Design_materials/Koonkor_CV_main.tex. Deliberately omitted
+ * from the public page: the personal phone number, and referees' emails, office
+ * numbers and direct lines. Referees appear by name and institution only.
  */
 
 export type CVEntry = {
@@ -12,7 +16,15 @@ export type CVEntry = {
 	/** Makes the role a link, e.g. to a thesis record. */
 	href?: string;
 	period: string;
-	badge?: "Award" | "Scholarship";
+	badge?: "Award" | "Scholarship" | "Talk" | "Poster" | "Attendee";
+};
+
+export const contact = {
+	institution: "National Astronomical Research Institute of Thailand (NARIT)",
+	address: "260 Moo 4, Don Kaew, Mae Rim, Chiang Mai 50180, Thailand",
+	email: "suttikoon@narit.or.th",
+	github: "https://github.com/SKoonkor",
+	orcid: "https://orcid.org/0009-0009-9864-4691",
 };
 
 export const cv: { group: string; entries: CVEntry[] }[] = [
@@ -27,7 +39,7 @@ export const cv: { group: string; entries: CVEntry[] }[] = [
 			{
 				role: "Research Assistant",
 				org: "National Astronomical Research Institute of Thailand (NARIT)",
-				period: "Jul 2025 – Sep 2025",
+				period: "Jul – Sep 2025",
 			},
 		],
 	},
@@ -44,7 +56,7 @@ export const cv: { group: string; entries: CVEntry[] }[] = [
 				period: "2021 – 2025",
 			},
 			{
-				role: "MSc by Research in Astrophysics",
+				role: "MSc by Research in Physics",
 				org: "Durham University, UK",
 				detail: [
 					"Thesis: Application of Principal Component Analysis to Galaxy Spectral Energy Distributions",
@@ -61,74 +73,176 @@ export const cv: { group: string; entries: CVEntry[] }[] = [
 		],
 	},
 	{
-		group: "Teaching Experience",
-		entries: [
-			{
-				role: "Level 1 Introduction to Astronomy",
-				org: "Undergraduate Teaching Assistant, Durham University, UK",
-				detail: ["Graded assignments"],
-				period: "2021 – 2024",
-			},
-			{
-				role: "Level 1 and Level 2 Scientific Computing Workshop",
-				org: "Undergraduate Teaching Assistant, Durham University, UK",
-				detail: ["Guided weekly assignments and graded assignments"],
-				period: "2022 – 2023",
-			},
-			{
-				role: "Introduction to Scientific and High-Performance Computing",
-				org: "Postgraduate Teaching Assistant, Durham University, UK",
-				detail: ["Guided weekly assignments and graded assignments"],
-				period: "2022",
-			},
-		],
-	},
-	{
 		group: "Scholarships & Awards",
 		entries: [
 			{
 				role: "Ogden Outreach Award",
 				badge: "Award",
-				detail: [
-					"Postgraduate ambassador award, for my contribution to physics outreach.",
-				],
+				detail: ["A postgraduate ambassador, for contributing to physics outreach."],
 				period: "2023",
 			},
 			{
-				role: "OCSC Scholarship",
+				role: "The Civil Service Commission of Thailand Postgraduate Scholarship",
 				badge: "Scholarship",
-				detail: [
-					"Full financial support for postgraduate study, from the Office of the Civil Service Commission of Thailand.",
-				],
-				period: "2017 – 2024",
+				detail: ["Full financial support for postgraduate study."],
+				period: "2018 – 2024",
 			},
 			{
-				role: "DPST Scholarship",
+				role: "The Development and Promotion of Science and Technology Talents Project",
 				badge: "Scholarship",
-				detail: [
-					"Fully-funded scholarship for a bachelor's degree in science, from the Development and Promotion of Science and Technology Talents Project.",
-				],
+				detail: ["A fully-funded scholarship for a bachelor's degree in science."],
 				period: "2014 – 2018",
 			},
 			{
 				role: "The 13th Conference on Science and Technology for Youths",
 				badge: "Award",
-				detail: ["Best Oral Presentation, for the research project presentation."],
+				detail: [
+					"Best Oral Presentation in Astrophysics and High Energy Physics research.",
+				],
 				period: "2018",
 			},
+		],
+	},
+	{
+		group: "Conferences & Workshops",
+		entries: [
+			{ role: "Deep Learning for Physics (DELPHYS2025)", badge: "Attendee", period: "Dec 2025" },
+			{ role: "Space Astronomy Science Platforms Focus Week", badge: "Attendee", period: "Dec 2025" },
 			{
-				role: "Young Thai Science Ambassador",
-				org: "National Science Museum, Thailand",
-				badge: "Award",
-				detail: ["Excellent science ambassador award, as part of a two-person team."],
-				period: "2015",
+				role: "WE-Heraeus and NARIT Cosmology School 2025 — Galaxies and Beyond",
+				badge: "Talk",
+				period: "Oct 2025",
+			},
+			{
+				role: "HSC Medium-band Survey Science Community Workshop",
+				badge: "Poster",
+				period: "Aug 2025",
+			},
+			{
+				role: "Durham-Edinburgh eXtragalactic (DEX) Workshop XX",
+				badge: "Talk",
+				period: "Jan 2024",
+			},
+			{ role: "Building Galaxies from Scratch 2024", badge: "Poster", period: "Feb 2024" },
+			{
+				role: "Carl-Zeiss-Stiftung Summer School on Scientific ML for Astrophysics 2023",
+				badge: "Attendee",
+				period: "Aug 2023",
+			},
+			{
+				role: "First Thai-CTA Workshop on Astroparticle Physics",
+				badge: "Attendee",
+				period: "Feb 2019",
+			},
+		],
+	},
+	{
+		group: "Teaching & Mentoring",
+		entries: [
+			{
+				role: "Research-based Outreach",
+				org: "NARIT",
+				detail: [
+					"Mentored high school students (projects: simple ML image classification and N-body simulations).",
+				],
+				period: "Nov 2025 – Jun 2026",
+			},
+			{
+				role: "Master's Research",
+				org: "Durham University",
+				detail: [
+					"Mentored a Master's student (A. Kumar) on his research using the mock galaxy catalogue.",
+				],
+				period: "Feb – Dec 2024",
+			},
+			{
+				role: "Level 1 Introduction to Astronomy",
+				org: "Durham University",
+				detail: ["Undergraduate Teaching Assistant"],
+				period: "Sep 2021 – Mar 2022, Sep 2023 – Mar 2024",
+			},
+			{
+				role: "Level 1 and Level 2 Scientific Computing Workshop",
+				org: "Durham University",
+				detail: ["Undergraduate Teaching Assistant"],
+				period: "Sep 2022 – Mar 2023",
+			},
+			{
+				role: "Introduction to Scientific and High-Performance Computing",
+				org: "Durham University",
+				detail: ["Postgraduate Teaching Assistant"],
+				period: "Sep – Nov 2022",
 			},
 		],
 	},
 ];
 
 /**
+ * Public engagement. Rendered on both /cv/ and /outreach/ from this one array,
+ * so the two pages cannot drift apart.
+ */
+export const outreach: CVEntry[] = [
+	{
+		role: "Astronomy for All",
+		org: "NARIT & Lopburi School for the Blind",
+		period: "Feb 2026",
+	},
+	{
+		role: "Research-based Outreach",
+		org: "Mentoring two high school students",
+		period: "Nov 2025 – Present",
+	},
+	{
+		role: "MOrning Coffee Hurried ArXiv (MOCHA)",
+		org: "Founder of a weekly astrophysics journal club",
+		period: "Oct 2025 – Present",
+	},
+	{
+		role: "The Space Investigators",
+		org: "Led the main interactive software development",
+		period: "Mar – Sep 2024",
+	},
+	{ role: "Durham University Open Days", period: "Sep 2024" },
+	{ role: "The Royal Society Exhibition at Jodrell Bank Observatory", period: "Aug 2024" },
+	{ role: "The Ukrainian Summer School", period: "Aug 2024" },
+	{ role: "Annual Schools' Physicist of the Year", period: "Jul 2022, Jun 2023, Jun 2024" },
+	{ role: "STEAM Live Primary Career Fair", period: "Jun 2024" },
+	{ role: "The Durham Schools' Science Festival", period: "Mar 2024" },
+	{ role: "Celebrate Science", period: "Oct 2022, Nov 2023" },
+	{ role: "Summer Science Exhibition Lates at the Royal Society", period: "Jul 2023" },
+	{ role: "Post-Offer Visit Days", period: "Mar 2023" },
+	{ role: "Astronomy Camps and Activities", org: "300+ hours", period: "2014 – 2017" },
+];
+
+export const skills: { label: string; items: string }[] = [
+	{ label: "Computing", items: "Python, Fortran, LaTeX, SQL, HTML, SAOImageDS9" },
+	{
+		label: "Soft skills",
+		items: "International collaboration, public speaking, technical writing, adaptability",
+	},
+	{ label: "Languages", items: "Thai (native), English (proficient), German (basic)" },
+	{
+		label: "Research areas",
+		items: "Galaxy formation and evolution, large scale structure, machine learning in astrophysics",
+	},
+];
+
+/** Names and institutions only. Contact details are on the PDF, on request. */
+export const referees: { name: string; role: string; org: string }[] = [
+	{
+		name: "Prof. Carlton Baugh",
+		role: "PhD supervisor",
+		org: "Institute for Computational Cosmology, Durham University",
+	},
+	{
+		name: "Asst. Prof. Wiphu Rujopakarn",
+		role: "Postdoctoral supervisor",
+		org: "National Astronomical Research Institute of Thailand",
+	},
+];
+
+/**
  * Drop a PDF at this path in public/ and the download button appears
- * automatically. Absent for now.
+ * automatically. Built by tools/build_cv.sh from cv/Koonkor_CV.tex.
  */
 export const cvPdfPath = "/cv/Koonkor_CV.pdf";

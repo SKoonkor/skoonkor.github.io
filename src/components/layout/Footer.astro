@@ -4,10 +4,26 @@ import { menuLinks, siteConfig } from "@/site.config";
 const year = new Date().getFullYear();
 ---
 
+{/*
+	Both rows are sized to stay on ONE line at every width, including a 390px
+	phone. The type is text-xs everywhere (not just at sm:) and the links use
+	px-3 with no gap: five items then measure 333px against the 358px a phone
+	gives us, and 689px of the 704px column on desktop -- which is what stops the
+	copyright line wrapping too. It used to miss by under two pixels at 768px.
+
+	The two rows sit side by side only from md:. At sm: (640px) the column is
+	just 576px, and copyright + nav need 668px, so they stack there instead --
+	still one line each.
+
+	Do not restore flex-wrap. Wrapping was a previous fix for the nav overflowing
+	the viewport; the real fix is fitting, and any change here must be re-checked
+	for horizontal overflow at 390px, not just for line count. 640px is the
+	tightest desktop case, not 768px.
+*/}
 <footer
-	class="text-muted mt-auto flex w-full flex-col items-center justify-center gap-y-2 pt-20 pb-4 text-center align-top font-semibold sm:flex-row sm:justify-between sm:text-xs"
+	class="text-muted mt-auto flex w-full flex-col items-center justify-center gap-y-2 pt-20 pb-4 text-center align-top text-xs font-semibold md:flex-row md:justify-between"
 >
-	<div class="me-0 font-normal sm:me-4">
+	<div class="me-0 font-normal md:me-4">
 		&copy; {year} {siteConfig.author}.
 		<span class="inline-block">
 			Built on <a
@@ -18,15 +34,10 @@ const year = new Date().getFullYear();
 			>.
 		</span>
 	</div>
-	{/* flex-wrap: five nav items do not fit on a 390px screen, and without it the
-	    footer pushed every page 11px wider than the viewport. */}
-	<nav
-		aria-label="Footer"
-		class="sm:divide-muted flex flex-wrap justify-center gap-x-2 sm:gap-x-0 sm:divide-x"
-	>
+	<nav aria-label="Footer" class="divide-muted flex justify-center divide-x">
 		{
 			menuLinks.map((link) => (
-				<a class="hover:text-global-text px-4 py-2 hover:underline sm:py-0" href={link.path}>
+				<a class="hover:text-global-text px-3 py-1 hover:underline md:py-0" href={link.path}>
 					{link.title}
 				</a>
 			))

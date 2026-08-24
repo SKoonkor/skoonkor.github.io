@@ -1,0 +1,41 @@
+---
+import type { CVEntry } from "@/data/cv";
+
+interface Props {
+	entries: CVEntry[];
+	/** Tighter rows, for list-like sections such as conferences and outreach. */
+	compact?: boolean | undefined;
+}
+
+const { entries, compact = false } = Astro.props;
+---
+
+<ul class:list={[compact ? "space-y-3" : "space-y-7"]} role="list">
+	{
+		entries.map((entry) => (
+			<li class="grid gap-1 sm:grid-cols-[1fr_11rem] sm:gap-6">
+				<div>
+					<p class="text-base leading-snug">
+						{entry.href ? (
+							<a class="cactus-link" href={entry.href} rel="noreferrer" target="_blank">
+								{entry.role}
+							</a>
+						) : (
+							entry.role
+						)}
+						{entry.badge && (
+							<span class="text-muted ms-2 align-middle text-[0.65rem] tracking-wide uppercase">
+								{entry.badge}
+							</span>
+						)}
+					</p>
+					{entry.org && <p class="text-muted mt-0.5 text-xs">{entry.org}</p>}
+					{entry.detail?.map((d) => (
+						<p class="text-muted mt-0.5 text-xs leading-relaxed text-pretty">{d}</p>
+					))}
+				</div>
+				<p class="text-muted order-first text-xs sm:order-none sm:text-right">{entry.period}</p>
+			</li>
+		))
+	}
+</ul>

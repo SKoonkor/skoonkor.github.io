@@ -1,32 +1,48 @@
 ---
+import { siteConfig } from "@/site.config";
+
 /**
  * The page heading, pinned to the top of the viewport instead of scrolling away.
  *
+ * Once it sticks, the site name slides in ahead of the label, so the bar reads
+ * "Suttikoon Koonkor | Research" -- a breadcrumb rather than a bare word.
+ *
+ * `stuckLabel` exists because prefixing the page's own <h1> is not viable: the
+ * longest research title makes a 76-character string, which needs a 7.8px font
+ * to fit a 390px phone. Detail pages therefore show their section instead, and
+ * keep the full title as the (unstuck) heading above.
+ *
  * Must be the first child of <main>. <body> is the centred column and is not
  * itself a scroll container, so a sticky descendant sticks to the viewport at
- * exactly the column width.
- *
- * Nothing on the way up to <body> may gain `overflow-x: hidden` -- sticky dies
- * inside any overflow ancestor, silently and only on some pages. Use
- * `overflow-x: clip` instead, which clips without creating a scroll container.
+ * exactly the column width. Nothing on the way up to <body> may gain
+ * `overflow-x: hidden` -- sticky dies inside any overflow ancestor, silently and
+ * only on some pages. Use `overflow-x: clip` instead, which clips without
+ * creating a scroll container.
  */
 interface Props {
 	title: string;
 	/** Shown under the sticky bar, unclipped. For full academic titles. */
 	subtitle?: string | undefined;
+	/** What the bar says once stuck. Defaults to `title`. */
+	stuckLabel?: string | undefined;
 	class?: string | undefined;
 }
 
-const { title, subtitle, class: className } = Astro.props;
+const { title, subtitle, stuckLabel, class: className } = Astro.props;
+
+const label = stuckLabel ?? title;
+// On the home page the heading is already the site name; prefixing it would just
+// say it twice.
+const showPrefix = label !== siteConfig.title;
 ---
 
 <div
+	data-page-title
 	class:list={[
 		// -mx-4/px-4 cancels body's own padding so the opaque background reaches
 		// the column edges; without it, prose scrolling past in the outer 1rem
 		// shows through beside the title.
-		"bg-global-bg sticky top-0 z-20 -mx-4 px-4 pt-4 pb-2 sm:-mx-8 sm:px-8",
-		// body's pt-16 is above the header and gone once this sticks.
+		"page-title bg-global-bg sticky top-0 z-20 -mx-4 px-4 pt-4 pb-2 sm:-mx-8 sm:px-8",
 		// A soft fade below the bar so prose does not guillotine on a hard edge.
 		"after:from-global-bg after:pointer-events-none after:absolute after:inset-x-0",
 		"after:top-full after:h-6 after:bg-gradient-to-b after:to-transparent",
@@ -34,10 +50,108 @@ const { title, subtitle, class: className } = Astro.props;
 		className,
 	]}
 >
-	<h1 class="title line-clamp-2">{title}</h1>
+	<h1 class="title page-title__h1 text-xl">
+		{
+			showPrefix && (
+				<span aria-hidden="true" class="page-title__prefix">
+					{siteConfig.title}
+					<span class="page-title__sep"> | </span>
+				</span>
+			)
+		}
+		<span class="page-title__label" data-title-label data-stuck-label={label}>{title}</span>
+	</h1>
 </div>
-{
-	subtitle && (
-		<p class="text-muted mb-12 text-base leading-relaxed text-pretty">{subtitle}</p>
-	)
-}
+{subtitle && <p class="text-muted mb-12 text-base leading-relaxed text-pretty">{subtitle}</p>}
+
+<style is:global>
+	/* Unstuck: full size, wrapping freely. No line clamp -- at the top of the page
+	   there is room, and the full title is worth showing. The clamp also cannot be
+	   done with -webkit-box here: that makes the label a block, so it drops onto
+	   its own line beneath the inline prefix. */
+	/* The site name is laid out but collapsed, so it can animate open rather than
+	   pop in. inline-block + max-width animates; display:none would not. */
+	.page-title__prefix {
+		display: inline-block;
+		max-width: 0;
+		opacity: 0;
+		overflow: hidden;
+		white-space: nowrap;
+		vertical-align: bottom;
+		transition:
+			max-width 0.32s ease,
+			opacity 0.24s ease-in;
+	}
+
+	/* Stuck: hold one line and ellipsise anything too long. The size itself is
+	   set inline by the script -- see the note there. */
+	.page-title.is-stuck .page-title__h1 {
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.page-title__prefix {
+			transition: none;
+		}
+	}
+</style>
+
+<script>
+	// Stuck when the bar's own top edge reaches the viewport top. A scroll probe
+	// rather than an IntersectionObserver: the observer needed a sentinel with a
+	// real height (a zero-area element never reports as intersecting) and still
+	// latched inconsistently between pages.
+	const bar = document.querySelector<HTMLElement>("[data-page-title]");
+	const label = document.querySelector<HTMLElement>("[data-title-label]");
+	const prefix = document.querySelector<HTMLElement>(".page-title__prefix");
+
+	if (bar) {
+		const pageTitle = label?.textContent ?? "";
+		const stuckLabel = label?.dataset.stuckLabel ?? pageTitle;
+		let stuck: boolean | null = null;
+
+		// One rect read per scroll event, and an early return unless the state
+		// actually flips. Cheap enough not to need rAF coalescing, and without it
+		// there is one less thing that can be throttled or deferred.
+		const sync = () => {
+			const next = bar.getBoundingClientRect().top <= 0.5;
+			if (next === stuck) return;
+			stuck = next;
+			bar.classList.toggle("is-stuck", next);
+
+			// Set inline rather than through a stylesheet rule: these are our own
+			// properties with no competitor, and an inline style cannot lose a
+			// cascade argument. The CSS transition on .page-title__prefix animates
+			// them.
+			if (prefix) {
+				// max-width animates; width:auto does not. 24ch clears the site name.
+				prefix.style.maxWidth = next ? "24ch" : "";
+				prefix.style.opacity = next ? "1" : "";
+			}
+			// Detail pages swap their long heading for the section name.
+			if (label && stuckLabel !== pageTitle) {
+				label.textContent = next ? stuckLabel : pageTitle;
+			}
+			publishHeight();
+		};
+
+		// Anchored headings must clear the bar. Its height changes between the
+		// stuck and unstuck states and between one- and two-line titles, so publish
+		// the real value rather than the 4.5rem guess this used to carry -- which
+		// left two-line mobile titles with exactly zero clearance.
+		function publishHeight() {
+			document.documentElement.style.setProperty(
+				"--page-title-h",
+				`${Math.round(bar!.getBoundingClientRect().height)}px`,
+			);
+		}
+
+		addEventListener("scroll", sync, { passive: true });
+		addEventListener("resize", sync, { passive: true });
+		addEventListener("pageshow", sync);
+		sync();
+		publishHeight();
+	}
+</script>

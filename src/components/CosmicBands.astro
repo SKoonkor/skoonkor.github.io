@@ -29,13 +29,25 @@
 		pointer-events: none;
 		/* Guarantees the bands can never invalidate layout in the content column. */
 		contain: strict;
+
+		/* Breathing room between the band and the text column. */
+		--cw-gutter: 2rem;
+		/* Distance over which the band fades out toward the text. Absolute rather
+		   than a percentage of the band, so the fade looks the same at every
+		   viewport width instead of steepening as the band narrows. */
+		--cw-fade: 9rem;
 	}
 
 	.cw-band {
 		position: absolute;
 		inset-block: 0;
-		/* Whatever the centred column leaves over. 48rem is Base.astro's max-w-3xl. */
-		inline-size: max(0px, calc((100vw - 48rem) / 2));
+		/* Whatever the centred column leaves over, less the gutter. 48rem is
+		   Base.astro's max-w-3xl.
+
+		   100dvw, not 100vw: 100vw includes the classic scrollbar while the centred
+		   body is laid out inside clientWidth, so on a machine set to always show
+		   scrollbars the right band used to creep ~7.5px under the column. */
+		inline-size: max(0px, calc((100dvw - 48rem) / 2 - var(--cw-gutter)));
 		block-size: 100%;
 		opacity: 0.55;
 		/* Static frame, so the margins are never empty: covers no-JS, reduced
@@ -49,13 +61,13 @@
 		inset-inline-start: 0;
 		background-position: left center;
 		/* Fade toward the text, not toward the page edge. */
-		mask-image: linear-gradient(to right, black 55%, transparent 100%);
+		mask-image: linear-gradient(to right, black calc(100% - var(--cw-fade)), transparent 100%);
 	}
 
 	.cw-band--right {
 		inset-inline-end: 0;
 		background-position: right center;
-		mask-image: linear-gradient(to left, black 55%, transparent 100%);
+		mask-image: linear-gradient(to left, black calc(100% - var(--cw-fade)), transparent 100%);
 	}
 
 	/* The frames are bright structure on black: right at home in dark mode, but
