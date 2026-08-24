@@ -1,0 +1,213 @@
+% Curriculum vitae -- Suttikoon Koonkor
+%
+% Styled to match skoonkor.github.io, which is set entirely in a monospace face.
+% Colours are the site's own tokens, converted from OKLCH to sRGB:
+%   accent #CB2A42, text #22272A, muted #4A5565, rule #D4D4D8
+%
+% Build:  tools/build_cv.sh        (Tectonic; no TeX installation required)
+% Output: public/cv/Koonkor_CV.pdf, which is what lights up the download button
+%         on /cv/ -- that page renders the link only if the file exists.
+%
+% Content is kept in step with src/data/cv.ts and src/data/publications.ts.
+% Unlike the web version, this one carries the phone number and full referee
+% contact details, which are deliberately withheld from the public page.
+
+\documentclass[a4paper,10pt]{article}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[margin=18mm,bottom=16mm]{geometry}
+\usepackage[dvipsnames]{xcolor}
+\usepackage{titlesec}
+\usepackage{enumitem}
+\usepackage{tabularx}
+\usepackage{needspace}
+\usepackage[hidelinks]{hyperref}
+
+% --- Monospace everywhere, like the site -------------------------------------
+% Inconsolata at 10pt is close to the site's ui-monospace, and zerostyle=n keeps
+% a slashed zero, which matters in dates and volume numbers.
+\usepackage[varqu,varl]{inconsolata}
+\renewcommand{\familydefault}{\ttdefault}
+
+% --- Site palette ------------------------------------------------------------
+\definecolor{accent}{HTML}{CB2A42}
+\definecolor{maintext}{HTML}{22272A}
+\definecolor{muted}{HTML}{4A5565}
+\definecolor{rulecol}{HTML}{D4D4D8}
+\color{maintext}
+
+\setlength{\parindent}{0pt}
+\pagestyle{empty}
+\linespread{1.05}
+
+% --- Section headings: small caps over a hairline rule -----------------------
+\titleformat{\section}
+  {\normalfont\footnotesize\bfseries\color{accent}\MakeUppercase}
+  {}{0pt}{}[\vspace{-6pt}{\color{rulecol}\rule{\linewidth}{0.4pt}}]
+\titlespacing*{\section}{0pt}{14pt}{7pt}
+
+% --- One CV row: title block on the left, date flush right -------------------
+% #1 role, #2 organisation or note (may be empty), #3 date
+\newcommand{\entry}[3]{%
+  \needspace{3\baselineskip}%
+  \begin{tabularx}{\linewidth}{@{}X@{}r@{}}
+    \textbf{#1} & {\footnotesize\color{muted}#3} \\
+  \end{tabularx}%
+  \ifx\relax#2\relax\else{\footnotesize\color{muted}#2\par}\fi
+  \vspace{4pt}%
+}
+
+% A compact row, for list-like sections
+\newcommand{\rowitem}[3]{%
+  \begin{tabularx}{\linewidth}{@{}X@{}r@{}}
+    \textbf{#1}\ifx\relax#2\relax\else{\color{muted}\ \textbar\ \footnotesize #2}\fi
+      & {\footnotesize\color{muted}#3} \\
+  \end{tabularx}%
+  \vspace{2pt}%
+}
+
+\begin{document}
+
+% --- Masthead ----------------------------------------------------------------
+\begin{center}
+  {\LARGE\bfseries Suttikoon Koonkor}\\[5pt]
+  {\footnotesize\color{muted}
+    Postdoctoral Researcher in Astrophysics\\
+    National Astronomical Research Institute of Thailand (NARIT)\\
+    260 Moo 4, Don Kaew, Mae Rim, Chiang Mai 50180, Thailand\\[3pt]
+    +66 96 339 1684 \textbar\ \href{mailto:suttikoon@narit.or.th}{suttikoon@narit.or.th}
+    \textbar\ \href{https://skoonkor.github.io}{skoonkor.github.io}
+    \textbar\ \href{https://orcid.org/0009-0009-9864-4691}{ORCID 0009-0009-9864-4691}
+  }
+\end{center}
+\vspace{4pt}
+
+% --- Work --------------------------------------------------------------------
+\section{Work Experience}
+\entry{Postdoctoral Researcher}{National Astronomical Research Institute of Thailand}{Oct 2025 -- Present}
+\entry{Research Assistant}{National Astronomical Research Institute of Thailand}{Jul -- Sep 2025}
+
+% --- Publications ------------------------------------------------------------
+\section{Publications}
+{\footnotesize\color{muted}Full list on
+\href{https://ui.adsabs.harvard.edu/search/q=author\%3A\%22Koonkor\%2C\%20S.\%22}{NASA ADS}.\par}
+\vspace{5pt}
+
+\begin{enumerate}[leftmargin=1.4em,itemsep=5pt,topsep=0pt,label=\arabic*.]
+  \item \textbf{S Koonkor}, C M Baugh, et al.
+        The galaxy spectrum synthesis in cosmological simulation using the
+        principal component analyses.
+        {\color{muted}\textit{In preparation; manuscript available on request.}}
+
+  \item A Kumar, C M Baugh, \textbf{S Koonkor}, et al.
+        The PAU Survey: uncovering the connection between intrinsic and observed
+        galaxy properties using symbolic regression.
+        {\color{muted}\textit{Accepted, MNRAS}, 2026.
+        \href{https://arxiv.org/abs/2512.13389}{arXiv:2512.13389}}
+
+  \item \textbf{S Koonkor}, C M Baugh, G Manzoni, et al. (2026)
+        The PAU Survey: the $i$-band galaxy luminosity function from the
+        present-day to $z = 2$.
+        {\color{muted}\textit{MNRAS}, 547(3), 1--24.
+        \href{https://doi.org/10.1093/mnras/stag362}{doi:10.1093/mnras/stag362}}
+
+  \item G Manzoni, C M Baugh, P Norberg, \ldots, \textbf{S Koonkor}, et al. (2024)
+        The PAU Survey: a new constraint on galaxy formation models using the
+        observed colour--redshift relation.
+        {\color{muted}\textit{MNRAS}, 530(2), 1394--1413.
+        \href{https://doi.org/10.1093/mnras/stae659}{doi:10.1093/mnras/stae659}}
+\end{enumerate}
+
+% --- Education ---------------------------------------------------------------
+\section{Education}
+\entry{PhD in Astrophysics \normalfont{\textemdash\ Durham University, UK}}%
+      {Thesis: A New Estimate of the Galaxy Luminosity Function, using Machine Learning and a Mock Catalogue}{2021 -- 2025}
+\entry{MSc by Research in Physics \normalfont{\textemdash\ Durham University, UK}}%
+      {Thesis: Application of Principal Component Analysis to Galaxy Spectral Energy Distributions}{2019 -- 2020}
+\entry{BSc in Physics \normalfont{\textemdash\ Khon Kaen University, Thailand}}%
+      {Thesis: Halo Mass Function in Dark Energy Models}{2014 -- 2018}
+
+% --- Scholarships ------------------------------------------------------------
+\section{Scholarships \& Awards}
+\entry{Ogden Outreach Award \normalfont{\color{muted}[award]}}%
+      {A postgraduate ambassador, for contributing to physics outreach}{2023}
+\entry{Civil Service Commission of Thailand Postgraduate Scholarship \normalfont{\color{muted}[scholarship]}}%
+      {Full financial support for postgraduate study}{2018 -- 2024}
+\entry{Development and Promotion of Science and Technology Talents Project \normalfont{\color{muted}[scholarship]}}%
+      {A fully-funded scholarship for a bachelor's degree in science}{2014 -- 2018}
+\entry{The 13\textsuperscript{th} Conference on Science and Technology for Youths \normalfont{\color{muted}[award]}}%
+      {Best Oral Presentation in Astrophysics and High Energy Physics research}{2018}
+
+% --- Conferences -------------------------------------------------------------
+\section{Conferences \& Workshops}
+\rowitem{Deep Learning for Physics (DELPHYS2025)}{Attendee}{Dec 2025}
+\rowitem{Space Astronomy Science Platforms Focus Week}{Attendee}{Dec 2025}
+\rowitem{WE-Heraeus and NARIT Cosmology School 2025 -- Galaxies and Beyond}{Talk}{Oct 2025}
+\rowitem{HSC Medium-band Survey Science Community Workshop}{Poster}{Aug 2025}
+\rowitem{Durham-Edinburgh eXtragalactic (DEX) Workshop XX}{Talk}{Jan 2024}
+\rowitem{Building Galaxies from Scratch 2024}{Poster}{Feb 2024}
+\rowitem{Carl-Zeiss-Stiftung Summer School on Scientific ML for Astrophysics}{Attendee}{Aug 2023}
+\rowitem{First Thai-CTA Workshop on Astroparticle Physics}{Attendee}{Feb 2019}
+
+% --- Teaching ----------------------------------------------------------------
+\section{Teaching \& Mentoring}
+\entry{Research-based Outreach \normalfont{\textemdash\ NARIT}}%
+      {Mentored high school students (simple ML image classification, N-body simulations)}{Nov 2025 -- Jun 2026}
+\entry{Master's Research \normalfont{\textemdash\ Durham University}}%
+      {Mentored a Master's student (A. Kumar) on research using the mock galaxy catalogue}{Feb -- Dec 2024}
+\entry{Level 1 Introduction to Astronomy \normalfont{\textemdash\ Durham University}}%
+      {Undergraduate Teaching Assistant}{Sep 2021 -- Mar 2022, Sep 2023 -- Mar 2024}
+\entry{Level 1 and Level 2 Scientific Computing Workshop \normalfont{\textemdash\ Durham University}}%
+      {Undergraduate Teaching Assistant}{Sep 2022 -- Mar 2023}
+\entry{Introduction to Scientific and High-Performance Computing \normalfont{\textemdash\ Durham University}}%
+      {Postgraduate Teaching Assistant}{Sep -- Nov 2022}
+
+% --- Outreach ----------------------------------------------------------------
+\section{Activities \& Outreach}
+\rowitem{Astronomy for All}{NARIT \& Lopburi School for the Blind}{Feb 2026}
+\rowitem{Research-based Outreach}{Mentoring two high school students}{Nov 2025 -- Present}
+\rowitem{MOrning Coffee Hurried ArXiv (MOCHA)}{Founder, weekly astrophysics journal club}{Oct 2025 -- Present}
+\rowitem{The Space Investigators}{Led the main interactive software development}{Mar -- Sep 2024}
+\rowitem{Durham University Open Days}{}{Sep 2024}
+\rowitem{The Royal Society Exhibition at Jodrell Bank Observatory}{}{Aug 2024}
+\rowitem{The Ukrainian Summer School}{}{Aug 2024}
+\rowitem{Annual Schools' Physicist of the Year}{}{Jul 2022, Jun 2023, Jun 2024}
+\rowitem{STEAM Live Primary Career Fair}{}{Jun 2024}
+\rowitem{The Durham Schools' Science Festival}{}{Mar 2024}
+\rowitem{Celebrate Science}{}{Oct 2022, Nov 2023}
+\rowitem{Summer Science Exhibition Lates at the Royal Society}{}{Jul 2023}
+\rowitem{Post-Offer Visit Days}{}{Mar 2023}
+\rowitem{Astronomy Camps and Activities}{300+ hours}{2014 -- 2017}
+
+% --- Skills ------------------------------------------------------------------
+\section{Key Skills}
+\begin{tabularx}{\linewidth}{@{}l@{\hspace{1.5em}}X@{}}
+  \textbf{Computing}      & Python, Fortran, \LaTeX, SQL, HTML, SAOImageDS9 \\[2pt]
+  \textbf{Soft skills}    & International collaboration, public speaking, technical writing, adaptability \\[2pt]
+  \textbf{Languages}      & Thai (native), English (proficient), German (basic) \\[2pt]
+  \textbf{Research areas} & Galaxy formation and evolution, large scale structure,
+                            machine learning in astrophysics \\
+\end{tabularx}
+
+% --- Referees ----------------------------------------------------------------
+\section{References}
+\begin{tabularx}{\linewidth}{@{}XX@{}}
+  \textbf{Prof. Carlton Baugh} & \textbf{Asst. Prof. Wiphu Rujopakarn} \\
+  {\footnotesize\color{muted}
+    Institute for Computational Cosmology\\
+    Durham University, South Road\\
+    Durham DH1 3LE, UK\\
+    \href{mailto:c.m.baugh@durham.ac.uk}{c.m.baugh@durham.ac.uk}\\
+    Tel: +44 (191) 334 3542
+  } &
+  {\footnotesize\color{muted}
+    National Astronomical Research\\
+    Institute of Thailand (NARIT)\\
+    260 Moo 4, Don Kaew, Mae Rim\\
+    Chiang Mai 50180, Thailand\\
+    \href{mailto:wiphu@narit.or.th}{wiphu@narit.or.th}
+  } \\
+\end{tabularx}
+
+\end{document}
