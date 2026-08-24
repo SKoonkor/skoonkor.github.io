@@ -217,11 +217,77 @@ function checkGolden(d) {
 
 /* ------------------------------------------------------------------ render -- */
 
-function drawSpectrum(canvas, d, state, recon, truth) {
+/**
+ * Human-facing names for the bands, keyed on the names in basis.json. Kept here
+ * rather than in the data because they are presentation, and because "nir" is
+ * the right identifier but the wrong thing to show a reader.
+ */
+const BAND_LABELS = { uv: 'UV', optical: 'optical', nir: 'near-IR' };
+export const bandLabel = (name) => BAND_LABELS[name] || name;
+
+const FONT = (px) => `${px}px ui-monospace, SFMono-Regular, Menlo, monospace`;
+
+/**
+ * Height of the strip above the plot that holds the band names, in CSS pixels.
+ * fitCanvas applies a devicePixelRatio transform, so canvas units are CSS units
+ * and .demo-legend can be offset by this same number to sit clear of them.
+ */
+const BAND_STRIP_H = 26;
+
+/** Å, formatted the way the axis ticks are: 1000, 2000 ... 30 000. */
+function formatAngstrom(a) {
+	return a >= 10000 ? `${Math.round(a / 1000)} 000` : String(Math.round(a));
+}
+
+/**
+ * The dashed dividers between the three PCA bands, plus their names along the
+ * top of the plot. These are the single most load-bearing annotation on the
+ * figure: the whole point of the method is that the analysis is done per band,
+ * and without them the reader cannot see where one basis stops and the next
+ * begins.
+ */
+function drawBandDividers(ctx, d, X, padT, h, c, withNames) {
+	ctx.save();
+	ctx.strokeStyle = c.axis;
+	ctx.globalAlpha = 0.85;
+	ctx.lineWidth = 1;
+	ctx.setLineDash([5, 4]);
+	for (let b = 1; b < d.bands.length; b++) {
+		const x = X(d.bands[b].lamLo);
+		ctx.beginPath();
+		ctx.moveTo(x, padT);
+		ctx.lineTo(x, padT + h);
+		ctx.stroke();
+	}
+	ctx.restore();
+
+	if (!withNames) return;
+	ctx.save();
+	ctx.fillStyle = c.text;
+	ctx.font = FONT(10);
+	ctx.textAlign = 'center';
+	ctx.textBaseline = 'middle';
+	for (const band of d.bands) {
+		// Clamp to the plot: the outer bands run off the axis, so their midpoint
+		// is not where their visible middle is.
+		const xa = Math.max(X(band.lamLo), X(d.lam[0]));
+		const xb = Math.min(X(band.lamHi), X(d.lam[d.lam.length - 1]));
+		ctx.fillText(bandLabel(band.name), (xa + xb) / 2, padT / 2);
+	}
+	ctx.restore();
+}
+
+function drawSpectrum(canvas, d, recon, truth) {
 	const [W, H] = fitCanvas(canvas);
 	const ctx = canvas.getContext('2d');
 	const c = CONFIG.colours;
-	const padL = state.deep ? 54 : 14, padR = 12, padT = 12, padB = 34;
+	// Left pad carries the 1e-n labels and the rotated axis title; the bottom
+	// carries the ribbon, the tick labels and the axis title, in that order.
+	//
+	// padT reserves a strip above the plot for the band names, so they cannot
+	// collide with the legend. The legend is DOM, positioned just below that
+	// strip -- see BAND_STRIP_H and .demo-legend in explore.css.
+	const padL = 64, padR = 12, padT = BAND_STRIP_H, padB = 52;
 	const w = W - padL - padR, h = H - padT - padB;
 	ctx.clearRect(0, 0, W, H);
 	if (w <= 0 || h <= 0) return;
@@ -246,44 +312,51 @@ function drawSpectrum(canvas, d, state, recon, truth) {
 	// Grid
 	ctx.strokeStyle = c.axis; ctx.lineWidth = 1;
 	ctx.fillStyle = c.text;
-	ctx.font = '11px "Source Sans Pro", system-ui, sans-serif';
+	ctx.font = FONT(10);
 	ctx.textAlign = 'center'; ctx.textBaseline = 'top';
 	for (const t of [1000, 2000, 5000, 10000, 20000]) {
 		const x = X(t);
 		if (x < padL - 1 || x > W - padR + 1) continue;
-		ctx.globalAlpha = 0.5;
+		ctx.globalAlpha = 0.35;
 		ctx.beginPath(); ctx.moveTo(x, padT); ctx.lineTo(x, padT + h); ctx.stroke();
 		ctx.globalAlpha = 1;
-		const label = state.deep ? `${t}` : (t === 1000 ? '' : '');
-		if (label) ctx.fillText(label, x, padT + h + 16);
+		ctx.fillText(formatAngstrom(t), x, padT + h + 16);
 	}
-	if (state.deep) {
-		ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
-		for (let e = Math.ceil(bot); e <= Math.floor(top); e++) {
-			const y = Y(Math.pow(10, e));
-			if (y < padT || y > padT + h) continue;
-			ctx.globalAlpha = 0.35;
-			ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(padL + w, y); ctx.stroke();
-			ctx.globalAlpha = 1;
-			ctx.fillText(`1e${e}`, padL - 6, y);
-		}
+	ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+	for (let e = Math.ceil(bot); e <= Math.floor(top); e++) {
+		const y = Y(Math.pow(10, e));
+		if (y < padT || y > padT + h) continue;
+		ctx.globalAlpha = 0.25;
+		ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(padL + w, y); ctx.stroke();
+		ctx.globalAlpha = 1;
+		ctx.fillText(`1e${e}`, padL - 8, y);
 	}
 	ctx.globalAlpha = 1;
 
+	drawBandDividers(ctx, d, X, padT, h, c, true);
+
 	// Visible-spectrum ribbon along the axis: tells a lay visitor, without a
-	// word of text, that the horizontal axis is colour.
-	const ry = padT + h + 4, rh = 7;
+	// word of text, which part of the range their eye can actually see.
+	const ry = padT + h + 4, rh = 6;
 	for (let nm = 380; nm <= 750; nm += 2) {
 		const xa = X(nm * 10), xb = X((nm + 2) * 10);
 		ctx.fillStyle = wavelengthToCSS(nm);
 		ctx.fillRect(xa, ry, Math.max(1, xb - xa + 0.5), rh);
 	}
+
+	// Axis titles.
 	ctx.fillStyle = c.text;
-	ctx.font = '10px "Source Sans Pro", system-ui, sans-serif';
-	ctx.textAlign = 'left'; ctx.textBaseline = 'top';
-	ctx.fillText('◀ ultraviolet', padL, ry + rh + 3);
-	ctx.textAlign = 'right';
-	ctx.fillText('infrared ▶', padL + w, ry + rh + 3);
+	ctx.font = FONT(11);
+	ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+	ctx.fillText('wavelength (Å)', padL + w / 2, H - 6);
+	ctx.save();
+	ctx.translate(14, padT + h / 2);
+	ctx.rotate(-Math.PI / 2);
+	ctx.textBaseline = 'top';
+	// The plotted spectrum is L2-normalised, not physical: ||f||_2 = 1. Saying
+	// just "flux" here would be a quiet lie about the units.
+	ctx.fillText('normalised flux density', 0, 0);
+	ctx.restore();
 
 	const line = (arr, style, width, dash) => {
 		ctx.save();
@@ -310,7 +383,7 @@ function drawResidual(canvas, d, recon, truth) {
 	const [W, H] = fitCanvas(canvas);
 	const ctx = canvas.getContext('2d');
 	const c = CONFIG.colours;
-	const padL = 54, padR = 12, padT = 8, padB = 20;
+	const padL = 64, padR = 12, padT = 10, padB = 26;
 	const w = W - padL - padR, h = H - padT - padB;
 	ctx.clearRect(0, 0, W, H);
 	if (w <= 0 || h <= 0 || !truth) return;
@@ -321,19 +394,36 @@ function drawResidual(canvas, d, recon, truth) {
 	const LIM = 10;                                   // +/- per cent
 	const Y = (p) => padT + h * (0.5 - Math.max(-LIM, Math.min(LIM, p)) / (2 * LIM));
 
-	// +/-1% and +/-5% guide bands
-	ctx.fillStyle = 'rgba(142, 190, 188, 0.13)';
+	// +/-1% and +/-5% guide bands. The inner one is only a tenth of the panel
+	// height, so it needs a real step in alpha to be distinguishable at all --
+	// 0.10 against 0.16 read as a single flat block.
+	ctx.fillStyle = c.good;
+	ctx.globalAlpha = 0.07;
 	ctx.fillRect(padL, Y(5), w, Y(-5) - Y(5));
-	ctx.fillStyle = 'rgba(142, 190, 188, 0.18)';
+	ctx.globalAlpha = 0.22;
 	ctx.fillRect(padL, Y(1), w, Y(-1) - Y(1));
+	ctx.globalAlpha = 1;
 
 	ctx.strokeStyle = c.axis; ctx.lineWidth = 1;
 	ctx.beginPath(); ctx.moveTo(padL, Y(0)); ctx.lineTo(padL + w, Y(0)); ctx.stroke();
 
+	// The same band dividers as the panel above, so the two read as one figure.
+	drawBandDividers(ctx, d, X, padT, h, c, false);
+
 	ctx.fillStyle = c.text;
-	ctx.font = '10px "Source Sans Pro", system-ui, sans-serif';
+	ctx.font = FONT(10);
 	ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
-	for (const p of [10, 5, 1, 0, -1, -5, -10]) ctx.fillText(`${p > 0 ? '+' : ''}${p}%`, padL - 6, Y(p));
+	for (const p of [10, 5, 0, -5, -10]) {
+		ctx.fillText(`${p > 0 ? '+' : ''}${p}%`, padL - 8, Y(p));
+	}
+
+	ctx.save();
+	ctx.translate(14, padT + h / 2);
+	ctx.rotate(-Math.PI / 2);
+	ctx.font = FONT(11);
+	ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+	ctx.fillText('error', 0, 0);
+	ctx.restore();
 
 	// The far-UV floor below the Lyman break carries essentially no flux, so its
 	// fractional error is meaningless; grey it out rather than drawing garbage.
@@ -407,10 +497,12 @@ export async function init(root) {
 		const p = parseInt(v, 10);
 		return Number.isFinite(p) ? p : fallback;
 	};
+	// There used to be a plain mode and an "astronomer mode" behind a toggle.
+	// Only the latter survives, so there is no view state left -- just the two
+	// sliders.
 	const state = {
 		n: clamp(intOr(urlState.n, 12), nMin, nMax),
 		age: clamp(intOr(urlState.age, Math.round(ssps.length * 0.72)), 0, ssps.length - 1),
-		deep: urlState.mode === 'deep',
 	};
 
 	function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
@@ -429,8 +521,8 @@ export async function init(root) {
 		reconstruct(d, ssp.index, state.n, recon);
 		const t = truthFor(ssp);
 
-		drawSpectrum(reconEl, d, state, recon, t);
-		if (state.deep && residEl) drawResidual(residEl, d, recon, t);
+		drawSpectrum(reconEl, d, recon, t);
+		if (residEl) drawResidual(residEl, d, recon, t);
 
 		// Readouts. Every number here comes from accuracy.json.
 		const err = p95At(state.n);
@@ -447,28 +539,29 @@ export async function init(root) {
 		const sw = $('[data-swatch]');
 		if (sw) sw.style.background = spectrumToCSS(d.lam, recon);
 
+		// Per-band component counts, above the chart. These move with the slider:
+		// the allocation across the three bands is not proportional, and watching
+		// the UV take the lion's share is the point.
+		const alloc = d.basis.allocation[String(state.n)];
+		d.bands.forEach((band, i) => {
+			const el = root.querySelector(`[data-band-n="${i}"]`);
+			if (el) el.textContent = alloc[i];
+		});
+
 		const live = $('[data-live]');
 		if (live) {
 			live.textContent = `Reconstruction using ${state.n} of ${nMax} components. `
 				+ `95th-percentile error ${err === null ? 'unknown' : err.toFixed(2) + ' per cent'}.`;
 		}
 
-		if (state.deep) {
-			const alloc = d.basis.allocation[String(state.n)];
-			const el = $('[data-alloc]');
-			if (el) {
-				el.textContent = d.bands
-					.map((b, i) => `${b.name} ${alloc[i]}`).join('  ·  ');
-			}
-			const pb = $('[data-perband]');
-			if (pb) {
-				const i = acc.n_values.indexOf(state.n);
-				pb.textContent = Object.entries(acc.per_band_p95)
-					.map(([k, v]) => `${k} ${v[i].toFixed(2)}%`).join('  ·  ');
-			}
+		const pb = $('[data-perband]');
+		if (pb) {
+			const i = acc.n_values.indexOf(state.n);
+			pb.textContent = Object.entries(acc.per_band_p95)
+				.map(([k, v]) => `${bandLabel(k)} ${v[i].toFixed(2)}%`).join('  ·  ');
 		}
 
-		writeState({ n: state.n, age: state.age, mode: state.deep ? 'deep' : null });
+		writeState({ n: state.n, age: state.age });
 	});
 
 	/* --- controls --- */
@@ -480,16 +573,6 @@ export async function init(root) {
 	const ageSlider = $('[data-slider-age]');
 	ageSlider.min = 0; ageSlider.max = ssps.length - 1; ageSlider.value = state.age;
 	ageSlider.addEventListener('input', () => { state.age = +ageSlider.value; render(); });
-
-	const toggle = $('[data-toggle-deep]');
-	function setDeep(on) {
-		state.deep = on;
-		root.classList.toggle('is-deep', on);
-		toggle.setAttribute('aria-expanded', String(on));
-		toggle.textContent = on ? 'Hide the details' : 'Astronomer mode';
-		render();
-	}
-	toggle.addEventListener('click', () => setDeep(!state.deep));
 
 	// Fill in the copy that depends on the data, so the page can never state a
 	// number the basis does not support.
@@ -506,14 +589,34 @@ export async function init(root) {
 		if (v !== undefined) el.textContent = v;
 	});
 
+	// Band names and wavelength ranges never change; only the counts do.
+	d.bands.forEach((band, i) => {
+		const nameEl = root.querySelector(`[data-band-name="${i}"]`);
+		const rangeEl = root.querySelector(`[data-band-range="${i}"]`);
+		if (nameEl) nameEl.textContent = bandLabel(band.name);
+		if (rangeEl) {
+			rangeEl.textContent = `${formatAngstrom(band.lamLo)}\u2013${formatAngstrom(band.lamHi)} \u212B`;
+		}
+	});
+
 	window.addEventListener('resize', render);
 
-	if (state.deep) setDeep(true);
+	// The canvas cannot inherit CSS, so a theme change has to be pushed into it.
+	// Both paths matter: the site's toggle stamps data-theme on <html>, and a
+	// visitor who has never used it follows the OS setting instead.
+	function refollowTheme() {
+		CONFIG.colours = readPalette(root);
+		render();
+	}
+	new MutationObserver(refollowTheme)
+		.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+	window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', refollowTheme);
+
 	root.classList.add('is-ready');
 
 	// The opening move: sweep the component count up so a visitor sees a
 	// featureless curve acquire real spectral structure before touching anything.
-	if (!state.deep && !urlState.n && !prefersReducedMotion()) {
+	if (!urlState.n && !prefersReducedMotion()) {
 		await sweep(nMin, state.n, 1600, (v) => { state.n = v; nSlider.value = v; render(); });
 	} else {
 		render();

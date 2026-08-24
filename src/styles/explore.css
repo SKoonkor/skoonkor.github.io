@@ -1,69 +1,36 @@
 /*
  * The interactive demos under /explore/.
  *
- * The chart panel stays dark in both site themes, deliberately: it is a figure,
- * and the CIE-derived colour swatch is calibrated against a dark ground -- on
- * white, young hot populations wash out. Everything is scoped to .demo-* or
- * .explore-cards so it cannot leak into the rest of the site, and the canvas
- * colours come from the custom properties set on [data-demo] so the panel can
- * follow a theme later without touching the drawing code.
- */
-
-.demo-pca-sed {
-	background: var(--demo-bg, #16121d);
-	color: rgb(255 255 255 / 0.72);
-	border-radius: 8px;
-	padding: 1.5rem;
-	margin-block: 1rem 0;
-}
-
-	.demo-pca-sed a {
-		color: inherit;
-		border-bottom-color: rgb(255 255 255 / 0.28);
-	}
-
-	.demo-pca-sed a:hover {
-		color: var(--demo-recon, #E27689);
-	}
-
-	.demo-pca-sed h2 {
-		color: #fff;
-		font-size: 1.05em;
-		margin-bottom: 0.6em;
-	}
-
-/*
- * Shell for the /explore/ demos.
+ * Everything here is drawn from the site's own theme tokens (--color-global-bg,
+ * --color-muted, --color-accent and friends), so the panel follows light and
+ * dark mode with the rest of the page. It used to be a fixed dark slab on the
+ * grounds that the CIE-derived colour swatch is calibrated against a dark
+ * ground; the swatch now carries its own dark mount instead, which keeps that
+ * true without forcing the whole figure to be dark.
  *
- * Loaded after main.css. The demo pages do not use Prologue's fixed sidebar, so
- * this overrides that layout with a plain centred column, and everything specific
- * to a demo is namespaced under its own root class.
+ * The canvas cannot inherit CSS, so the drawing colours are handed to the script
+ * through the --demo-* custom properties below. Those are var() references, and
+ * custom properties are substituted at computed-value time, so getComputedStyle
+ * hands the script a fully resolved colour that already reflects the theme.
+ *
+ * Everything is scoped to .demo-* or .explore-cards so it cannot leak into the
+ * rest of the site.
  */
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-.explore-status {
-	margin: 1em 0;
-	padding: 0.9em 1.1em;
-	border-left: 3px solid #d8a657;
-	background: rgba(216, 166, 87, 0.1);
-	font-size: 0.9em;
-}
-
-/* --- the demo panel ------------------------------------------------------- */
-
 .demo-pca-sed {
+	--demo-recon: var(--color-accent);
+	--demo-truth: var(--color-muted);
+	--demo-axis: var(--color-muted);
+	--demo-text: var(--color-muted);
+	/* Pass/fail signals, not theme colours: the accent is red in light mode, and
+	   a red "within tolerance" band would read as an error. Fixed teal and amber
+	   instead, both chosen to hold up against either ground. */
+	--demo-good: oklch(65% 0.11 175);
+	--demo-warn: oklch(70% 0.13 70);
+	--demo-line: color-mix(in oklab, var(--color-muted) 25%, transparent);
+	--demo-surface: color-mix(in oklab, var(--color-muted) 6%, transparent);
+
+	margin-block: 1.5rem 0;
 	opacity: 0;
 	transition: opacity 0.4s ease-in-out;
 }
@@ -72,14 +39,89 @@
 		opacity: 1;
 	}
 
+	.demo-pca-sed h2 {
+		font-size: 1rem;
+		color: var(--color-accent-2);
+		margin-bottom: 0.6em;
+	}
+
+	.demo-pca-sed p {
+		line-height: 1.65;
+	}
+
+	.demo-pca-sed a {
+		text-decoration: underline;
+		text-underline-offset: 2px;
+	}
+
+	.demo-pca-sed a:hover {
+		text-decoration-color: var(--color-link);
+		text-decoration-thickness: 2px;
+	}
+
+.explore-status {
+	margin: 1em 0;
+	padding: 0.9em 1.1em;
+	border-inline-start: 3px solid var(--color-accent);
+	background: color-mix(in oklab, var(--color-accent) 8%, transparent);
+	font-size: 0.9em;
+}
+
+/* --- per-band component counts -------------------------------------------- */
+/*
+ * Sits directly above the chart and lines up with the dashed dividers drawn on
+ * it, so the three counts read as a key to the bands rather than as a stray
+ * statistic. Contents are written by the script from basis.json.
+ */
+
+.demo-bands {
+	display: grid;
+	grid-template-columns: repeat(3, 1fr);
+	gap: 0.75rem;
+	margin: 0 0 0.75rem;
+	padding: 0;
+	list-style: none;
+}
+
+	.demo-bands li {
+		padding: 0.55rem 0.7rem;
+		border: 1px solid var(--demo-line);
+		border-radius: 6px;
+		background: var(--demo-surface);
+		text-align: center;
+	}
+
+	.demo-bands__n {
+		display: block;
+		font-size: 1.35rem;
+		line-height: 1.1;
+		color: var(--color-accent);
+		font-variant-numeric: tabular-nums;
+	}
+
+	.demo-bands__name {
+		display: block;
+		margin-top: 0.15rem;
+		font-size: 0.8rem;
+		color: var(--color-global-text);
+	}
+
+	.demo-bands__range {
+		display: block;
+		font-size: 0.7rem;
+		color: var(--color-muted);
+	}
+
+/* --- the figure ------------------------------------------------------------ */
+
 .demo-chart {
 	position: relative;
 	width: 100%;
-	aspect-ratio: 16 / 8;
-	min-height: 260px;
-	border-radius: 8px;
-	background: rgba(0, 0, 0, 0.28);
-	border: 1px solid rgba(255, 255, 255, 0.08);
+	aspect-ratio: 16 / 9;
+	min-height: 280px;
+	border: 1px solid var(--demo-line);
+	border-radius: 6px;
+	background: var(--demo-surface);
 }
 
 	.demo-chart canvas {
@@ -89,45 +131,60 @@
 	}
 
 .demo-residual {
-	display: none;
+	display: block;
 	width: 100%;
-	height: 150px;
-	margin-top: 0.5em;
-	border-radius: 8px;
-	background: rgba(0, 0, 0, 0.28);
-	border: 1px solid rgba(255, 255, 255, 0.08);
+	height: 160px;
+	margin-top: 0.5rem;
+	border: 1px solid var(--demo-line);
+	border-radius: 6px;
+	background: var(--demo-surface);
 }
 
-	.is-deep .demo-residual {
-		display: block;
-	}
-
-	.demo-residual canvas {
-		display: block;
-		width: 100%;
-		height: 100%;
-	}
-
+/*
+ * Top-right of the plot, inside the frame. Absolutely positioned rather than
+ * painted onto the canvas so it stays crisp at any device pixel ratio and can
+ * use the page's own type.
+ *
+ * The 26px offset clears the band-name strip the chart reserves at the top of
+ * the canvas (BAND_STRIP_H in pca-sed.js); without it the legend lands on top of
+ * the near-IR label. The tinted background is because the spectrum itself runs
+ * high on the right at most ages, and the text has to stay readable over it.
+ */
 .demo-legend {
+	position: absolute;
+	inset-block-start: 26px;
+	inset-inline-end: 0.55rem;
+	padding: 0.3rem 0.5rem;
+	border-radius: 4px;
+	/* Opaque, and mixed to exactly the composite of --demo-surface over the page
+	   background, so it hides the curve behind it without showing an edge. */
+	background: color-mix(in oklab, var(--color-global-bg) 94%, var(--color-muted));
 	display: flex;
-	flex-wrap: wrap;
-	gap: 1.25em;
-	margin-top: 0.9em;
-	font-size: 0.8em;
-	opacity: 0.75;
+	flex-direction: column;
+	align-items: flex-end;
+	gap: 0.25rem;
+	font-size: 0.7rem;
+	line-height: 1.3;
+	color: var(--color-muted);
+	pointer-events: none;
 }
 
 	.demo-legend span::before {
 		content: '';
 		display: inline-block;
-		width: 22px;
+		width: 20px;
 		height: 0;
-		margin-right: 0.5em;
+		margin-inline-end: 0.45em;
 		vertical-align: middle;
 	}
 
-	.demo-legend .k-truth::before { border-top: 3px dashed rgba(255, 255, 255, 0.5); }
-	.demo-legend .k-recon::before { border-top: 2px solid #E27689; }
+	.demo-legend .k-truth::before {
+		border-top: 3px dashed var(--color-muted);
+	}
+
+	.demo-legend .k-recon::before {
+		border-top: 2px solid var(--color-accent);
+	}
 
 /* --- controls ------------------------------------------------------------- */
 
@@ -140,17 +197,17 @@
 
 .demo-control label {
 	display: block;
-	font-size: 0.75em;
+	font-size: 0.7rem;
 	letter-spacing: 0.14em;
 	text-transform: uppercase;
-	opacity: 0.6;
+	color: var(--color-muted);
 	margin-bottom: 0.6em;
 }
 
 .demo-control input[type="range"] {
 	width: 100%;
 	margin: 0;
-	accent-color: #E27689;
+	accent-color: var(--color-accent);
 	background: none;
 	border: 0;
 	height: 24px;
@@ -159,12 +216,12 @@
 
 .demo-readout {
 	margin-top: 0.5em;
-	font-size: 0.95em;
-	color: #fff;
+	font-size: 0.9rem;
+	color: var(--color-global-text);
 }
 
 	.demo-readout strong {
-		color: #fff;
+		color: var(--color-accent-2);
 		font-weight: 600;
 	}
 
@@ -172,7 +229,7 @@
 	height: 5px;
 	margin-top: 0.6em;
 	border-radius: 3px;
-	background: rgba(255, 255, 255, 0.1);
+	background: color-mix(in oklab, var(--color-muted) 20%, transparent);
 	overflow: hidden;
 }
 
@@ -180,7 +237,7 @@
 		display: block;
 		height: 100%;
 		width: 0;
-		background: #8ebebc;
+		background: var(--color-accent);
 		transition: width 0.15s linear, background 0.3s ease;
 	}
 
@@ -191,20 +248,35 @@
 	margin-top: 0.5em;
 }
 
+/*
+ * The swatch keeps a dark mount in both themes. It is the colour these stars
+ * would look to the eye, and a hot young population is very nearly white: on the
+ * light theme's near-white page it would simply disappear. Against black it
+ * reads the way a star does against the night sky.
+ */
 .demo-swatch {
 	width: 42px;
 	height: 42px;
 	flex: 0 0 auto;
+	padding: 5px;
 	border-radius: 50%;
-	border: 1px solid rgba(255, 255, 255, 0.25);
-	background: #222;
-	transition: background 0.2s ease;
+	background: oklch(18% 0 0);
+	border: 1px solid var(--demo-line);
 }
 
+	.demo-swatch i {
+		display: block;
+		width: 100%;
+		height: 100%;
+		border-radius: 50%;
+		background: oklch(18% 0 0);
+		transition: background 0.2s ease;
+	}
+
 .demo-swatch-note {
-	font-size: 0.8em;
-	opacity: 0.65;
-	line-height: 1.4;
+	font-size: 0.78rem;
+	color: var(--color-muted);
+	line-height: 1.45;
 }
 
 /* --- why it matters ------------------------------------------------------- */
@@ -212,70 +284,53 @@
 .demo-why {
 	margin-top: 2.5em;
 	padding: 1.4em 1.6em;
-	border-radius: 8px;
-	background: rgba(255, 255, 255, 0.04);
-	border: 1px solid rgba(255, 255, 255, 0.07);
-	line-height: 1.65;
+	border: 1px solid var(--demo-line);
+	border-radius: 6px;
+	background: var(--demo-surface);
 }
 
 	.demo-why h2 {
-		font-size: 1em;
+		font-size: 0.75rem;
 		letter-spacing: 0.14em;
 		text-transform: uppercase;
-		color: rgba(255, 255, 255, 0.55);
+		color: var(--color-muted);
 		margin-bottom: 0.7em;
 	}
 
-/* --- astronomer mode ------------------------------------------------------ */
-
-.demo-toggle {
-	display: inline-block;
-	margin-top: 2em;
-	padding: 0.6em 1.2em;
-	border: 1px solid rgba(255, 255, 255, 0.2);
-	border-radius: 4px;
-	background: none;
-	color: inherit;
-	font-family: inherit;
-	font-size: 0.8em;
-	letter-spacing: 0.12em;
-	text-transform: uppercase;
-	cursor: pointer;
-}
-
-	.demo-toggle:hover {
-		border-color: #E27689;
-		color: #fff;
-	}
+/* --- the detail ----------------------------------------------------------- */
 
 .demo-deep {
-	display: none;
-	margin-top: 2em;
+	margin-top: 2.5em;
 	padding-top: 2em;
-	border-top: 1px solid rgba(255, 255, 255, 0.1);
+	border-top: 1px solid var(--demo-line);
 }
 
-	.is-deep .demo-deep {
-		display: block;
-	}
+/* The reconstruction identity, given its own line and centred. */
+.demo-eq {
+	margin-block: 1.2em;
+	text-align: center;
+	font-size: 1.05rem;
+	color: var(--color-accent-2);
+}
 
 .demo-facts {
 	width: 100%;
-	font-size: 0.85em;
-	margin-bottom: 2em;
+	font-size: 0.85rem;
+	margin-block: 1.5em 2em;
+	border-collapse: collapse;
 }
 
 	.demo-facts th,
 	.demo-facts td {
-		padding: 0.5em 0.8em 0.5em 0;
-		border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-		text-align: left;
+		padding: 0.55em 0.8em 0.55em 0;
+		border-bottom: 1px solid var(--demo-line);
+		text-align: start;
 		vertical-align: top;
 	}
 
 	.demo-facts th {
 		font-weight: 400;
-		opacity: 0.55;
+		color: var(--color-muted);
 		white-space: nowrap;
 		width: 15em;
 	}
@@ -289,10 +344,15 @@
 
 	.demo-downloads a {
 		padding: 0.3em 0.8em;
-		border: 1px solid rgba(255, 255, 255, 0.18);
+		border: 1px solid var(--demo-line);
 		border-radius: 3px;
-		border-bottom-width: 1px;
-		font-size: 0.8em;
+		font-size: 0.8rem;
+		text-decoration: none;
+	}
+
+	.demo-downloads a:hover {
+		border-color: var(--color-accent);
+		color: var(--color-accent);
 	}
 
 .visually-hidden {
@@ -319,38 +379,38 @@
 }
 
 	.explore-cards li {
-		border: 1px solid rgba(255, 255, 255, 0.1);
-		border-radius: 8px;
+		border: 1px solid var(--color-muted);
+		border-color: color-mix(in oklab, var(--color-muted) 25%, transparent);
+		border-radius: 6px;
 		overflow: hidden;
-		background: rgba(255, 255, 255, 0.03);
 	}
 
 	.explore-cards a {
 		display: block;
 		padding: 1.5em;
-		border-bottom: 0;
 		height: 100%;
+		text-decoration: none;
 	}
 
 		.explore-cards a:hover {
-			background: rgba(255, 255, 255, 0.05);
+			background: color-mix(in oklab, var(--color-muted) 6%, transparent);
 		}
 
 	.explore-cards h2 {
-		font-size: 1.15em;
-		color: #fff;
+		font-size: 1.1rem;
+		color: var(--color-accent-2);
 		margin-bottom: 0.4em;
 	}
 
 	.explore-cards p {
-		font-size: 0.88em;
+		font-size: 0.88rem;
 		line-height: 1.55;
 		margin: 0;
-		opacity: 0.7;
+		color: var(--color-muted);
 	}
 
 	.explore-cards .soon {
-		opacity: 0.45;
+		opacity: 0.55;
 	}
 
 		.explore-cards .soon a {
@@ -358,9 +418,6 @@
 		}
 
 @media screen and (max-width: 736px) {
-
-	
-
 
 	.demo-controls {
 		grid-template-columns: 1fr;
@@ -371,9 +428,38 @@
 		aspect-ratio: 4 / 3;
 	}
 
+	.demo-bands {
+		gap: 0.4rem;
+	}
+
+		.demo-bands li {
+			padding: 0.45rem 0.3rem;
+		}
+
+		.demo-bands__n {
+			font-size: 1.1rem;
+		}
+
+		.demo-bands__range {
+			font-size: 0.62rem;
+		}
+
 	.demo-facts th {
 		width: auto;
 		white-space: normal;
 	}
+
+	/* At 390px the plot is only ~280px wide inside its padding, and the legend at
+	   full size takes two thirds of that. */
+	.demo-legend {
+		font-size: 0.6rem;
+		padding: 0.25rem 0.4rem;
+		gap: 0.15rem;
+	}
+
+		.demo-legend span::before {
+			width: 14px;
+			margin-inline-end: 0.35em;
+		}
 
 }
