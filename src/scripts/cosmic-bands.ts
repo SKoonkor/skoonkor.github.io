@@ -1,7 +1,7 @@
 /*
  * Scroll-driven cosmic web in the page margins.
  *
- * Payload is 90 AVIF frames at ~19 KB each. The binding constraint is not the
+ * Payload is 90 AVIF frames averaging ~31 KB. The binding constraint is not the
  * download but the decode: an ImageBitmap costs width x height x 4 bytes
  * whatever the source format, so decoding all 90 at 960x1080 would be ~356 MB.
  * Enough to get a tab killed on iOS.
@@ -19,7 +19,7 @@
 
 const BASE = "/cosmic-web";
 /** Bump when the frames are regenerated. Same idiom as DATA_VERSION. */
-const FRAME_VERSION = "2026-08";
+const FRAME_VERSION = "2026-08b";
 
 /** Below this there is no margin to draw into. Checked before any fetch. */
 const MIN_WIDTH = 1100;
@@ -39,9 +39,36 @@ interface Manifest {
 	stripHeight: number;
 	proxyWidth: number;
 	proxyHeight: number;
+	/** Redshift of each sharp frame, so nothing here has to model the clip. */
+	z: number[];
+	/** Comoving kpc spanned by one pixel of the packed frame. */
+	comovingKpcPerPixel: number;
 }
 
 type Band = { canvas: HTMLCanvasElement; ctx: CanvasRenderingContext2D; half: 0 | 1 };
+
+/**
+ * Round physical lengths a scale bar is allowed to take, in kpc. The source
+ * movie steps through very nearly this ladder, which is why a redrawn bar
+ * sitting beside a frame from the movie reads as the same instrument.
+ */
+const SCALE_LADDER = [20, 50, 100, 200, 300, 500, 1000, 2000, 5000, 10000];
+
+/** The cover-fit scale `drawHalf` applies. Shared so the bar cannot drift. */
+function coverScale(bandW: number, bandH: number, m: Manifest): number {
+	return Math.max(bandW / (m.packedWidth / 2), bandH / m.stripHeight);
+}
+
+function formatRedshift(z: number): string {
+	// Matches the movie: one decimal from z = 1 up, two below.
+	return `z = ${z >= 1 ? z.toFixed(1) : z.toFixed(2)}`;
+}
+
+function formatLength(kpc: number): string {
+	if (kpc < 1000) return `${kpc} kpc`;
+	const mpc = kpc / 1000;
+	return `${Number.isInteger(mpc) ? mpc : mpc.toFixed(1)} Mpc`;
+}
 
 /** Whether this visitor should get the animation at all. */
 function shouldRun(): boolean {
@@ -84,11 +111,20 @@ export async function initCosmicBands(): Promise<void> {
 	// not composited on top of each other at differing opacities.
 	let painted = false;
 
+	const container = leftEl.closest<HTMLElement>(".cw");
+	const ruleEl = document.querySelector<HTMLElement>("[data-cw-rule]");
+	const scaleLabelEl = document.querySelector<HTMLElement>("[data-cw-scale-label]");
+	const zEl = document.querySelector<HTMLElement>("[data-cw-z]");
+
 	const N = manifest.frames;
 	const blobs: (Blob | undefined)[] = new Array(N);
 	const sharp = new Map<number, ImageBitmap>();
 	const pending = new Set<number>();
 	let proxy: ImageBitmap | null = null;
+
+	const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
+	/** Clamped, so a manifest shorter than `frames` cannot produce NaN. */
+	const zOf = (i: number) => manifest.z[Math.min(manifest.z.length - 1, Math.max(0, i))] ?? 0;
 
 	/* ---------------------------------------------------------------- assets */
 
@@ -177,6 +213,7 @@ export async function initCosmicBands(): Promise<void> {
 		const halfW = srcW / 2;
 		const sx0 = band.half === 0 ? 0 : halfW;
 		// cover: scale so the band is filled, then centre the overflow.
+		// Same expression as coverScale(); keep the two in step.
 		const scale = Math.max(w / halfW, h / srcH);
 		const dw = halfW * scale;
 		const dh = srcH * scale;
@@ -204,6 +241,38 @@ export async function initCosmicBands(): Promise<void> {
 		band.ctx.globalAlpha = 1;
 	}
 
+	/**
+	 * Size and label the scale bar, and print the redshift.
+	 *
+	 * Both come out of one measured fact about the source: it is a fixed comoving
+	 * frame, so a pixel always spans manifest.comovingKpcPerPixel comoving kpc.
+	 * Proper distance is that divided by (1 + z), matching the convention the
+	 * movie's own bar uses.
+	 */
+	function updateReadouts(pos: number, bandW: number, bandH: number) {
+		if (!ruleEl || !scaleLabelEl || !zEl) return;
+
+		const i0 = Math.floor(pos);
+		const i1 = Math.min(N - 1, i0 + 1);
+		// Frames are spaced evenly in log10(1+z), so interpolate there too.
+		const l = lerp(Math.log10(1 + zOf(i0)), Math.log10(1 + zOf(i1)), pos - i0);
+		const z = 10 ** l - 1;
+
+		const kpcPerPx = manifest.comovingKpcPerPixel / coverScale(bandW, bandH, manifest) / (1 + z);
+
+		// Aim for a bar a little under half the band, the way the movie does, then
+		// take whichever round length lands nearest that.
+		const target = Math.min(120, Math.max(56, bandW * 0.42));
+		let best = SCALE_LADDER[0] as number;
+		for (const kpc of SCALE_LADDER) {
+			if (Math.abs(kpc / kpcPerPx - target) < Math.abs(best / kpcPerPx - target)) best = kpc;
+		}
+
+		ruleEl.style.inlineSize = `${(best / kpcPerPx).toFixed(1)}px`;
+		scaleLabelEl.textContent = formatLength(best);
+		zEl.textContent = formatRedshift(z);
+	}
+
 	function render(pos: number) {
 		const i0 = Math.floor(pos);
 		const i1 = Math.min(N - 1, i0 + 1);
@@ -211,8 +280,16 @@ export async function initCosmicBands(): Promise<void> {
 		const a = sharp.get(i0);
 		const b = sharp.get(i1);
 
+		// Both bands are always the same size, so either one sizes the readouts.
+		// Read it from the loop rather than measuring again: fit() has just done
+		// the layout read, and a second getBoundingClientRect here would be a
+		// forced reflow on every animation frame.
+		let bandW = 0;
+		let bandH = 0;
 		for (const band of bands) {
 			const { w, h } = fit(band);
+			bandW = w;
+			bandH = h;
 			band.ctx.clearRect(0, 0, w, h);
 
 			// Proxy underneath, always. Sharp frames overdraw it when ready, so a
@@ -227,9 +304,14 @@ export async function initCosmicBands(): Promise<void> {
 			if (b && t > 0.001 && b !== a) drawHalf(band, b, sw, sh, w, h, t);
 		}
 
+		updateReadouts(pos, bandW, bandH);
+
 		if (!painted && (a || proxy)) {
 			painted = true;
 			for (const band of bands) band.canvas.style.backgroundImage = "none";
+			// Reveal the readouts on the same signal, so they never appear over the
+			// CSS static frame with numbers that describe a different moment.
+			container?.classList.add("cw--live");
 		}
 	}
 

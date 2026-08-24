@@ -2,11 +2,17 @@
 /**
  * The cosmic web, evolving in the page margins as you scroll.
  *
- * Left and right bands show the outer slices of the same IllustrisTNG frame, so
- * together with the content column they read as one continuous image. Scrolling
- * from the top of the page to the bottom advances cosmic time from z = 10 to
- * z = 0.4; the redshift readout and scale bar burned into the frames come along
- * for free.
+ * The two bands show two windows either side of the most massive cluster in the
+ * IllustrisTNG frame -- the left band carries that cluster, the right band the
+ * second-ranked one. Scrolling from the top of the page to the bottom advances
+ * cosmic time from z = 6 to z = 0.
+ *
+ * The framing crops the movie's own burned-in scale bar and redshift readout out
+ * of shot, so both are redrawn here as DOM elements. That is not just a
+ * workaround: the band cover-crop discards the top of the frame entirely at wide
+ * viewports, and .cw-band is inverted in light mode, so anything painted into the
+ * image would be cut off, inverted, or both. As markup they also update
+ * continuously rather than stepping between the 90 discrete frames.
  *
  * Decoration only: aria-hidden, pointer-events none, and hidden entirely below
  * 1100px, on reduced-motion, in print, and on constrained connections.
@@ -19,6 +25,11 @@
 <div class="cw" aria-hidden="true">
 	<canvas class="cw-band cw-band--left" data-cw-left></canvas>
 	<canvas class="cw-band cw-band--right" data-cw-right></canvas>
+	<div class="cw-readout cw-readout--scale" data-cw-scale>
+		<span class="cw-rule" data-cw-rule></span>
+		<span data-cw-scale-label></span>
+	</div>
+	<div class="cw-readout cw-readout--z" data-cw-z></div>
 </div>
 
 <style>
@@ -76,6 +87,55 @@
 	:global(html:not([data-theme="dark"])) .cw-band {
 		filter: invert(1);
 		opacity: 0.4;
+	}
+
+	/* --- Redrawn readouts ---------------------------------------------------
+	   Siblings of the canvases, never children: .cw-band is inverted in light
+	   mode, and a canvas cannot have children anyway. Laid out to mirror the
+	   source movie -- scale bar top-left, redshift top-right.
+
+	   Hidden until the script sets a value. Without that, a visitor with no
+	   JavaScript, reduced motion, or a slow first decode would be shown an empty
+	   rule and no number, which reads as broken rather than as decoration. */
+	.cw-readout {
+		position: absolute;
+		inset-block-start: 1.5rem;
+		visibility: hidden;
+		font-size: 0.75rem;
+		line-height: 1.4;
+		letter-spacing: 0.02em;
+		color: var(--color-muted);
+		/* The band underneath peaks at a mid grey, but a cluster core is the one
+		   place it gets close to the text colour. A shadow in the page's own
+		   background colour keeps the glyphs legible there without drawing a box. */
+		text-shadow:
+			0 0 4px var(--color-global-bg),
+			0 0 8px var(--color-global-bg);
+	}
+
+	.cw--live .cw-readout {
+		visibility: visible;
+	}
+
+	/* 1.5rem in from the page edge: the outer edge of the band is the part the
+	   fade mask leaves solid, so the readouts sit over image rather than over
+	   bare background even in the narrowest 134px band. */
+	.cw-readout--scale {
+		inset-inline-start: 1.5rem;
+	}
+
+	.cw-readout--z {
+		inset-inline-end: 1.5rem;
+		text-align: end;
+	}
+
+	/* Width is set by the script, to the exact pixel length of the labelled
+	   physical distance at the current redshift. */
+	.cw-rule {
+		display: block;
+		block-size: 1px;
+		margin-block-end: 0.25rem;
+		background: currentcolor;
 	}
 
 	/* Below this the margins have collapsed and there is nothing to draw into.
