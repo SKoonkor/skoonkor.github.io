@@ -1,13 +1,18 @@
 ---
 import { existsSync } from "node:fs";
+import { join } from "node:path";
 import CVList from "@/components/CVList.astro";
 import PageTitle from "@/components/PageTitle.astro";
-import PageLayout from "@/layouts/Base.astro";
 import { contact, cv, cvPdfPath, outreach, referees, skills } from "@/data/cv";
+import PageLayout from "@/layouts/Base.astro";
 
 // The download button appears by itself once a PDF is dropped at this path in
 // public/. Rendering it unconditionally would ship a link to a 404.
-const hasPdf = existsSync(new URL(`../../public${cvPdfPath}`, import.meta.url));
+//
+// Resolved from the working directory, not import.meta.url: during the build
+// this module is a Vite chunk whose URL points into the bundler's own tree, so
+// ../../public from there does not exist and the button never appeared.
+const hasPdf = existsSync(join(process.cwd(), "public", cvPdfPath));
 
 const meta = {
 	description:

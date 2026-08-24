@@ -4,7 +4,7 @@
 % Colours are the site's own tokens, converted from OKLCH to sRGB:
 %   accent #CB2A42, text #22272A, muted #4A5565, rule #D4D4D8
 %
-% Build:  tools/build_cv.sh        (Tectonic; no TeX installation required)
+% Build:  tools/build_cv.sh        (pdflatex; brew install texlive)
 % Output: public/cv/Koonkor_CV.pdf, which is what lights up the download button
 %         on /cv/ -- that page renders the link only if the file exists.
 %
@@ -42,27 +42,47 @@
 \linespread{1.05}
 
 % --- Section headings: small caps over a hairline rule -----------------------
+% \MakeUppercase belongs in the before-code slot, where it takes the title as
+% its argument. In the format slot it stays open and swallows the after-code
+% too, which makes \color{rulecol} arrive as `RULECOL' -- an undefined colour.
 \titleformat{\section}
-  {\normalfont\footnotesize\bfseries\color{accent}\MakeUppercase}
-  {}{0pt}{}[\vspace{-6pt}{\color{rulecol}\rule{\linewidth}{0.4pt}}]
+  {\normalfont\footnotesize\bfseries\color{accent}}
+  {}{0pt}{\MakeUppercase}[\vspace{-6pt}{\color{rulecol}\rule{\linewidth}{0.4pt}}]
 \titlespacing*{\section}{0pt}{14pt}{7pt}
 
 % --- One CV row: title block on the left, date flush right -------------------
+% Both columns live in a single table row so they share a baseline and the
+% detail line inherits the title column's width. Setting the detail as a
+% separate paragraph after the table instead leaves it at \hsize, and it
+% overflows.
+%
+% The date is an `r' column, not a fixed-width `p'. A p-column is a \vtop whose
+% first line sits a full \baselineskip below the row's baseline, which drops
+% every date a line beneath its title; r-columns are plain hboxes and align.
+% The longest date ("Sep 2021 -- Mar 2022, Sep 2023 -- Mar 2024") is about
+% 58mm, which still leaves the title column over 110mm.
+\newcolumntype{L}{>{\raggedright\arraybackslash}X}
+\newcolumntype{D}{>{\footnotesize\color{muted}}r}
+
 % #1 role, #2 organisation or note (may be empty), #3 date
 \newcommand{\entry}[3]{%
   \needspace{3\baselineskip}%
-  \begin{tabularx}{\linewidth}{@{}X@{}r@{}}
-    \textbf{#1} & {\footnotesize\color{muted}#3} \\
+  \begin{tabularx}{\linewidth}{@{}L@{\hspace{1.5em}}D@{}}
+    \textbf{#1}%
+    \ifx\relax#2\relax\else\newline{\footnotesize\color{muted}#2}\fi
+      & #3 \\
   \end{tabularx}%
-  \ifx\relax#2\relax\else{\footnotesize\color{muted}#2\par}\fi
   \vspace{4pt}%
 }
 
-% A compact row, for list-like sections
+% A compact row, for list-like sections: the note sits inline after the title
+% rather than on its own line. \newline is the only way to break inside an
+% X cell -- \\ there is ambiguous with the row separator.
 \newcommand{\rowitem}[3]{%
-  \begin{tabularx}{\linewidth}{@{}X@{}r@{}}
-    \textbf{#1}\ifx\relax#2\relax\else{\color{muted}\ \textbar\ \footnotesize #2}\fi
-      & {\footnotesize\color{muted}#3} \\
+  \begin{tabularx}{\linewidth}{@{}L@{\hspace{1.5em}}D@{}}
+    \textbf{#1}%
+    \ifx\relax#2\relax\else{\color{muted}\ \textbar\ \footnotesize #2}\fi
+      & #3 \\
   \end{tabularx}%
   \vspace{2pt}%
 }
@@ -182,7 +202,7 @@
 
 % --- Skills ------------------------------------------------------------------
 \section{Key Skills}
-\begin{tabularx}{\linewidth}{@{}l@{\hspace{1.5em}}X@{}}
+\begin{tabularx}{\linewidth}{@{}l@{\hspace{1.5em}}L@{}}
   \textbf{Computing}      & Python, Fortran, \LaTeX, SQL, HTML, SAOImageDS9 \\[2pt]
   \textbf{Soft skills}    & International collaboration, public speaking, technical writing, adaptability \\[2pt]
   \textbf{Languages}      & Thai (native), English (proficient), German (basic) \\[2pt]
@@ -195,17 +215,17 @@
 \begin{tabularx}{\linewidth}{@{}XX@{}}
   \textbf{Prof. Carlton Baugh} & \textbf{Asst. Prof. Wiphu Rujopakarn} \\
   {\footnotesize\color{muted}
-    Institute for Computational Cosmology\\
-    Durham University, South Road\\
-    Durham DH1 3LE, UK\\
-    \href{mailto:c.m.baugh@durham.ac.uk}{c.m.baugh@durham.ac.uk}\\
+    Institute for Computational Cosmology\newline
+    Durham University, South Road\newline
+    Durham DH1 3LE, UK\newline
+    \href{mailto:c.m.baugh@durham.ac.uk}{c.m.baugh@durham.ac.uk}\newline
     Tel: +44 (191) 334 3542
   } &
   {\footnotesize\color{muted}
-    National Astronomical Research\\
-    Institute of Thailand (NARIT)\\
-    260 Moo 4, Don Kaew, Mae Rim\\
-    Chiang Mai 50180, Thailand\\
+    National Astronomical Research\newline
+    Institute of Thailand (NARIT)\newline
+    260 Moo 4, Don Kaew, Mae Rim\newline
+    Chiang Mai 50180, Thailand\newline
     \href{mailto:wiphu@narit.or.th}{wiphu@narit.or.th}
   } \\
 \end{tabularx}

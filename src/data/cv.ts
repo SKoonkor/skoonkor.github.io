@@ -96,9 +96,7 @@ export const cv: { group: string; entries: CVEntry[] }[] = [
 			{
 				role: "The 13th Conference on Science and Technology for Youths",
 				badge: "Award",
-				detail: [
-					"Best Oral Presentation in Astrophysics and High Energy Physics research.",
-				],
+				detail: ["Best Oral Presentation in Astrophysics and High Energy Physics research."],
 				period: "2018",
 			},
 		],
@@ -107,7 +105,11 @@ export const cv: { group: string; entries: CVEntry[] }[] = [
 		group: "Conferences & Workshops",
 		entries: [
 			{ role: "Deep Learning for Physics (DELPHYS2025)", badge: "Attendee", period: "Dec 2025" },
-			{ role: "Space Astronomy Science Platforms Focus Week", badge: "Attendee", period: "Dec 2025" },
+			{
+				role: "Space Astronomy Science Platforms Focus Week",
+				badge: "Attendee",
+				period: "Dec 2025",
+			},
 			{
 				role: "WE-Heraeus and NARIT Cosmology School 2025 — Galaxies and Beyond",
 				badge: "Talk",
@@ -223,7 +225,8 @@ export const skills: { label: string; items: string }[] = [
 	{ label: "Languages", items: "Thai (native), English (proficient), German (basic)" },
 	{
 		label: "Research areas",
-		items: "Galaxy formation and evolution, large scale structure, machine learning in astrophysics",
+		items:
+			"Galaxy formation and evolution, large scale structure, machine learning in astrophysics",
 	},
 ];
 

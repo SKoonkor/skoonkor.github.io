@@ -1,26 +1,36 @@
 #!/usr/bin/env bash
+# Compile cv/Koonkor_CV.tex to public/cv/Koonkor_CV.pdf.
 #
-# Compile the LaTeX CV into public/, which is what makes the Download PDF button
-# appear on /cv/ -- that page renders the link only if the file exists.
+# The PDF is committed, so this only needs running when the .tex changes.
+# Dropping the PDF into public/cv/ is what makes the "Download PDF" button
+# appear on /cv/ -- src/pages/cv.astro renders it only when the file exists.
 #
-# Uses Tectonic: a single binary that fetches the packages it needs on demand,
-# so there is no TeX distribution to install and the build is reproducible.
-#   brew install tectonic
-#
-# Usage: tools/build_cv.sh
-
+# Needs pdflatex. On macOS: brew install texlive (or the full MacTeX).
+# Tectonic would be lighter, but its package bundle host was unreachable.
 set -euo pipefail
 
-ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-SRC="$ROOT/cv/Koonkor_CV.tex"
-OUT="$ROOT/public/cv"
+root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+src="$root/cv/Koonkor_CV.tex"
+out="$root/public/cv"
 
-command -v tectonic >/dev/null || { echo "tectonic not found: brew install tectonic" >&2; exit 1; }
-[ -f "$SRC" ] || { echo "not found: $SRC" >&2; exit 1; }
+# Homebrew's texlive and MacTeX both install outside the default PATH.
+export PATH="/opt/homebrew/opt/texlive/bin:/usr/local/opt/texlive/bin:/Library/TeX/texbin:$PATH"
 
-mkdir -p "$OUT"
-tectonic --chatter minimal --outdir "$OUT" "$SRC"
+command -v pdflatex >/dev/null || {
+	echo "pdflatex not found. brew install texlive" >&2
+	exit 1
+}
 
-echo
-printf 'wrote %s (%s KB)\n' "$OUT/Koonkor_CV.pdf" \
-  "$(( $(stat -f%z "$OUT/Koonkor_CV.pdf" 2>/dev/null || stat -c%s "$OUT/Koonkor_CV.pdf") / 1024 ))"
+mkdir -p "$out"
+work="$(mktemp -d)"
+trap 'rm -rf "$work"' EXIT
+
+# Twice: the second pass resolves the hyperref anchors written by the first.
+for _ in 1 2; do
+	pdflatex -interaction=nonstopmode -halt-on-error \
+		-output-directory "$work" "$src" >"$work/log" 2>&1 ||
+		{ tail -40 "$work/log" >&2; exit 1; }
+done
+
+cp "$work/Koonkor_CV.pdf" "$out/Koonkor_CV.pdf"
+echo "wrote $out/Koonkor_CV.pdf ($(du -h "$out/Koonkor_CV.pdf" | cut -f1))"

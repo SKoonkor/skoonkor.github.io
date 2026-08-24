@@ -45,8 +45,7 @@ export const papers: Publication[] = [
 			{ name: "J. García-Bellido" },
 		],
 		etAl: true,
-		title:
-			"The PAU Survey: the i-band galaxy luminosity function from the present-day to z = 2",
+		title: "The PAU Survey: the i-band galaxy luminosity function from the present-day to z = 2",
 		venue: "Monthly Notices of the Royal Astronomical Society, 547(3), 1\u201324",
 		year: 2026,
 		links: [
@@ -101,9 +100,7 @@ export const theses: Publication[] = [
 			"A New Estimate of the Galaxy Luminosity Function, using Machine Learning and a Mock Catalogue",
 		venue: "PhD thesis, Durham University",
 		year: 2025,
-		links: [
-			{ label: "Durham e-Theses", href: "https://etheses.durham.ac.uk/id/eprint/16238/" },
-		],
+		links: [{ label: "Durham e-Theses", href: "https://etheses.durham.ac.uk/id/eprint/16238/" }],
 	},
 	{
 		authors: [{ name: "S. Koonkor", self: true }],

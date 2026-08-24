@@ -2,8 +2,8 @@
 import { getCollection } from "astro:content";
 import PageTitle from "@/components/PageTitle.astro";
 import SocialList from "@/components/SocialList.astro";
-import PageLayout from "@/layouts/Base.astro";
 import { papers } from "@/data/publications";
+import PageLayout from "@/layouts/Base.astro";
 
 const research = (await getCollection("research", ({ data }) => !data.draft)).sort(
 	(a, b) => a.data.order - b.data.order,
