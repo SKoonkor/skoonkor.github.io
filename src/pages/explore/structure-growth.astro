@@ -1,0 +1,253 @@
+---
+import PageTitle from "@/components/PageTitle.astro";
+import PageLayout from "@/layouts/Base.astro";
+import "@/styles/explore.css";
+
+const meta = {
+	description:
+		"Two dark-matter universes grown from the same starting conditions with different cosmologies. Run time forward from redshift 45 to today and watch them come apart.",
+	title: "Watching a universe grow",
+	// The fiducial run at three epochs, left to right: nearly smooth, filaments
+	// forming, the web today. The other demos both reuse /images/PCA.webp, which
+	// would say nothing about this page.
+	ogImage: "/images/structure-growth.webp",
+};
+---
+
+{/*
+	A space between a text node and a following element is TRIMMED by Astro, so
+	`holds\n<span>` renders as "holds2,097,152". Every `<span data-fill>` below
+	therefore begins its line with the preceding word attached. Check the rendered
+	text, not the source, after editing this prose.
+
+	bands={false}: the margin animation holds ~47 MB of decoded frames on every
+	page, and this one needs its memory budget for two windows of its own.
+*/}
+<PageLayout bands={false} meta={meta}>
+	<PageTitle
+		title="Watching a universe grow"
+		subtitle="Two universes from identical starting conditions. Change the recipe and watch where they part company."
+	/>
+
+	<p class="explore-status" role="status" data-status hidden></p>
+
+	<div class="demo-structure" data-demo data-pagefind-body>
+		<div class="demo-stage" data-stage>
+			{/*
+				The A/B switch only exists below 40em, where two panels would be 173px
+				wide and ~600px apart -- never on screen together, which defeats the
+				comparison. It is a radiogroup, so arrow keys flick between the two
+				universes and give a blink comparator for free.
+			*/}
+			<div class="demo-panel-switch" data-panel-switch hidden>
+				<span class="demo-chips__label" id="sg-panel-label">Showing</span>
+				<div class="demo-chips__set" data-chips="panel" aria-labelledby="sg-panel-label"></div>
+				<p class="demo-hint">Flick between them — same patch of sky, so the differences jump out.</p>
+			</div>
+
+			<div class="demo-stage__pair" data-pair>
+				<section class="demo-panel" aria-labelledby="sg-a-name" data-panel="a">
+					<h3 class="demo-panel__name" id="sg-a-name"><i data-dot="a"></i>Universe A</h3>
+					<div class="demo-panel__frame" data-frame>
+						<canvas data-canvas-a role="img"></canvas>
+						<div class="demo-panel__placeholder" data-placeholder hidden></div>
+					</div>
+					<div class="demo-panel__chips">
+						<div class="demo-chips__row">
+							<span class="demo-chips__label" id="sg-om-label">Matter</span>
+							<div class="demo-chips__set" data-chips="a-om" aria-labelledby="sg-a-name sg-om-label"></div>
+						</div>
+						<div class="demo-chips__row">
+							<span class="demo-chips__label" id="sg-w0-label">Dark energy</span>
+							<div class="demo-chips__set" data-chips="a-w0" aria-labelledby="sg-a-name sg-w0-label"></div>
+						</div>
+					</div>
+				</section>
+
+				<section class="demo-panel" aria-labelledby="sg-b-name" data-panel="b">
+					<h3 class="demo-panel__name" id="sg-b-name"><i data-dot="b"></i>Universe B</h3>
+					<div class="demo-panel__frame" data-frame>
+						<canvas data-canvas-b role="img"></canvas>
+						<div class="demo-panel__placeholder" data-placeholder hidden></div>
+					</div>
+					<div class="demo-panel__chips">
+						<div class="demo-chips__row">
+							<span class="demo-chips__label">Matter</span>
+							<div class="demo-chips__set" data-chips="b-om" aria-labelledby="sg-b-name sg-om-label"></div>
+						</div>
+						<div class="demo-chips__row">
+							<span class="demo-chips__label">Dark energy</span>
+							<div class="demo-chips__set" data-chips="b-w0" aria-labelledby="sg-b-name sg-w0-label"></div>
+						</div>
+					</div>
+				</section>
+			</div>
+
+			{/*
+				Sticky to the BOTTOM of the stage, not under the page title: it is a
+				video transport and belongs under the picture, and the quantitative
+				chart below is driven by the same clock, so it must stay reachable
+				while the reader looks at it.
+			*/}
+			<div class="demo-transport">
+				<div class="demo-transport__buttons">
+					<button type="button" data-reset aria-label="Back to the beginning">&#9198;</button>
+					<button type="button" data-step-back aria-label="One step earlier">&#9664;</button>
+					<button type="button" class="demo-transport__play" data-play aria-label="Play the animation"
+						>Play</button
+					>
+					<button type="button" data-step-fwd aria-label="One step later">&#9654;</button>
+				</div>
+				<div class="demo-zslider">
+					<input type="range" data-time min="0" max="38" step="1" aria-label="Cosmic time" />
+					<p class="demo-zslider__scale" aria-hidden="true">
+						<span>z = 45</span>
+						<span data-z-readout>z = 45.11</span>
+						<span>now</span>
+					</p>
+				</div>
+			</div>
+			<p class="demo-hint" data-motion-hint hidden>Step or drag to run time forward.</p>
+		</div>
+
+		<div class="demo-shared">
+			<div class="demo-chips__row">
+				<span class="demo-chips__label" id="sg-norm-label">Matched</span>
+				<div class="demo-chips__set" data-chips="norm" aria-labelledby="sg-norm-label"></div>
+			</div>
+			<div class="demo-gridmap" data-gridmap aria-hidden="true"></div>
+			<p class="demo-progress" data-progress>
+				The grid is still running: <span data-fill="nAvail">2</span> of <span data-fill="nTotal">17</span> universes are finished. Last exported <span data-fill="exported"></span>.
+			</p>
+		</div>
+
+		<div class="demo-chips__row">
+			<span class="demo-chips__label" id="sg-view-label">Chart</span>
+			<div class="demo-chips__set" data-chips="view" aria-labelledby="sg-view-label"></div>
+		</div>
+
+		<div class="demo-chart demo-chart--structure">
+			<canvas data-chart role="img"
+				aria-label="A chart comparing the two universes: growth rate, clumpiness, or clustering scale by scale."
+			></canvas>
+		</div>
+
+		<p class="visually-hidden" data-live aria-live="polite"></p>
+		<p class="demo-caption" data-caption></p>
+
+		<div class="demo-why">
+			<h2>Why this matters</h2>
+			<p>
+				Both universes here begin from <em>the same</em> random pattern of tiny
+				ripples — the same seed, the same box, the same everything except the recipe.
+				At redshift 45 they are almost indistinguishable: the pattern is identical
+				because the seed is, and only the contrast differs, by around a fifth.
+				Everything that separates them afterwards is gravity working against
+				expansion, and the only thing that differs is how much matter there is to
+				pull and how the dark energy behaves.
+			</p>
+			<p>
+				That is the whole method of modern cosmology in one image. We cannot rerun
+				the Universe with a different amount of matter, so we run the simulation
+				instead, and compare the web it grows against the one we see in galaxy
+				surveys. The growth rate chart is where the difference is starkest: across the
+				matter axis it nearly doubles. Redshift-space distortions in galaxy surveys
+				constrain the combination <i>f</i>&sigma;<sub>8</sub> rather than <i>f</i>
+				on its own, because <i>f</i> alone cannot be separated from how galaxies
+				trace the matter.
+			</p>
+			<p>
+				The <strong>Matched</strong> control is the subtle one. Simulations are
+				normally tuned so every universe has the same clumpiness <em>today</em>,
+				which makes them agree now and differ only in how they got here. Match them
+				at the <em>start</em> instead and they begin together and end apart. Neither
+				is more correct — they answer different questions, and switching between
+				them on the clumpiness chart is the quickest way to see why that matters.
+			</p>
+		</div>
+
+		<div class="demo-deep">
+			<h2>The detail</h2>
+
+			<p>
+				Dark-matter-only runs with <a href="https://swift.strw.leidenuniv.nl/" rel="noopener" target="_blank">SWIFT</a>,
+				from initial conditions generated with MUSIC using an Eisenstein&ndash;Hu
+				transfer function and second-order Lagrangian perturbation theory. Each box
+				is <span data-fill="box">100</span>&thinsp;Mpc/<i>h</i> on a side and
+				holds <span data-fill="particles">2,097,152</span> particles
+				(128<sup>3</sup>), integrated from <i>z</i>&thinsp;=&thinsp;50 to 0
+				with <span data-fill="frames">39</span> snapshots kept. The slider starts at
+				<i>z</i>&thinsp;=&thinsp;45 because SWIFT does not write an output for the
+				scale factor it begins on.
+			</p>
+
+			<p>
+				Every run in the grid shares one random seed
+				(<span data-fill="seed">20260825</span>), which is what makes the panels
+				comparable at all. &Omega;<sub>b</sub> scales with &Omega;<sub>m</sub> at a
+				fixed baryon fraction of 0.1517. That keeps the baryon feature in the
+				transfer function from doing work that belongs to the matter density —
+				holding &Omega;<sub>b</sub> fixed instead would push the baryon fraction to
+				0.30 at the sparse end. Only the fiducial point has a baryon density
+				consistent with the measured one; the others are deliberate variations, not
+				candidate universes. The dark-energy axis varies <i>w</i><sub>0</sub>; because
+				&rho;<sub>DE</sub>&thinsp;&prop;&thinsp;<i>a</i><sup>&minus;3(1+<i>w</i>)</sup>, <i>w</i><sub>0</sub>&thinsp;=&thinsp;&minus;1.3 means dark
+				energy <em>grows</em> with time rather than weakening — the intuitive reading of
+				the sign is backwards, which is why the control says so in words. Each grid
+				point appears here as its run finishes; the growth curves are analytic and
+				are drawn for every cosmology whether or not its images exist yet.
+			</p>
+
+			<p>
+				Each frame is a <span data-fill="slab">15</span>&thinsp;Mpc/<i>h</i> slab
+				projected to <span data-fill="res">512</span><sup>2</sup> pixels with an SPH
+				kernel over 64 neighbours. Pixel value is
+				log<sub>10</sub>(1&thinsp;+&thinsp;&delta;) mapped onto the same black and
+				white points, <span data-fill="stretchLo">-0.9</span> to <span data-fill="stretchHi">1.8</span>,
+				for every frame and every run — a
+				shared stretch is what makes the growth real rather than an artefact of
+				renormalising each picture.
+			</p>
+
+			<p>
+				On the clustering chart, each curve stops where the measurement does. A
+				100&thinsp;Mpc/<i>h</i> box with two million particles has a white shot-noise
+				floor of about 1.37&thinsp;Mpc<sup>3</sup>, and at early times the real
+				clustering is beneath it — at redshift 45 only a handful of the 35 scales
+				rise above the noise. Those points are not plotted rather than being drawn as
+				noise. Nothing is plotted below the box's own fundamental
+				mode, <i>k</i>&thinsp;=&thinsp;0.044&thinsp;Mpc<sup>&minus;1</sup>, which is a
+				limit of the simulation rather than of the Universe — a 100&thinsp;Mpc/<i>h</i>
+				box does not contain the baryon acoustic scale at all. It also holds only
+				about 29 halos above 10<sup>14</sup>&thinsp;M<sub>&#9737;</sub>/<i>h</i>, so
+				nothing here should be read as a claim about how many clusters exist.
+			</p>
+
+			<div class="demo-downloads">
+				<a href="/data/structure-growth/README.md">Data notes</a>
+				<a href="/data/structure-growth/structure.json">structure.json</a>
+				<a href="/data/structure-growth/pk.json">pk.json</a>
+				<a
+					href="https://github.com/SKoonkor/skoonkor.github.io/blob/main/tools/structure/export_web.py"
+					rel="noopener"
+					target="_blank">build script</a
+				>
+			</div>
+		</div>
+	</div>
+
+	<noscript>
+		<p>
+			This demo animates simulation frames in your browser, so it needs JavaScript.
+			The underlying numbers are readable without it: see the
+			<a class="cactus-link" href="/data/structure-growth/README.md">data notes</a>.
+		</p>
+	</noscript>
+</PageLayout>
+
+<script>
+	import { init } from "@/scripts/explore/structure-growth.js";
+
+	const root = document.querySelector<HTMLElement>("[data-demo]");
+	if (root) void init(root);
+</script>

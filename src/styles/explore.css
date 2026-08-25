@@ -610,3 +610,291 @@
 		}
 
 }
+
+/* ------------------------------------------------- watching a universe grow --
+ * /explore/structure-growth/
+ *
+ * The two panel identities are fixed oklch, not theme tokens, for the reason
+ * given above the .demo-lf series colours: --color-accent is red in light mode
+ * and green in dark, so a themed identity would swap meaning between themes.
+ * Blue and amber also survive the common colour-vision deficiencies, which
+ * matters here because the identity is the only thing tying a picture to its
+ * curve in the chart below.
+ *
+ * Nothing in this block may use `overflow: hidden`. The transport is sticky
+ * within .demo-stage, and PageTitle's sticky heading is an ancestor -- both die
+ * silently inside an overflow container. Use `overflow-x: clip` if ever needed.
+ */
+.demo-structure {
+	/* visibility, not opacity alone: opacity 0 leaves every control focusable,
+	   so tabbing into a not-yet-initialised demo drops focus into nowhere. */
+	visibility: hidden;
+
+	--demo-text: var(--color-muted);
+	--demo-axis: var(--color-muted);
+	--demo-line: color-mix(in oklab, var(--color-muted) 25%, transparent);
+	--demo-surface: color-mix(in oklab, var(--color-muted) 6%, transparent);
+
+	--sg-a: oklch(62% 0.16 265);              /* blue-violet -- Universe A */
+	--sg-b: oklch(70% 0.14 65);               /* amber       -- Universe B */
+	--sg-shot: color-mix(in oklab, var(--color-muted) 45%, transparent);
+
+	margin-block: 1.5rem 0;
+	opacity: 0;
+	transition: opacity 0.4s ease-in-out;
+}
+
+	.demo-structure.is-ready {
+		visibility: visible;
+		opacity: 1;
+	}
+
+	.demo-structure h2 {
+		font-size: 1rem;
+		color: var(--color-accent-2);
+		margin-bottom: 0.6em;
+	}
+
+	.demo-structure p {
+		margin-bottom: 0.9em;
+		line-height: 1.7;
+	}
+
+.demo-stage {
+	margin-bottom: 1.2rem;
+}
+
+	.demo-stage__pair {
+		display: grid;
+		grid-template-columns: 1fr;
+		gap: 1rem;
+	}
+
+@media (min-width: 40em) {
+	.demo-stage__pair {
+		grid-template-columns: 1fr 1fr;
+	}
+}
+
+.demo-panel__name {
+	display: flex;
+	align-items: center;
+	gap: 0.4rem;
+	font-size: 0.72rem;
+	letter-spacing: 0.14em;
+	text-transform: uppercase;
+	color: var(--color-muted);
+	margin-bottom: 0.4rem;
+}
+
+	.demo-panel__name i {
+		width: 0.6rem;
+		height: 0.6rem;
+		border-radius: 50%;
+		background: var(--sg-a);
+	}
+
+	.demo-panel__name i[data-dot="b"] {
+		background: var(--sg-b);
+	}
+
+.demo-panel__frame {
+	position: relative;
+	aspect-ratio: 1;
+	background: var(--demo-surface);
+}
+
+	.demo-panel__frame canvas {
+		display: block;
+		width: 100%;
+		height: 100%;
+	}
+
+/* Shown when the selected cosmology has not been simulated yet. It names what
+   is missing in the reader's own units and says the growth curve is still
+   drawn -- which it is, because growth is linear theory, not a simulation
+   product, so a pending grid point is only missing its pictures. */
+.demo-panel__placeholder {
+	position: absolute;
+	inset: 0;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	gap: 0.5rem;
+	padding: 1rem;
+	text-align: center;
+	font-size: 0.74rem;
+	line-height: 1.5;
+	color: var(--color-muted);
+	background: var(--demo-surface);
+	border: 1px dashed var(--demo-line);
+}
+
+	.demo-panel__placeholder strong {
+		color: var(--color-accent-2);
+		font-weight: normal;
+	}
+
+	.demo-panel__hint {
+		opacity: 0.75;
+		font-size: 0.7rem;
+	}
+
+.demo-panel__chips {
+	display: flex;
+	flex-direction: column;
+	gap: 0.35rem;
+	margin-top: 0.6rem;
+}
+
+	.demo-panel__chips .demo-chips__label {
+		flex-basis: 4.5rem;
+	}
+
+/* Sticky to the bottom of the stage. The chart below is driven by the same
+   clock, so the transport has to stay reachable while the reader looks at it --
+   and when the stage ends it scrolls away rather than following them into the
+   prose. scroll-margin on the panels keeps a focused chip clear of it. */
+.demo-transport {
+	position: sticky;
+	bottom: 0;
+	z-index: 1;
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.5rem 0.9rem;
+	margin-top: 0.9rem;
+	padding: 0.5rem 0;
+	background: var(--color-global-bg);
+}
+
+	.demo-transport .demo-zslider {
+		flex: 1 1 14rem;
+	}
+
+	.demo-transport__buttons {
+		display: flex;
+		gap: 0.3rem;
+	}
+
+	.demo-transport__buttons button {
+		min-width: 2rem;
+		padding: 0.25rem 0.5rem;
+		border: 1px solid var(--demo-line);
+		border-radius: 4px;
+		background: none;
+		color: var(--color-muted);
+		font: inherit;
+		font-size: 0.78rem;
+		cursor: pointer;
+		transition: color 0.15s, border-color 0.15s;
+	}
+
+	.demo-transport__buttons button:hover {
+		border-color: var(--color-accent);
+		color: var(--color-accent);
+	}
+
+	.demo-transport__play {
+		min-width: 4.5rem;
+	}
+
+.demo-panel {
+	scroll-margin-bottom: 6rem;
+}
+
+.demo-panel-switch {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	gap: 0.5rem 0.75rem;
+	margin-bottom: 0.7rem;
+}
+
+.demo-hint {
+	font-size: 0.7rem;
+	color: var(--color-muted);
+	opacity: 0.8;
+	margin: 0.2rem 0 0;
+}
+
+.demo-shared {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.6rem 1rem;
+	margin-bottom: 0.9rem;
+}
+
+/* A 3x3 map of the grid at the current normalisation: filled means simulated,
+   hollow means still running, and the two rings mark where the panels are.
+   aria-hidden, because a 12px dot is not a tap target -- the same information
+   is in each chip's accessible name and in the progress line. */
+.demo-gridmap {
+	display: grid;
+	grid-template-columns: repeat(3, 0.75rem);
+	gap: 0.25rem;
+}
+
+	.demo-gridmap__dot {
+		width: 0.75rem;
+		height: 0.75rem;
+		border-radius: 50%;
+		border: 1px solid var(--demo-line);
+	}
+
+	.demo-gridmap__dot[data-on] {
+		background: color-mix(in oklab, var(--color-muted) 55%, transparent);
+	}
+
+	.demo-gridmap__dot[data-ring="a"] {
+		outline: 2px solid var(--sg-a);
+		outline-offset: 1px;
+	}
+
+	.demo-gridmap__dot[data-ring="b"] {
+		outline: 2px solid var(--sg-b);
+		outline-offset: 1px;
+	}
+
+.demo-progress {
+	flex: 1 1 14rem;
+	font-size: 0.7rem;
+	color: var(--color-muted);
+	margin: 0;
+}
+
+.demo-chart--structure {
+	aspect-ratio: 16 / 9;
+	min-height: 300px;
+	padding-block-end: 0.5rem;
+}
+
+/* A chip whose combination has not been simulated. Marked, never disabled: a
+   disabled control cannot be focused to discover why it is dead, and on a grid
+   that fills in over hours the set of dead controls keeps changing. The state
+   is also in the accessible name -- a dashed border alone is presentation. */
+.demo-chip[data-avail="no"] {
+	border-style: dashed;
+	opacity: 0.55;
+}
+
+.demo-chip[aria-checked="true"] {
+	border-color: var(--color-accent);
+	color: var(--color-accent-2);
+	background: color-mix(in oklab, var(--color-accent) 12%, transparent);
+}
+
+/* With roving tabindex the checked chip already carries the accent, so the UA
+   ring alone is not enough to tell focus from selection. */
+.demo-chip:focus-visible,
+.demo-transport__buttons button:focus-visible {
+	outline: 2px solid var(--color-accent);
+	outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.demo-structure {
+		transition: none;
+	}
+}

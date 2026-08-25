@@ -4,7 +4,7 @@ Linear growth factor D+(a) for a flat w0-wa cosmology.
 
 Used for three things:
 
-  1. the "how fast it grew" panel on the website, for all 27 grid points --
+  1. the "how fast it grew" panel on the website, for all 18 grid points --
      it is analytic, so it costs nothing and does not need a simulation;
   2. converting between the two normalisation conventions (see `sigma8_for`);
   3. the sigma8 round-trip check, which divides a measured P(k) at z~9 by
@@ -90,6 +90,35 @@ def growth_and_f(a_eval, omega_m, w0=-1.0, wa=0.0, a_init=1e-4):
     D = np.array([d[k] / d1 for k in keys])
     f = np.array([dp[k] / d[k] for k in keys])
     return D, f
+
+
+def age_gyr(a_eval, omega_m, w0=-1.0, *, wa=0.0, h=0.703):
+    """
+    Age of the universe at each `a`, in Gyr.
+
+    t(a) = (1/H0) * integral_0^a da' / (a' E(a')), with 1/H0 = 9.77792/h Gyr.
+
+    `wa` and `h` are keyword-only on purpose. They were positional once, and the
+    fourth positional argument being `wa` rather than the far more commonly passed
+    `h` meant a call site reading `age_gyr(a, om, w0, 0.703)` silently integrated a
+    universe with wa = 0.703. It produced plausible ages -- 12.98 Gyr instead of
+    13.41 -- which is exactly the kind of wrong that ships.
+
+    Worth shipping because at a FIXED redshift two cosmologies have different
+    ages -- the low-Omega_m box has had longer to grow by the time it reaches a
+    given z, which is part of why it looks more evolved than the matter density
+    alone suggests.
+    """
+    from scipy.integrate import quad
+
+    inv_h0_gyr = 9.77792 / h
+    a_eval = np.atleast_1d(np.asarray(a_eval, dtype=float))
+    out = np.array([
+        inv_h0_gyr * quad(lambda x: 1.0 / (x * np.sqrt(E2(x, omega_m, w0, wa))),
+                          1e-8, float(a), limit=200)[0]
+        for a in a_eval
+    ])
+    return out[0] if out.size == 1 else out
 
 
 def sigma8_for(sigma8_ref, omega_m, w0, a_ini, omega_m_ref=0.30, w0_ref=-1.0):

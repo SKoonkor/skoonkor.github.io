@@ -35,9 +35,11 @@ export const demos: Demo[] = [
 		tagline: "how many galaxies of each brightness are out there?",
 	},
 	{
-		title: "Weighing dark matter",
+		href: "/explore/structure-growth/",
+		title: "Watching a universe grow",
 		blurb:
-			"Dark matter clumps into halos. Counting how many of each mass exist is a way to test what dark energy is doing.",
+			"Two universes from the same first ripples, with different amounts of matter. Run time forward from a nearly smooth beginning to today, and watch them come apart.",
+		tagline: "run cosmic time forward and watch the web appear",
 	},
 ];
 

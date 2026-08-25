@@ -77,7 +77,8 @@ print(f'{ob:.6f} {om-ob:.6f} {1-om:.6f}')")"
 
   local ic="ic_${tag}.hdf5"
   if [ ! -f "$dir/$ic" ]; then
-    "$PY" "$MAKE_ICS" --omega-m "$om" --sigma8 "$s8" --w0 "$w0" --out "$dir"
+    "$PY" "$MAKE_ICS" --omega-m "$om" --sigma8 "$s8" --w0 "$w0" \
+        --tag "$tag" --out "$dir"
   fi
 
   cp "$GRID/output_list.txt" "$GRID/select_output.yml" "$dir/"

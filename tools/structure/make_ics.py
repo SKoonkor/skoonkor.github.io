@@ -154,10 +154,16 @@ def main() -> None:
     ap.add_argument("--w0", type=float, default=-1.0)
     ap.add_argument("--level", type=int, default=7, help="7 = 128^3, 6 = 64^3")
     ap.add_argument("--out", type=pathlib.Path, required=True)
+    # The caller owns the tag. run_grid.sh formats sigma_8 to three decimals so
+    # that the two amplitude conventions produce distinct directory names, and a
+    # tag computed independently here drifted from it -- MUSIC wrote
+    # ic_..._s0.80_... while the generated run.yml asked for ic_..._s0.800_...,
+    # and SWIFT died in H5Fopen with no useful message.
+    ap.add_argument("--tag", help="directory/file tag; derived if omitted")
     a = ap.parse_args()
 
     a.out.mkdir(parents=True, exist_ok=True)
-    tag = f"Om{a.omega_m:.2f}_s{a.sigma8:.2f}_w{a.w0:+.1f}"
+    tag = a.tag or f"Om{a.omega_m:.2f}_s{a.sigma8:.3f}_w{a.w0:+.1f}"
     outfile = f"ic_{tag}.hdf5"
     conf = a.out / f"{tag}.conf"
     conf.write_text(

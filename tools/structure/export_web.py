@@ -40,17 +40,63 @@ import numpy as np
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
 from compute_pk import read_swift_ps  # noqa: E402
-from growth import growth_and_f, sigma8_for  # noqa: E402
+from growth import age_gyr, growth_and_f, sigma8_for  # noqa: E402
 
 H = 0.703
 SIG_FIGS = 5
 SIGMA8_REF = 0.80
 A_BEGIN = 1.0 / 51.0
 
+# The grid the campaign intends to produce, which is NOT the same as the grid
+# that exists at any given moment -- the runs land over about nineteen hours.
+# The page renders its controls from this, marking what has not arrived yet, so
+# that a run completing needs an export and nothing else.
+GRID_OMEGA_M = (0.15, 0.30, 0.45)
+GRID_W0 = (-0.7, -1.0, -1.3)
+GRID_NORM = ("today", "start")
+
 
 def sig(x: float, n: int = SIG_FIGS) -> float:
     """Round to n significant figures. P(k) spans 5 decades; %.5g halves the file."""
     return float(f"%.{n}g" % x)
+
+
+def grid_tag(omega_m: float, w0: float, norm: str) -> tuple[str, float]:
+    """
+    (tag, sigma8) for one intended grid point.
+
+    Must agree exactly with run_grid.sh, which names directories the same way --
+    if the two drift, the page asks for frames under a path the renderer never
+    wrote. Both derive sigma_8 for the 'start' convention from the same
+    growth.sigma8_for().
+    """
+    s8 = SIGMA8_REF if norm == "today" else sigma8_for(SIGMA8_REF, omega_m, w0, A_BEGIN)
+    return f"Om{omega_m:.2f}_s{s8:.3f}_w{w0:+.1f}", round(float(s8), 3)
+
+
+def intended_grid(available: set[str]) -> dict:
+    """Every point the campaign will produce, flagged with whether it is here yet."""
+    points, seen = [], {}
+    for norm in GRID_NORM:
+        for om in GRID_OMEGA_M:
+            for w0 in GRID_W0:
+                tag, s8 = grid_tag(om, w0, norm)
+                # The fiducial has the same sigma_8 under both conventions and so
+                # the same tag; it is one run that serves two points.
+                key = (tag, norm)
+                if key in seen:
+                    continue
+                seen[key] = True
+                points.append({
+                    "omegaM": om, "w0": w0, "normalisation": norm,
+                    "tag": tag, "sigma8": s8, "available": tag in available,
+                })
+    tags = {p["tag"] for p in points}
+    return {
+        "omegaM": list(GRID_OMEGA_M), "w0": list(GRID_W0),
+        "normalisation": list(GRID_NORM), "points": points,
+        "nAvailable": len(tags & available), "nTotal": len(tags),
+    }
 
 
 def parse_run_yml(path: pathlib.Path) -> dict:
@@ -169,14 +215,18 @@ def main() -> None:
         if not conv:
             raise SystemExit(f"{tag}: sigma8={cos['sigma8']} matches neither convention")
         cos["normalisation"] = conv
-        runs.append(cos)
-
         D, f = growth_and_f(av, cos["omegaM"], cos["w0"])
         growth_out[tag] = {
             "D": [sig(x) for x in D],
             "f": [sig(x) for x in f],
             "sigma8": [sig(cos["sigma8"] * x) for x in D],
+            "tGyr": [sig(x, 4) for x in age_gyr(av, cos["omegaM"], cos["w0"], h=cos["h"])],
+            "simulated": True,
         }
+        runs.append(cos)
+
+        with __import__("h5py").File(next(run_dir.glob("snap_*.hdf5"))) as hf:
+            n_particles = int(hf["PartType1"]["Coordinates"].shape[0])
 
         zs, k, P, shot = read_spectra(run_dir)
         if len(zs) != len(av):
@@ -193,16 +243,31 @@ def main() -> None:
     structure_z = [round(x, 4) for x in epochs_z]
     now = dt.datetime.now(dt.UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
 
+    intended = intended_grid(set(tags))
+    # Growth for EVERY intended point, simulated or not (see above).
+    for pt in intended["points"]:
+        if pt["tag"] in growth_out:
+            continue
+        D, f = growth_and_f(epochs_a, pt["omegaM"], pt["w0"])
+        growth_out[pt["tag"]] = {
+            "D": [sig(x) for x in D],
+            "f": [sig(x) for x in f],
+            "sigma8": [sig(pt["sigma8"] * x) for x in D],
+            "tGyr": [sig(x, 4) for x in age_gyr(epochs_a, pt["omegaM"], pt["w0"], h=H)],
+            "simulated": pt["available"],
+        }
+
     structure = {
         "schema": "structure-growth/1",
         "box": {
             "sizeMpcH": fmeta["boxMpcH"], "slabMpcH": fmeta["slabMpcH"],
-            "resolution": fmeta["resolution"], "particles": 128**3, "seed": 20260825,
+            "resolution": fmeta["resolution"], "particles": n_particles, "seed": 20260825,
         },
         "stretch": stretch,
         "epochs": {"a": [round(x, 6) for x in epochs_a], "z": structure_z},
         "runs": runs,
         "growth": growth_out,
+        "intendedGrid": intended,
         "axes": {
             "omegaM": sorted({r["omegaM"] for r in runs}),
             "w0": sorted({r["w0"] for r in runs}),
@@ -233,8 +298,10 @@ def main() -> None:
         "provenance": {
             "code": "SWIFT 2026.04, --cosmology --self-gravity --power",
             "ics": "MUSIC, Eisenstein-Hu transfer, 2LPT, one seed for the whole grid",
-            "note": "Omega_b scales with Omega_m at fixed f_b = 0.151667, so every "
-                    "grid point stays observationally plausible.",
+            "note": "Omega_b scales with Omega_m at fixed f_b = 0.151667. This keeps the "
+                    "baryon feature in the transfer function from tracking the matter "
+                    "density; it does not make the off-fiducial points observationally "
+                    "allowed -- only the fiducial has a BBN-consistent Omega_b h^2.",
             "generated_utc": now,
         },
     }
