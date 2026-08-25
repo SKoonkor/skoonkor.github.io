@@ -1,0 +1,254 @@
+#!/usr/bin/env python3
+"""
+Assemble what the /explore/structure-growth/ page actually fetches.
+
+Writes two JSON files and copies the rendered frames:
+
+  public/data/structure-growth/structure.json   grid, epochs, growth histories
+  public/data/structure-growth/pk.json          matter power spectra
+  public/structure-frames/<tag>/frame_NNN.avif  39 frames per cosmology
+
+Split into two files on purpose. `structure.json` is small and is needed before
+anything can be drawn; `pk.json` is an order of magnitude larger and is only
+needed if the reader opens the quantitative panel, so the page lazy-loads it.
+
+Two invariants are asserted rather than assumed, because the whole design leans
+on them and both are cheap to check:
+
+  * every run lands on the SAME scale-factor grid, so the time slider is shared
+    and `z[]` ships once instead of nine times;
+  * every run's P(k) lands on the SAME k bins, so `k[]` ships once too.
+
+Both are exactly true today (max difference 0.0 on the pilot pair) because box,
+particle count and P(k) grid are fixed across the grid -- but a future change to
+any of those would break them silently, and a wrong-by-one-epoch slider is the
+kind of bug that looks like physics.
+"""
+
+from __future__ import annotations
+
+import argparse
+import datetime as dt
+import glob
+import json
+import pathlib
+import re
+import shutil
+import sys
+
+import numpy as np
+
+sys.path.insert(0, str(pathlib.Path(__file__).parent))
+from compute_pk import read_swift_ps  # noqa: E402
+from growth import growth_and_f  # noqa: E402
+
+H = 0.703
+SIG_FIGS = 5
+
+
+def sig(x: float, n: int = SIG_FIGS) -> float:
+    """Round to n significant figures. P(k) spans 5 decades; %.5g halves the file."""
+    return float(f"%.{n}g" % x)
+
+
+def parse_run_yml(path: pathlib.Path) -> dict:
+    """Read the cosmology back out of the .yml the driver generated."""
+    txt = path.read_text()
+
+    def grab(key: str) -> float:
+        m = re.search(rf"^\s*{key}:\s*([-\d.eE+]+)", txt, re.M)
+        if not m:
+            raise SystemExit(f"{path}: no {key}")
+        return float(m.group(1))
+
+    ocdm, ob = grab("Omega_cdm"), grab("Omega_b")
+    return {
+        "omegaM": round(ocdm + ob, 6),
+        "omegaB": ob,
+        "omegaLambda": grab("Omega_lambda"),
+        "w0": grab("w_0"),
+        "h": grab("h"),
+    }
+
+
+def read_spectra(run_dir: pathlib.Path):
+    """(z[n_epoch], k[n_k], P[n_epoch, n_k], shot_noise) from SWIFT's estimator."""
+    files = sorted(glob.glob(str(run_dir / "power_spectra" / "power_matter_*.txt")))
+    z, k, rows, shot = [], None, [], None
+    for f in files:
+        p = pathlib.Path(f)
+        body = [l for l in p.read_text().splitlines() if l.strip() and not l.startswith("#")]
+        z.append(float(body[0].split()[0]))
+        shot = float(body[0].split()[3])
+        ki, pi = read_swift_ps(p)
+        if k is None:
+            k = ki
+        elif not np.array_equal(k, ki):
+            raise SystemExit(f"{p.name}: k bins differ within a single run")
+        rows.append(pi)
+    return np.array(z), k, np.array(rows), shot
+
+
+def usable_bins(P: np.ndarray, shot: float) -> list[int]:
+    """
+    Per epoch, the number of leading k bins the page may plot.
+
+    SWIFT reports P(k) with the shot noise already subtracted. At high redshift
+    the field is still nearly uniform, so the true power falls BELOW the shot
+    noise and the subtraction goes negative -- 28% of the (epoch, k) grid at
+    128^3, everywhere above z = 6.5. Those entries are not wrong, they are
+    measurements of nothing, and a log axis cannot draw them at all.
+
+    The cut is the first bin where the signal drops below the shot noise, i.e.
+    signal-to-noise per bin < 1. Everything at or beyond it is discarded by the
+    page rather than silently clipped, so an early-time P(k) curve simply stops
+    where the simulation stops being able to say anything.
+    """
+    out = []
+    for row in P:
+        bad = np.where(row <= shot)[0]
+        out.append(int(bad[0]) if len(bad) else int(len(row)))
+    return out
+
+
+def main() -> None:
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--grid", type=pathlib.Path, required=True, help="SWIFT run dirs")
+    ap.add_argument("--frames", type=pathlib.Path, required=True, help="rendered AVIFs")
+    ap.add_argument("--public", type=pathlib.Path, default=pathlib.Path("public"))
+    ap.add_argument("--no-copy", action="store_true", help="JSON only, leave frames")
+    a = ap.parse_args()
+
+    tags = sorted(p.name for p in a.frames.iterdir()
+                  if p.is_dir() and (p / "frames.json").exists())
+    if not tags:
+        raise SystemExit(f"no rendered runs under {a.frames}")
+
+    epochs_a = epochs_z = None
+    k_ref = None
+    runs, growth_out, pk_out = [], {}, {}
+
+    for tag in tags:
+        fmeta = json.loads((a.frames / tag / "frames.json").read_text())
+        frames = fmeta["frames"]
+        av = np.array([f["a"] for f in frames])
+        zv = np.array([f["z"] for f in frames])
+
+        if epochs_a is None:
+            epochs_a, epochs_z = av, zv
+        elif len(av) != len(epochs_a) or not np.allclose(av, epochs_a, atol=1e-9):
+            raise SystemExit(
+                f"{tag}: scale-factor grid differs from {tags[0]}. Every run must "
+                "share one grid -- the time slider and the side-by-side both "
+                "depend on it. Check output_list.txt was copied unmodified."
+            )
+
+        run_dir = a.grid / tag
+        cos = parse_run_yml(run_dir / "run.yml")
+        m = re.search(r"_s([\d.]+)_", tag)
+        cos["sigma8"] = float(m.group(1)) if m else None
+        cos["tag"] = tag
+        cos["nframes"] = len(frames)
+        # MUSIC normalises sigma_8 at z=0, so every run on this grid has the same
+        # clustering today by construction. The alternative convention -- matching
+        # the amplitude at a_begin instead, which is what makes the w0 axis show
+        # anything -- needs its own IC and its own run, so it is recorded per run
+        # rather than derived here.
+        cos["normalisation"] = "z0"
+        runs.append(cos)
+
+        D, f = growth_and_f(av, cos["omegaM"], cos["w0"])
+        growth_out[tag] = {
+            "D": [sig(x) for x in D],
+            "f": [sig(x) for x in f],
+            "sigma8": [sig(cos["sigma8"] * x) for x in D],
+        }
+
+        zs, k, P, shot = read_spectra(run_dir)
+        if len(zs) != len(av):
+            raise SystemExit(f"{tag}: {len(zs)} spectra but {len(av)} frames")
+        if k_ref is None:
+            k_ref = k
+        elif not np.allclose(k, k_ref, atol=1e-12):
+            raise SystemExit(f"{tag}: k bins differ from {tags[0]}")
+        pk_out[tag] = {"P": [[sig(x) for x in row] for row in P],
+                       "shotNoise": sig(shot),
+                       "usableBins": usable_bins(P, shot)}
+
+    stretch = fmeta["stretch"]
+    structure_z = [round(x, 4) for x in epochs_z]
+    now = dt.datetime.now(dt.UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+    structure = {
+        "schema": "structure-growth/1",
+        "box": {
+            "sizeMpcH": fmeta["boxMpcH"], "slabMpcH": fmeta["slabMpcH"],
+            "resolution": fmeta["resolution"], "particles": 128**3, "seed": 20260825,
+        },
+        "stretch": stretch,
+        "epochs": {"a": [round(x, 6) for x in epochs_a], "z": structure_z},
+        "runs": runs,
+        "growth": growth_out,
+        "axes": {
+            "omegaM": sorted({r["omegaM"] for r in runs}),
+            "w0": sorted({r["w0"] for r in runs}),
+            "sigma8": sorted({r["sigma8"] for r in runs}),
+        },
+        "units": {
+            "D": "linear growth factor, normalised to 1 at a=1",
+            "f": "dlnD/dlna, the linear growth rate",
+            "sigma8": "sigma_8 at that epoch, = sigma_8(z=0) x D(a)",
+            "stretch": "log10(1+delta) mapped to black and to white",
+            "slabMpcH": "projection depth along z, in Mpc/h",
+        },
+        # A handful of exact values, so a future change to the binning, the units
+        # or the rounding is caught by comparison rather than by eye. Same idea
+        # as lf.json's `golden`.
+        "golden": [
+            {"tag": t, "epochIndex": i, "z": structure_z[i],
+             "D": growth_out[t]["D"][i], "kIndex": j,
+             "k": sig(float(k_ref[j])), "P": pk_out[t]["P"][i][j]}
+            for t in (tags[0], tags[-1])
+            for i, j in ((0, 5), (len(epochs_a) // 2, 12), (len(epochs_a) - 1, 20))
+        ],
+        "provenance": {
+            "code": "SWIFT 2026.04, --cosmology --self-gravity --power",
+            "ics": "MUSIC, Eisenstein-Hu transfer, 2LPT, one seed for the whole grid",
+            "note": "Omega_b scales with Omega_m at fixed f_b = 0.151667, so every "
+                    "grid point stays observationally plausible.",
+            "generated_utc": now,
+        },
+    }
+
+    pk = {
+        "schema": "structure-growth-pk/1",
+        "k": [sig(x) for x in k_ref],
+        "epochs": structure["epochs"]["z"],
+        "units": {"k": "1/Mpc (h-free)", "P": "Mpc^3, shot noise subtracted",
+                  "shotNoise": "Mpc^3, the V/N white noise already removed from P",
+                  "usableBins": "per epoch, how many leading k bins have S/N > 1; "
+                                "plot only these -- the rest are negative or noise"},
+        "runs": pk_out,
+    }
+
+    out = a.public / "data" / "structure-growth"
+    out.mkdir(parents=True, exist_ok=True)
+    (out / "structure.json").write_text(json.dumps(structure, indent=1))
+    (out / "pk.json").write_text(json.dumps(pk, separators=(",", ":")))
+
+    if not a.no_copy:
+        for tag in tags:
+            dst = a.public / "structure-frames" / tag
+            dst.mkdir(parents=True, exist_ok=True)
+            for f in sorted((a.frames / tag).glob("frame_*.avif")):
+                shutil.copy2(f, dst / f.name)
+
+    for name in ("structure.json", "pk.json"):
+        print(f"  {name}: {(out / name).stat().st_size / 1024:.1f} KB")
+    print(f"  runs: {', '.join(tags)}")
+    print(f"  epochs: {len(epochs_a)}  z {epochs_z[0]:.2f} -> {epochs_z[-1]:.2f}"
+          f"   k bins: {len(k_ref)}")
+
+
+if __name__ == "__main__":
+    main()
