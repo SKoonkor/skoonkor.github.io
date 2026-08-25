@@ -40,10 +40,12 @@ import numpy as np
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
 from compute_pk import read_swift_ps  # noqa: E402
-from growth import growth_and_f  # noqa: E402
+from growth import growth_and_f, sigma8_for  # noqa: E402
 
 H = 0.703
 SIG_FIGS = 5
+SIGMA8_REF = 0.80
+A_BEGIN = 1.0 / 51.0
 
 
 def sig(x: float, n: int = SIG_FIGS) -> float:
@@ -154,7 +156,19 @@ def main() -> None:
         # the amplitude at a_begin instead, which is what makes the w0 axis show
         # anything -- needs its own IC and its own run, so it is recorded per run
         # rather than derived here.
-        cos["normalisation"] = "z0"
+        # A run belongs to a convention if its simulated sigma_8 matches what
+        # that convention asks for. The fiducial satisfies both, so it is stored
+        # once on disk and listed twice here -- which is the whole reason the tag
+        # carries sigma_8 rather than the convention's name.
+        conv = []
+        if abs(cos["sigma8"] - SIGMA8_REF) < 5e-4:
+            conv.append("today")
+        if abs(cos["sigma8"] - sigma8_for(SIGMA8_REF, cos["omegaM"], cos["w0"],
+                                          A_BEGIN)) < 5e-4:
+            conv.append("start")
+        if not conv:
+            raise SystemExit(f"{tag}: sigma8={cos['sigma8']} matches neither convention")
+        cos["normalisation"] = conv
         runs.append(cos)
 
         D, f = growth_and_f(av, cos["omegaM"], cos["w0"])
@@ -193,11 +207,16 @@ def main() -> None:
             "omegaM": sorted({r["omegaM"] for r in runs}),
             "w0": sorted({r["w0"] for r in runs}),
             "sigma8": sorted({r["sigma8"] for r in runs}),
+            "normalisation": ["today", "start"],
         },
         "units": {
             "D": "linear growth factor, normalised to 1 at a=1",
             "f": "dlnD/dlna, the linear growth rate",
             "sigma8": "sigma_8 at that epoch, = sigma_8(z=0) x D(a)",
+            "normalisation": "which amplitude conventions this run serves. "
+                             "'today' = sigma_8 is 0.80 at z=0; 'start' = the "
+                             "amplitude at z=50 equals the fiducial's. The "
+                             "fiducial serves both.",
             "stretch": "log10(1+delta) mapped to black and to white",
             "slabMpcH": "projection depth along z, in Mpc/h",
         },
