@@ -1,5 +1,6 @@
 ---
 import { getCollection } from "astro:content";
+import DemoThumb from "@/components/DemoThumb.astro";
 import FormattedDate from "@/components/FormattedDate.astro";
 import PageTitle from "@/components/PageTitle.astro";
 import { demos } from "@/data/demos";
@@ -27,12 +28,15 @@ const meta = {
 
 		<ul class="explore-cards" role="list">
 			{
-				demos.map(({ href, title, blurb }) => (
+				demos.map(({ href, title, blurb, thumb }) => (
 					<li class={href ? undefined : "soon"}>
 						{href ? (
 							<a href={href}>
-								<h2>{title}</h2>
-								<p>{blurb}</p>
+								{thumb && <DemoThumb name={thumb} />}
+								<span class="explore-cards__text">
+									<h2>{title}</h2>
+									<p>{blurb}</p>
+								</span>
 							</a>
 						) : (
 							<div class="block h-full p-6">

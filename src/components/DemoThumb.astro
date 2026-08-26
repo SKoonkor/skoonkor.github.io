@@ -1,0 +1,42 @@
+---
+/**
+ * The square picture on an /explore/ card.
+ *
+ * Two of the three are SVG and inlined rather than referenced with <img>. An
+ * <img src="...svg"> is an isolated document that the page's CSS cannot reach,
+ * so its strokes could not follow the light/dark theme; inlined, they use
+ * currentColor and simply inherit. The third is a stitched simulation frame --
+ * photographic, so it stays a raster, and it is inverted in light mode exactly
+ * as CosmicBands does with the same imagery.
+ *
+ * Decorative: the card's own title and blurb carry the meaning.
+ *
+ * Not lazy-loaded: all three cards are above the fold on /explore/, so deferring
+ * the image only buys a reflow once it arrives.
+ */
+import galaxyLf from "@/assets/thumbs/galaxy-lf.svg?raw";
+import pcaSed from "@/assets/thumbs/pca-sed.svg?raw";
+
+interface Props {
+	name: string;
+}
+
+const { name } = Astro.props;
+const inline: Record<string, string> = { "pca-sed": pcaSed, "galaxy-lf": galaxyLf };
+const svg = inline[name];
+---
+
+{
+	svg ? (
+		<span class="demo-thumb" aria-hidden="true" set:html={svg} />
+	) : (
+		<img
+			class="demo-thumb demo-thumb--photo"
+			src={`/images/thumbs/${name}.avif`}
+			alt=""
+			width="180"
+			height="180"
+			decoding="async"
+		/>
+	)
+}

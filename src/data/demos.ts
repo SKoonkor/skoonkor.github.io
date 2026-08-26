@@ -17,11 +17,17 @@ export type Demo = {
 	blurb: string;
 	/** One clause, for the single line Home gives each demo. */
 	tagline?: string;
+	/**
+	 * Slug of the card thumbnail, built by tools/build_thumbnails.py. Absent
+	 * means no picture -- the card still works, it just has no square.
+	 */
+	thumb?: string;
 };
 
 export const demos: Demo[] = [
 	{
 		href: "/explore/pca-sed/",
+		thumb: "pca-sed",
 		title: "Rebuilding starlight",
 		blurb:
 			"The spectrum of a billion stars takes over a thousand numbers to write down. Find out how few you really need — and why that matters for simulating a universe.",
@@ -29,6 +35,7 @@ export const demos: Demo[] = [
 	},
 	{
 		href: "/explore/galaxy-lf/",
+		thumb: "galaxy-lf",
 		title: "Counting galaxies",
 		blurb:
 			"How many galaxies of each brightness does the Universe contain, and how has that changed over the last three quarters of cosmic time?",
@@ -36,6 +43,7 @@ export const demos: Demo[] = [
 	},
 	{
 		href: "/explore/structure-growth/",
+		thumb: "structure-growth",
 		title: "Watching a universe grow",
 		blurb:
 			"Two universes from the same first ripples, with different amounts of matter. Run time forward from a nearly smooth beginning to today, and watch them come apart.",
