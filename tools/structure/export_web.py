@@ -354,6 +354,11 @@ def main() -> None:
                 "mParticle": sig(blk["mParticle"]),
                 "counts": blk["counts"],
                 "largestGroup": blk["largestGroup"],
+                # Up to two per epoch: the most massive halos whose centre lies
+                # inside the projected slab, as fractions of the box. Only those
+                # can be circled on a frame -- a halo behind the slab is not in
+                # the picture at all.
+                "topHalos": blk.get("topHalos", []),
             }
         if runs_h:
             halos = {
@@ -371,6 +376,10 @@ def main() -> None:
                               "page can draw sqrt(N) Poisson bars -- the massive end "
                               "has tens of objects, not thousands",
                     "boxVolume": "(Mpc/h)^3, for turning counts into number densities",
+                    "topHalos": "[epoch] -> up to two {fx, fy, m}: box-fraction "
+                                "position and mass of the most massive halos inside "
+                                "the 15 Mpc/h slab the frames show. fx maps to the "
+                                "image ROW and fy to the column.",
                     "mParticle": "Msun/h. DIFFERS PER RUN because it scales with "
                                  "Omega_m, so each run's resolution floor "
                                  "(nMinParticles x mParticle) sits at a different "

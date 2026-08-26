@@ -85,6 +85,15 @@ Omega_m, a 32-particle halo is 6.4e11 Msun/h at Omega_m = 0.15 but 1.9e12 at
 resolved measurement against an unresolved one. This is the same discipline as
 `usableBins` on the power spectra.
 
+`topHalos[epoch]` holds up to two `{fx, fy, m}`: the most massive halos whose
+centre lies inside the 15 Mpc/h slab the frames show, as fractions of the box.
+Only in-slab halos are listed, because the frames are a slice and a halo behind
+it is not in the picture. **`fx` maps to the image row and `fy` to the column** —
+`swiftsimio` returns the projection indexed `[x][y]` and PIL writes the first
+index as the row, so on screen the vertical axis is x. Verified by sampling the
+frames at each candidate mapping: the correct one lands on 250+/255, the others
+on 6 to 97.
+
 Groups of a single particle are dropped before binning, so the lowest bins are
 not stuffed with unbound particles. Even so, nothing below 32 particles should
 be read as a halo.

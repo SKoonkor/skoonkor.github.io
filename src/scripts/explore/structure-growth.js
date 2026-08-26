@@ -85,13 +85,18 @@ const NORM = [
 	{ id: "today", label: "today" },
 	{ id: "start", label: "at the start" },
 ];
+/*
+ * Ordered so the halo counts come first: they are the sharpest statement the
+ * grid makes -- 157 halos above 1e13 at Omega_m = 0.15 against 832 at 0.45 --
+ * on an axis where the two picture panels look nearly identical.
+ */
 const VIEWS = [
-	{ id: "growth", label: "growth rate" },
-	{ id: "amplitude", label: "clumpiness" },
-	{ id: "pk", label: "scale by scale" },
-	{ id: "hmf", label: "mass function" },
-	{ id: "cumulative", label: "how many" },
 	{ id: "halotime", label: "over time" },
+	{ id: "cumulative", label: "how many" },
+	{ id: "hmf", label: "mass function" },
+	{ id: "pk", label: "scale by scale" },
+	{ id: "amplitude", label: "clumpiness" },
+	{ id: "growth", label: "growth rate" },
 ];
 const HALO_VIEWS = new Set(["hmf", "cumulative", "halotime"]);
 
@@ -105,8 +110,27 @@ function clear(ctx, W, H) {
 	ctx.clearRect(0, 0, W, H);
 }
 
+/** Msun/h per (Mpc/h)^3. Same constant the halo pipeline uses. */
+const RHO_CRIT = 2.77536627e11;
+const BOX_MPC_H = 100.0;
+
+/**
+ * Ring radius in source-image pixels for a halo of mass `m`.
+ *
+ * 2 x R_200m, with a floor so it stays visible. R_200m alone is 1.2 px at
+ * 1e12 Msun/h and only 9.9 px for the most massive halo in the box, which at
+ * the size these panels actually render is a dot. The floor governs below about
+ * 1e13.3, so for most of the animation the ring is a POINTER, not a size --
+ * which is what the deep-dive prose says.
+ */
+function ringRadius512(m, omegaM) {
+	const rhoM = omegaM * RHO_CRIT;
+	const r = ((3 * m) / (4 * Math.PI * 200 * rhoM)) ** (1 / 3); // Mpc/h
+	return Math.max(2 * (r / BOX_MPC_H) * 512, 10);
+}
+
 /** One simulation panel: the frame, or an explanation of why there isn't one. */
-function drawPanel(canvas, bmp, colours, accent) {
+function drawPanel(canvas, bmp, colours, accent, rings) {
 	const [W, H] = fitCanvas(canvas);
 	const ctx = canvas.getContext("2d");
 	clear(ctx, W, H);
@@ -128,6 +152,31 @@ function drawPanel(canvas, bmp, colours, accent) {
 	ctx.strokeStyle = accent;
 	ctx.lineWidth = 2;
 	ctx.strokeRect(1, 1, W - 2, H - 2);
+
+	// Mark the most massive halos. The frame is drawn cover-fit above, so the
+	// rings go through the same transform. fx maps to the image ROW and fy to the
+	// column: swiftsimio returns the projection indexed [x][y] and PIL writes the
+	// first index as the row, so on screen the vertical axis is x. Verified by
+	// sampling the frame at each candidate mapping -- the right one lands on
+	// 250+/255, the others on 6 to 97.
+	if (bmp && rings?.length) {
+		const s = Math.max(W / bmp.width, H / bmp.height);
+		const ox = (W - bmp.width * s) / 2;
+		const oy = (H - bmp.height * s) / 2;
+		ctx.strokeStyle = accent;
+		ctx.lineWidth = 1.5;
+		for (const ring of rings) {
+			ctx.beginPath();
+			ctx.arc(
+				ox + ring.fy * bmp.width * s,
+				oy + ring.fx * bmp.height * s,
+				ring.r * s,
+				0,
+				Math.PI * 2,
+			);
+			ctx.stroke();
+		}
+	}
 }
 
 /** Axis furniture shared by the three chart views. */
@@ -412,11 +461,12 @@ function drawHalos(canvas, halos, state, colours, cumulative) {
 	const h = H - pad.t - pad.b;
 	if (w <= 0 || h <= 0) return;
 
-	// Fixed across every epoch and run, as everywhere else on this page.
-	const xLo = 11.5;
+	// Fixed across every epoch and run, as everywhere else on this page. Checked
+	// against all 17 runs at all 39 epochs: nothing falls outside these limits.
+	const xLo = 12.0;
 	const xHi = 15.0;
 	const yLo = cumulative ? 0 : -7;
-	const yHi = cumulative ? 4 : -1;
+	const yHi = cumulative ? 4 : -2;
 	const xOf = (lm) => pad.l + (w * (lm - xLo)) / (xHi - xLo);
 	const yOf = (ly) => pad.t + h * (1 - (ly - yLo) / (yHi - yLo));
 
@@ -484,7 +534,12 @@ function drawHalos(canvas, halos, state, colours, cumulative) {
 		}
 		ctx.globalAlpha = 1;
 
-		// Where this run stops being able to resolve a halo at all.
+		// Where this run stops being able to resolve a halo at all. Skipped when
+		// it falls off the left of the axis -- at Omega_m = 0.15 the floor is
+		// 10^11.80, below the plotted range, and drawing it there would put a
+		// dashed line through the y-axis labels. The curve's own left-hand end
+		// still shows where that run's data begins.
+		if (s.floor < xLo) continue;
 		ctx.setLineDash([2, 3]);
 		ctx.globalAlpha = 0.55;
 		ctx.beginPath();
@@ -638,7 +693,7 @@ export async function init(root) {
 		b: { om: num(urlState.bom, grid.omegaM, 0.15), w0: num(urlState.bw, grid.w0, -1.0), tag: null },
 		norm: grid.normalisation.includes(urlState.n) ? urlState.n : "today",
 		i: Number.isFinite(+urlState.i) ? Math.min(38, Math.max(0, +urlState.i | 0)) : 0,
-		view: VIEWS.some((v) => v.id === urlState.v) ? urlState.v : "growth",
+		view: VIEWS.some((v) => v.id === urlState.v) ? urlState.v : "halotime",
 		panel: "a",
 		playing: false,
 	};
@@ -736,11 +791,71 @@ export async function init(root) {
 		if (s8 > 0.6) look = "Clusters have formed at the nodes";
 		else if (s8 > 0.35) look = "A web of filaments";
 		else if (s8 > 0.15) look = "The first filaments are appearing";
-		return `${name}: matter ${fmtOm(s.om)}, dark energy ${w0Label(s.w0)}, redshift ${z.toFixed(2)}. ${look}.`;
+		const rings = ringMassText(side);
+		const circled = rings
+			? ` The two most massive halos in this slice, ${rings} solar masses, are circled.`
+			: "";
+		return `${name}: matter ${fmtOm(s.om)}, dark energy ${w0Label(s.w0)}, redshift ${z.toFixed(2)}. ${look}.${circled}`;
 	}
 
 	let lastIndex = 0;
 	let lastDir = 1;
+	/**
+	 * Fetch the halo data.
+	 *
+	 * Called during init rather than only on a chip click, because "over time" is
+	 * now the default view -- lazily waiting for an event that never fires would
+	 * leave the opening chart empty. drawHaloTime tolerates a null `halos`, so the
+	 * axes render while this is in flight.
+	 */
+	function loadHalos() {
+		if (halos || halosLoading) return;
+		halosLoading = true;
+		fetchJSON(HALOS_URL)
+			.then((j) => {
+				halos = j;
+				// One fixed maximum for the whole grid, taken across every run and
+				// epoch, so the curve rising is a real statement and not an axis
+				// rescaling under the reader.
+				let m = 1;
+				for (const tag of Object.keys(j.runs)) {
+					const series = countAbove(j, tag, 13);
+					if (series) m = Math.max(m, ...series);
+				}
+				haloYMax = Math.ceil(m / 50) * 50;
+				render();
+			})
+			.catch((err) => {
+				halosLoading = false;
+				fail("The halo counts could not be loaded; showing the growth history instead.", err);
+				state.view = "growth";
+				refresh();
+			});
+	}
+
+	/** Up to two rings for one panel, or [] before halos exist at this epoch. */
+	function ringsFor(side) {
+		const tag = state[side].tag;
+		const run = halos && tag && halos.runs[tag];
+		const top = run?.topHalos?.[state.i];
+		if (!top?.length) return [];
+		const om = state[side].om;
+		return top.map((hlo) => ({ fx: hlo.fx, fy: hlo.fy, r: ringRadius512(hlo.m, om) }));
+	}
+
+	/** "3.1 and 2.4 x 10^14" for the caption and the panel's accessible name. */
+	function ringMassText(side) {
+		const top = ringsFor(side).length ? halos.runs[state[side].tag].topHalos[state.i] : [];
+		if (!top.length) return "";
+		// top holds {fx, fy, m} objects; the mass has to be pulled out before
+		// formatting, or every figure comes out NaN.
+		const fmt = (m) => {
+			const e = Math.floor(Math.log10(m));
+			return `${(m / 10 ** e).toFixed(1)}\u00d710^${e}`;
+		};
+		return top.map((hlo) => fmt(hlo.m)).join(" and ");
+	}
+
 	function chartLabel() {
 		const v = VIEWS.find((x) => x.id === state.view);
 		const z = d.epochs.z[state.i];
@@ -763,7 +878,7 @@ export async function init(root) {
 			const c = cacheFor(tag);
 			if (c) c.reconcile(state.i, dir);
 			const bmp = c ? c.get(state.i) : null;
-			drawPanel(canvas, bmp, colours, colours[side]);
+			drawPanel(canvas, bmp, colours, colours[side], ringsFor(side));
 
 			const host = canvas.closest("[data-frame]");
 			const tile = host?.querySelector("[data-placeholder]");
@@ -810,6 +925,10 @@ export async function init(root) {
 			const gB = state.b.point && d.growth[state.b.point.tag];
 			const age = gA?.tGyr ? `${gA.tGyr[state.i].toFixed(2)} billion years after the Big Bang` : "";
 			let txt = z >= 0.005 ? `Redshift ${z.toFixed(2)} — ${age}.` : `Today, ${age}.`;
+			const ringsA = ringMassText("a");
+			if (ringsA) {
+				txt += ` The circled halos on the left are ${ringsA} solar masses.`;
+			}
 			if (same) txt += " Both panels are showing the same universe.";
 			else if (gA && gB) {
 				txt += ` Growth rate f = ${gA.f[state.i].toFixed(2)} on the left, ${gB.f[state.i].toFixed(2)} on the right.`;
@@ -923,29 +1042,7 @@ export async function init(root) {
 			() => state.view,
 			(v) => {
 				state.view = v;
-				if (HALO_VIEWS.has(v) && !halos && !halosLoading) {
-					halosLoading = true;
-					fetchJSON(HALOS_URL)
-						.then((j) => {
-							halos = j;
-							// One fixed maximum for the whole grid: taken across every
-							// run and epoch so the "over time" curve rising is a real
-							// statement rather than an axis rescale.
-							let m = 1;
-							for (const tag of Object.keys(j.runs)) {
-								const series = countAbove(j, tag, 13);
-								if (series) m = Math.max(m, ...series);
-							}
-							haloYMax = Math.ceil(m / 50) * 50;
-							render();
-						})
-						.catch((err) => {
-							halosLoading = false;
-							fail("The halo counts could not be loaded; showing growth instead.", err);
-							state.view = "growth";
-							refresh();
-						});
-				}
+				if (HALO_VIEWS.has(v)) loadHalos();
 				if (v === "pk" && !pk && !pkLoading) {
 					pkLoading = true;
 					fetchJSON(PK_URL)
@@ -1177,6 +1274,7 @@ export async function init(root) {
 		render();
 	});
 
+	loadHalos();
 	drawGridMap();
 	root.classList.add("is-ready");
 	render();

@@ -3419,6 +3419,6 @@
   "code": "SWIFT 2026.04, --cosmology --self-gravity --power",
   "ics": "MUSIC, Eisenstein-Hu transfer, 2LPT, one seed for the whole grid",
   "note": "Omega_b scales with Omega_m at fixed f_b = 0.151667. This keeps the baryon feature in the transfer function from tracking the matter density; it does not make the off-fiducial points observationally allowed -- only the fiducial has a BBN-consistent Omega_b h^2.",
-  "generated_utc": "2026-08-26T02:48:14Z"
+  "generated_utc": "2026-08-26T04:17:58Z"
  }
 }
