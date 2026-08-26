@@ -6,8 +6,19 @@
  * be lifted into a component without rewriting it.
  */
 
-/** Cache-busting suffix. Bump when the data under /data/ changes. */
-export const DATA_VERSION = "2026-08";
+/**
+ * Cache-busting suffix for everything under /data/.
+ *
+ * Re-exported from a generated module rather than hand-bumped: it used to be a
+ * literal "2026-08", and while the simulation grid was filling in over a day
+ * that meant a returning reader kept a structure.json from their first visit and
+ * never saw the runs that finished afterwards.
+ */
+// Imported, not just re-exported: `export { X } from` forwards the binding
+// without putting it in local scope, and fetchJSON below interpolates it.
+import { DATA_VERSION } from "./data-version.js";
+
+export { DATA_VERSION };
 
 /**
  * Fetch and parse JSON, with the version tag appended.

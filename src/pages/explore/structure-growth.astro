@@ -127,13 +127,16 @@ const meta = {
 		</div>
 
 		<div class="demo-chart demo-chart--structure">
-			<canvas data-chart role="img"
-				aria-label="A chart comparing the two universes: growth rate, clumpiness, or clustering scale by scale."
+			{/* aria-label is rewritten from the script to name the active view;
+				aria-describedby ties the chart to the caption, which carries the
+				actual numbers. */}
+			<canvas data-chart role="img" aria-describedby="sg-caption"
+				aria-label="Chart comparing the two universes."
 			></canvas>
 		</div>
 
 		<p class="visually-hidden" data-live aria-live="polite"></p>
-		<p class="demo-caption" data-caption></p>
+		<p class="demo-caption" id="sg-caption" data-caption></p>
 
 		<div class="demo-why">
 			<h2>Why this matters</h2>
@@ -152,14 +155,25 @@ const meta = {
 				instead, and compare the web it grows against the one we see in galaxy
 				surveys. The growth rate chart is where the difference is starkest: across the
 				matter axis it nearly doubles. Redshift-space distortions in galaxy surveys
-				constrain the combination <i>f</i>&sigma;<sub>8</sub> rather than <i>f</i>
-				on its own, because <i>f</i> alone cannot be separated from how galaxies
+				constrain the combination <i>f</i>&sigma;<sub>8</sub> rather than <i>f</i> on its
+				own, because <i>f</i> alone cannot be separated from how galaxies
 				trace the matter.
 			</p>
 			<p>
+				The halo charts are where that comparison gets sharpest. A halo is a
+				collapsed clump of dark matter — the thing a galaxy or a cluster of
+				galaxies sits inside — and counting them is far more sensitive to the
+				recipe than any picture is. Nothing at all has collapsed by redshift 16;
+				by redshift 5 there are a handful; by today the fiducial box holds about
+				3,500 resolved halos, of which roughly 40 are cluster-sized. Watch
+				the <em>over time</em> chart and the count stops rising long before the
+				massive end does, because past a point the small halos are being eaten
+				rather than made.
+			</p>
+			<p>
 				The <strong>Matched</strong> control is the subtle one. Simulations are
-				normally tuned so every universe has the same clumpiness <em>today</em>,
-				which makes them agree now and differ only in how they got here. Match them
+				normally tuned so every universe has the same clumpiness <em>today</em>, which
+				makes them agree now and differ only in how they got here. Match them
 				at the <em>start</em> instead and they begin together and end apart. Neither
 				is more correct — they answer different questions, and switching between
 				them on the clumpiness chart is the quickest way to see why that matters.
@@ -170,14 +184,14 @@ const meta = {
 			<h2>The detail</h2>
 
 			<p>
-				Dark-matter-only runs with <a href="https://swift.strw.leidenuniv.nl/" rel="noopener" target="_blank">SWIFT</a>,
-				from initial conditions generated with MUSIC using an Eisenstein&ndash;Hu
+				Dark-matter-only runs with <a href="https://swift.strw.leidenuniv.nl/" rel="noopener" target="_blank">SWIFT</a>, from
+				initial conditions generated with MUSIC using an Eisenstein&ndash;Hu
 				transfer function and second-order Lagrangian perturbation theory. Each box
 				is <span data-fill="box">100</span>&thinsp;Mpc/<i>h</i> on a side and
 				holds <span data-fill="particles">2,097,152</span> particles
 				(128<sup>3</sup>), integrated from <i>z</i>&thinsp;=&thinsp;50 to 0
-				with <span data-fill="frames">39</span> snapshots kept. The slider starts at
-				<i>z</i>&thinsp;=&thinsp;45 because SWIFT does not write an output for the
+				with <span data-fill="frames">39</span> snapshots kept. The slider starts
+				at <i>z</i>&thinsp;=&thinsp;45 because SWIFT does not write an output for the
 				scale factor it begins on.
 			</p>
 
@@ -203,8 +217,8 @@ const meta = {
 				projected to <span data-fill="res">512</span><sup>2</sup> pixels with an SPH
 				kernel over 64 neighbours. Pixel value is
 				log<sub>10</sub>(1&thinsp;+&thinsp;&delta;) mapped onto the same black and
-				white points, <span data-fill="stretchLo">-0.9</span> to <span data-fill="stretchHi">1.8</span>,
-				for every frame and every run — a
+				white points, <span data-fill="stretchLo">-0.9</span> to <span data-fill="stretchHi">1.8</span>, for
+				every frame and every run — a
 				shared stretch is what makes the growth real rather than an artefact of
 				renormalising each picture.
 			</p>
@@ -217,16 +231,40 @@ const meta = {
 				rise above the noise. Those points are not plotted rather than being drawn as
 				noise. Nothing is plotted below the box's own fundamental
 				mode, <i>k</i>&thinsp;=&thinsp;0.044&thinsp;Mpc<sup>&minus;1</sup>, which is a
-				limit of the simulation rather than of the Universe — a 100&thinsp;Mpc/<i>h</i>
-				box does not contain the baryon acoustic scale at all. It also holds only
-				about 29 halos above 10<sup>14</sup>&thinsp;M<sub>&#9737;</sub>/<i>h</i>, so
+				limit of the simulation rather than of the Universe — a 100&thinsp;Mpc/<i>h</i> box
+				does not contain the baryon acoustic scale at all. It also holds only
+				39 halos above 10<sup>14</sup>&thinsp;M<sub>&#9737;</sub>/<i>h</i> today, so
 				nothing here should be read as a claim about how many clusters exist.
+			</p>
+
+			<p>
+				Halos are found with friends-of-friends at a linking length of 0.2 times
+				the mean interparticle separation, which selects roughly the virialised
+				region and gives masses close
+				to <i>M</i><sub>200m</sub>. A halo's mass is simply its particle count times
+				the particle mass, because every dark matter particle in a run is
+				identical.
+			</p>
+
+			<p>
+				That particle mass scales with the matter density, so the three matter
+				settings do <em>not</em> resolve the same halos: one particle is
+				2.0&thinsp;&times;&thinsp;10<sup>10</sup>&thinsp;M<sub>&#9737;</sub>/<i>h</i> in
+				the sparse universe and
+				6.0&thinsp;&times;&thinsp;10<sup>10</sup> in the heavy one. A halo needs at
+				least 32 particles before its mass means anything, so each curve begins at
+				its own limit — marked by the dashed vertical line — and the limits differ
+				by a factor of three. Below them the simulation is not measuring halos, it
+				is measuring noise. The error bars are
+				&radic;<i>N</i>: at the massive end these are counts of tens of objects in
+				a single box, not a smooth function.
 			</p>
 
 			<div class="demo-downloads">
 				<a href="/data/structure-growth/README.md">Data notes</a>
 				<a href="/data/structure-growth/structure.json">structure.json</a>
 				<a href="/data/structure-growth/pk.json">pk.json</a>
+				<a href="/data/structure-growth/halos.json">halos.json</a>
 				<a
 					href="https://github.com/SKoonkor/skoonkor.github.io/blob/main/tools/structure/export_web.py"
 					rel="noopener"

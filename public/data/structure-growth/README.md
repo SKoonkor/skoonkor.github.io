@@ -28,7 +28,8 @@ Softening is 1/25 of the mean interparticle separation. The mean separation is
 | file | size | what |
 |---|---|---|
 | `structure.json` | ~20 KB | the grid, the shared epoch list, and an analytic growth history per run |
-| `pk.json` | ~100 KB | matter power spectra, one row per epoch per run |
+| `pk.json` | ~170 KB | matter power spectra, one row per epoch per run |
+| `halos.json` | ~90 KB | friends-of-friends halo counts, binned in log mass |
 | `../../structure-frames/<tag>/frame_NNN.avif` | 24 KB each | 512² greyscale projections |
 
 `z[]` and `k[]` are stored **once**, not per run: every run lands on exactly the
@@ -59,12 +60,42 @@ subtraction goes negative — 28% of the grid, all above z ≈ 6.5. Those entrie
 are kept as they are rather than clipped, but **only the first `usableBins[i]`
 should be plotted**. The usable range grows from a few bins at z = 45 to all 35 by z ≈ 4, which is simply structure forming.
 
+## Halos
+
+Found with friends-of-friends at a linking length of **b = 0.2** times the mean
+interparticle separation, periodic, on the particle positions alone. That is
+possible because every dark matter particle in a run has the same mass and that
+mass is analytic:
+
+    m_p = Omega_m * rho_crit * L^3 / N
+        = 1.985e10 / 3.970e10 / 5.955e10 Msun/h   for Omega_m = 0.15 / 0.30 / 0.45
+
+(The Omega_m = 0.30 value agrees with the mass measured off the initial
+conditions, 3.9711e10, to 0.02%.) A halo's mass is its particle count times m_p,
+and at b = 0.2 that is close to **M_200m** — not M_200c and not M_vir.
+
+`counts[epoch][bin]` are **raw integers**, so the page can draw sqrt(N) Poisson
+bars. At the massive end these are counts of tens of objects in one box, and a
+smooth-looking curve there would be a lie.
+
+**The mass resolution differs across the Omega_m axis.** Because m_p scales with
+Omega_m, a 32-particle halo is 6.4e11 Msun/h at Omega_m = 0.15 but 1.9e12 at
+0.45 — a factor of three. Every curve must be truncated at its own
+`nMinParticles * mParticle`; comparing below the higher floor compares a
+resolved measurement against an unresolved one. This is the same discipline as
+`usableBins` on the power spectra.
+
+Groups of a single particle are dropped before binning, so the lowest bins are
+not stuffed with unbound particles. Even so, nothing below 32 particles should
+be read as a halo.
+
 ## Caveats
 
 A 100 Mpc/h box has no power below its fundamental mode, k = 0.063 h/Mpc — which is
 **0.044 Mpc⁻¹**, the unit `pk.json` actually uses. (The smallest bin there is 0.056
 Mpc⁻¹.) It does not contain the BAO
-scale. It holds roughly 29 halos above 10¹⁴ M☉/h, so the page makes no
+scale. It holds 39 halos above 10¹⁴ M☉/h at z = 0 in the fiducial run — measured
+by the friends-of-friends run above, not estimated — so the page makes no
 quantitative claim about cluster abundance. σ₈ measured back out of a single
 realisation in this box comes in about 4% low from the missing large-scale modes
 alone, which is expected and not an error.
