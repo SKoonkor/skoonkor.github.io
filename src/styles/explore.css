@@ -638,6 +638,11 @@
 	--sg-a: oklch(62% 0.16 265);              /* blue-violet -- Universe A */
 	--sg-b: oklch(70% 0.14 65);               /* amber       -- Universe B */
 	--sg-shot: color-mix(in oklab, var(--color-muted) 45%, transparent);
+	/* Halo markers are red in both panels, not the panel identity colour: they
+	   point at the same structure in each universe, so colouring them per panel
+	   implied a difference that is not there. Fixed oklch, like the other series
+	   colours, and it reads against greyscale in either theme. */
+	--sg-ring: oklch(62% 0.23 25);
 
 	margin-block: 1.5rem 0;
 	opacity: 0;

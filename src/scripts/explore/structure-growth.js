@@ -63,6 +63,7 @@ const PALETTE = {
 	a: "--sg-a",
 	b: "--sg-b",
 	shot: "--sg-shot",
+	ring: "--sg-ring",
 };
 
 /*
@@ -93,13 +94,19 @@ const NORM = [
 const VIEWS = [
 	{ id: "halotime", label: "over time" },
 	{ id: "halogrowth", label: "halo growth" },
-	{ id: "cumulative", label: "how many" },
 	{ id: "hmf", label: "mass function" },
 	{ id: "pk", label: "scale by scale" },
-	{ id: "amplitude", label: "clumpiness" },
-	{ id: "growth", label: "growth rate" },
+	{ id: "growth", label: "growth & clumpiness" },
 ];
-const HALO_VIEWS = new Set(["hmf", "cumulative", "halotime", "halogrowth"]);
+const HALO_VIEWS = new Set(["hmf", "halotime", "halogrowth"]);
+
+/*
+ * "how many" and "mass function" used to be separate charts, as did "clumpiness"
+ * and "growth rate". Each pair is two readings of one dataset, so they now share
+ * a frame with independent left and right axes. Links saved against the old view
+ * names still work.
+ */
+const VIEW_ALIASES = { cumulative: "hmf", amplitude: "growth" };
 
 /*
  * Every number the caption prints is formatted to a fixed decimal count AND a
@@ -141,16 +148,16 @@ const BOX_MPC_H = 100.0;
 /**
  * Ring radius in source-image pixels for a halo of mass `m`.
  *
- * 2 x R_200m, with a floor so it stays visible. R_200m alone is 1.2 px at
- * 1e12 Msun/h and only 9.9 px for the most massive halo in the box, which at
- * the size these panels actually render is a dot. The floor governs below about
- * 1e13.3, so for most of the animation the ring is a POINTER, not a size --
- * which is what the deep-dive prose says.
+ * 2 x R_200m, with a small floor so it does not vanish. R_200m alone is 1.2 px
+ * at 1e12 Msun/h and 9.9 px for the most massive halo in the box. With a 4 px
+ * floor the ring tracks 2 x R_200m over almost the whole mass range and only
+ * holds steady at the very faint end, so it stays close to a real size -- but the
+ * label beside it is what actually makes it findable.
  */
 function ringRadius512(m, omegaM) {
 	const rhoM = omegaM * RHO_CRIT;
 	const r = ((3 * m) / (4 * Math.PI * 200 * rhoM)) ** (1 / 3); // Mpc/h
-	return Math.max(2 * (r / BOX_MPC_H) * 512, 10);
+	return Math.max(2 * (r / BOX_MPC_H) * 512, 4);
 }
 
 /** One simulation panel: the frame, or an explanation of why there isn't one. */
@@ -187,19 +194,27 @@ function drawPanel(canvas, bmp, colours, accent, rings) {
 		const s = Math.max(W / bmp.width, H / bmp.height);
 		const ox = (W - bmp.width * s) / 2;
 		const oy = (H - bmp.height * s) / 2;
-		ctx.strokeStyle = accent;
+		// One colour for both panels, not the panel identity: the rings point at
+		// the same structure in each universe, so colouring them per panel implied
+		// a difference that is not there.
+		ctx.strokeStyle = colours.ring;
+		ctx.fillStyle = colours.ring;
 		ctx.lineWidth = 1.5;
+		ctx.font = FONT(11);
+		ctx.textAlign = "left";
+		ctx.textBaseline = "middle";
 		for (const ring of rings) {
+			const cx = ox + ring.fy * bmp.width * s;
+			const cy = oy + ring.fx * bmp.height * s;
+			const rr = ring.r * s;
 			ctx.beginPath();
-			ctx.arc(
-				ox + ring.fy * bmp.width * s,
-				oy + ring.fx * bmp.height * s,
-				ring.r * s,
-				0,
-				Math.PI * 2,
-			);
+			ctx.arc(cx, cy, rr, 0, Math.PI * 2);
 			ctx.stroke();
+			// The name travels with the circle, so a ring can be matched to its
+			// curve on the growth chart without counting panels.
+			ctx.fillText(ring.label, cx + rr + 3, cy);
 		}
+		ctx.textBaseline = "alphabetic";
 	}
 }
 
@@ -236,6 +251,24 @@ function frame(ctx, W, H, colours, pad) {
 	ctx.strokeRect(pad.l, pad.t, W - pad.l - pad.r, H - pad.t - pad.b);
 }
 
+/**
+ * Label for a second, right-hand y axis.
+ *
+ * Two quantities share one frame on the combined charts, so each needs its own
+ * scale. Solid curves read against the left axis and dashed against the right;
+ * the axis captions say so, because a twin-axis plot with no such cue is a trap.
+ */
+function rightAxisLabel(ctx, colours, label, W, H, pad) {
+	ctx.fillStyle = colours.axis;
+	ctx.font = FONT(11);
+	ctx.save();
+	ctx.translate(W - 12, pad.t + (H - pad.t - pad.b) / 2);
+	ctx.rotate(Math.PI / 2);
+	ctx.textAlign = "center";
+	ctx.fillText(label, 0, 0);
+	ctx.restore();
+}
+
 function axisLabels(ctx, colours, xLabel, yLabel, W, H, pad) {
 	ctx.fillStyle = colours.axis;
 	ctx.font = FONT(11);
@@ -255,34 +288,30 @@ function axisLabels(ctx, colours, xLabel, yLabel, W, H, pad) {
  * single line; f runs 0.345 / 0.513 / 0.644 across the matter axis at z = 0,
  * a factor of 1.86 from end to end.
  */
-function drawHistory(canvas, d, state, colours, which, keyRows) {
+function drawHistory(canvas, d, state, colours, keyRows) {
 	const [W, H] = fitCanvas(canvas);
 	const ctx = canvas.getContext("2d");
 	clear(ctx, W, H);
 	if (W <= 0 || H <= 0) return;
-	const pad = { l: 52, r: 14, t: 14, b: 40 };
+	const pad = { l: 52, r: 54, t: 14, b: 40 };
 	const w = W - pad.l - pad.r;
 	const h = H - pad.t - pad.b;
 	if (w <= 0 || h <= 0) return;
 
 	const zs = d.epochs.z;
-	const xOf = (z) => {
-		const lo = Math.log10(1 + zs[zs.length - 1]);
-		const hi = Math.log10(1 + zs[0]);
-		return pad.l + w * (1 - (Math.log10(1 + z) - lo) / (hi - lo));
-	};
+	const lo = Math.log10(1 + zs[zs.length - 1]);
+	const hi = Math.log10(1 + zs[0]);
+	const xOf = (z) => pad.l + w * (1 - (Math.log10(1 + z) - lo) / (hi - lo));
 
-	const log = which === "amplitude";
-	const yLo = log ? Math.log10(0.02) : 0;
-	const yHi = log ? Math.log10(1.1) : 1.05;
-	const yOf = (v) => {
-		const t = ((log ? Math.log10(Math.max(v, 1e-6)) : v) - yLo) / (yHi - yLo);
-		return pad.t + h * (1 - t);
-	};
+	// Left: growth rate f, linear and bounded. Right: sigma_8, which spans nearly
+	// two decades and needs a log scale. Sharing one frame only works because the
+	// two axes are independent.
+	const fOf = (v) => pad.t + h * (1 - v / 1.05);
+	const sLo = Math.log10(0.02);
+	const sHi = Math.log10(1.1);
+	const sOf = (v) => pad.t + h * (1 - (Math.log10(Math.max(v, 1e-6)) - sLo) / (sHi - sLo));
 
 	frame(ctx, W, H, colours, pad);
-
-	// Gridlines at decade-ish redshifts the reader can name.
 	ctx.strokeStyle = colours.line;
 	ctx.fillStyle = colours.axis;
 	ctx.font = FONT(10);
@@ -298,43 +327,37 @@ function drawHistory(canvas, d, state, colours, which, keyRows) {
 		ctx.globalAlpha = 1;
 		ctx.fillText(z === 0 ? "now" : String(z), x, H - pad.b + 14);
 	}
-
 	ctx.textAlign = "right";
-	const ticks = log ? [0.02, 0.05, 0.1, 0.2, 0.5, 1] : [0, 0.25, 0.5, 0.75, 1];
-	for (const t of ticks) {
-		const y = yOf(t);
-		ctx.fillText(String(t), pad.l - 6, y + 3);
-	}
+	for (const t of [0, 0.25, 0.5, 0.75, 1]) ctx.fillText(t.toFixed(2), pad.l - 6, fOf(t) + 3);
+	ctx.textAlign = "left";
+	for (const t of [0.02, 0.05, 0.1, 0.2, 0.5, 1])
+		ctx.fillText(String(t), W - pad.r + 6, sOf(t) + 3);
 
 	for (const side of ["a", "b"]) {
-		// point.tag, NOT state.tag: state.tag is null for a cosmology that has not
-		// been simulated, but its growth history exists regardless -- that is the
-		// whole reason growth is exported for all 18 grid points. Reading
-		// state.tag here silently skipped the curve for every pending point, which
-		// is 14 of 18 today, and contradicted both the page copy and rule 3 above.
 		const g = state[side].point && d.growth[state[side].point.tag];
 		if (!g) continue;
-		const series = which === "amplitude" ? g.sigma8 : g.f;
 		ctx.strokeStyle = colours[side];
 		ctx.lineWidth = 1.8;
-		// A cosmology that has not been simulated still has an exact growth
-		// history, so it is drawn -- dashed, to say the pictures are missing but
-		// the physics is not.
-		ctx.setLineDash(g.simulated ? [] : [4, 3]);
-		ctx.beginPath();
-		for (let i = 0; i < zs.length; i++) {
-			const x = xOf(zs[i]);
-			const y = yOf(series[i]);
-			if (i === 0) ctx.moveTo(x, y);
-			else ctx.lineTo(x, y);
+		for (const [series, yFn, dash] of [
+			[g.f, fOf, []],
+			[g.sigma8, sOf, [5, 3]],
+		]) {
+			// Dashed for the quantity on the right axis, matching the captions.
+			ctx.setLineDash(g.simulated ? dash : [2, 2]);
+			ctx.beginPath();
+			for (let i = 0; i < zs.length; i++) {
+				const x = xOf(zs[i]);
+				const y = yFn(series[i]);
+				if (i === 0) ctx.moveTo(x, y);
+				else ctx.lineTo(x, y);
+			}
+			ctx.stroke();
+			ctx.setLineDash([]);
+			ctx.fillStyle = colours[side];
+			ctx.beginPath();
+			ctx.arc(xOf(zs[state.i]), yFn(series[state.i]), 3.5, 0, Math.PI * 2);
+			ctx.fill();
 		}
-		ctx.stroke();
-		ctx.setLineDash([]);
-		// "You are here" dot, which is what keeps the chart alive during playback.
-		ctx.fillStyle = colours[side];
-		ctx.beginPath();
-		ctx.arc(xOf(zs[state.i]), yOf(series[state.i]), 3.5, 0, Math.PI * 2);
-		ctx.fill();
 	}
 
 	ctx.strokeStyle = colours.axis;
@@ -345,11 +368,13 @@ function drawHistory(canvas, d, state, colours, which, keyRows) {
 	ctx.stroke();
 	ctx.globalAlpha = 1;
 
+	drawCosmoKey(ctx, colours, W, H, pad, keyRows, "bl");
+	rightAxisLabel(ctx, colours, "clumpiness \u03c3\u2088   (dashed)", W, H, pad);
 	axisLabels(
 		ctx,
 		colours,
 		"redshift  (earlier to the left)",
-		which === "amplitude" ? "clumpiness  σ₈(z)" : "growth rate  f",
+		"growth rate  f   (solid)",
 		W,
 		H,
 		pad,
@@ -459,6 +484,8 @@ function drawPk(canvas, pk, state, colours, keyRows) {
 		}
 	}
 
+	// P(k) falls from the top left, so the top right is the empty corner.
+	drawCosmoKey(ctx, colours, W, H, pad, keyRows, "tr");
 	axisLabels(ctx, colours, "k  [Mpc⁻¹]   larger scales to the left", "P(k)  [Mpc³]", W, H, pad);
 }
 
@@ -596,24 +623,26 @@ function countAbove(halos, tag, logM) {
 }
 
 /** dn/dlnM, or the cumulative N(>M), at the selected epoch. */
-function drawHalos(canvas, halos, state, colours, cumulative, keyRows) {
+function drawHalos(canvas, halos, state, colours, keyRows) {
 	const [W, H] = fitCanvas(canvas);
 	const ctx = canvas.getContext("2d");
 	clear(ctx, W, H);
 	if (W <= 0 || H <= 0) return;
-	const pad = { l: 58, r: 14, t: 14, b: 40 };
+	const pad = { l: 50, r: 56, t: 14, b: 40 };
 	const w = W - pad.l - pad.r;
 	const h = H - pad.t - pad.b;
 	if (w <= 0 || h <= 0) return;
 
-	// Fixed across every epoch and run, as everywhere else on this page. Checked
-	// against all 17 runs at all 39 epochs: nothing falls outside these limits.
+	// Fixed across every epoch and run. Checked against all 17 runs at all 39
+	// epochs: nothing falls outside these limits.
 	const xLo = 12.0;
 	const xHi = 15.0;
-	const yLo = cumulative ? 0 : -7;
-	const yHi = cumulative ? 4 : -2;
 	const xOf = (lm) => pad.l + (w * (lm - xLo)) / (xHi - xLo);
-	const yOf = (ly) => pad.t + h * (1 - (ly - yLo) / (yHi - yLo));
+	// Left: how many halos exceed a mass. Right: how many per unit log mass.
+	// Same data, two conventional readings; sharing the frame lets one be read
+	// off the other.
+	const nOf = (ly) => pad.t + h * (1 - ly / 4);
+	const dOf = (ly) => pad.t + h * (1 - (ly + 7) / 5);
 
 	frame(ctx, W, H, colours, pad);
 	ctx.fillStyle = colours.axis;
@@ -621,85 +650,89 @@ function drawHalos(canvas, halos, state, colours, cumulative, keyRows) {
 	ctx.textAlign = "center";
 	for (let lm = 12; lm <= 15; lm++) ctx.fillText(`1e${lm}`, xOf(lm), H - pad.b + 14);
 	ctx.textAlign = "right";
-	for (let ly = yLo; ly <= yHi; ly++) {
-		if (yOf(ly) < pad.t - 1) continue;
-		ctx.fillText(cumulative ? String(10 ** ly) : `1e${ly}`, pad.l - 6, yOf(ly) + 3);
-	}
+	for (let e = 0; e <= 4; e++) ctx.fillText(String(10 ** e), pad.l - 6, nOf(e) + 3);
+	ctx.textAlign = "left";
+	for (let e = -7; e <= -2; e++) ctx.fillText(`1e${e}`, W - pad.r + 6, dOf(e) + 3);
 
 	if (!halos) {
 		ctx.fillStyle = colours.axis;
 		ctx.font = FONT(12);
 		ctx.textAlign = "center";
-		ctx.fillText("loading…", pad.l + w / 2, pad.t + h / 2);
+		ctx.fillText("loading\u2026", pad.l + w / 2, pad.t + h / 2);
 		return;
 	}
 
 	const dlnM = Math.LN10 * (halos.logMassEdges[1] - halos.logMassEdges[0]);
 	for (const side of ["a", "b"]) {
 		const tag = state[side].tag;
-		const s = tag && haloSeries(halos, tag);
-		if (!s) continue;
-		const row = s.run.counts[state.i];
+		const ser = tag && haloSeries(halos, tag);
+		if (!ser) continue;
+		const row = ser.run.counts[state.i];
 
-		// Cumulative counts run downward from the massive end, so they are built
-		// from the top bin back.
-		const vals = [];
+		const cum = [];
+		const dif = [];
 		let running = 0;
-		for (let i = row.length - 1; i >= s.floorBin; i--) {
+		for (let i = row.length - 1; i >= ser.floorBin; i--) {
 			running += row[i];
-			const lm = (s.edges[i] + s.edges[i + 1]) / 2;
-			const v = cumulative ? running : row[i] / (halos.boxVolume * dlnM);
-			if (v > 0) vals.push([lm, Math.log10(v), row[i]]);
+			const lm = (ser.edges[i] + ser.edges[i + 1]) / 2;
+			if (running > 0) cum.push([lm, Math.log10(running)]);
+			const dn = row[i] / (halos.boxVolume * dlnM);
+			if (dn > 0) dif.push([lm, Math.log10(dn), row[i]]);
 		}
-		vals.reverse();
-		if (!vals.length) continue;
+		cum.reverse();
+		dif.reverse();
 
 		ctx.strokeStyle = colours[side];
 		ctx.lineWidth = 1.8;
-		ctx.beginPath();
-		for (let j = 0; j < vals.length; j++) {
-			const [lm, ly] = vals[j];
-			if (j === 0) ctx.moveTo(xOf(lm), yOf(ly));
-			else ctx.lineTo(xOf(lm), yOf(ly));
+		for (const [pts, yFn, dash] of [
+			[cum, nOf, []],
+			[dif, dOf, [5, 3]],
+		]) {
+			if (!pts.length) continue;
+			ctx.setLineDash(dash);
+			ctx.beginPath();
+			for (let j = 0; j < pts.length; j++) {
+				const [lm, ly] = pts[j];
+				if (j === 0) ctx.moveTo(xOf(lm), yFn(ly));
+				else ctx.lineTo(xOf(lm), yFn(ly));
+			}
+			ctx.stroke();
+			ctx.setLineDash([]);
 		}
-		ctx.stroke();
 
-		// sqrt(N) Poisson bars. At the massive end these are tens of objects, so
-		// a bare line would imply a precision the box cannot deliver.
+		// sqrt(N) bars, on the differential only: cumulative bins share objects,
+		// so error bars there would imply an independence they do not have.
 		ctx.globalAlpha = 0.5;
-		for (const [lm, ly, n] of vals) {
+		for (const [lm, ly, n] of dif) {
 			if (n < 1 || n > 60) continue;
 			const rel = Math.sqrt(n) / n;
-			const hi = Math.log10(10 ** ly * (1 + rel));
-			const lo = Math.log10(Math.max(1e-30, 10 ** ly * (1 - rel)));
 			ctx.beginPath();
-			ctx.moveTo(xOf(lm), yOf(hi));
-			ctx.lineTo(xOf(lm), yOf(lo));
+			ctx.moveTo(xOf(lm), dOf(Math.log10(10 ** ly * (1 + rel))));
+			ctx.lineTo(xOf(lm), dOf(Math.log10(Math.max(1e-30, 10 ** ly * (1 - rel)))));
 			ctx.stroke();
 		}
 		ctx.globalAlpha = 1;
 
-		// Where this run stops being able to resolve a halo at all. Skipped when
-		// it falls off the left of the axis -- at Omega_m = 0.15 the floor is
-		// 10^11.80, below the plotted range, and drawing it there would put a
-		// dashed line through the y-axis labels. The curve's own left-hand end
-		// still shows where that run's data begins.
-		if (s.floor < xLo) continue;
+		// Where this run stops resolving halos. Skipped when off the left of the
+		// axis -- at Omega_m = 0.15 the floor is 10^11.80, below the plotted range.
+		if (ser.floor < xLo) continue;
 		ctx.setLineDash([2, 3]);
 		ctx.globalAlpha = 0.55;
 		ctx.beginPath();
-		ctx.moveTo(xOf(s.floor), pad.t);
-		ctx.lineTo(xOf(s.floor), H - pad.b);
+		ctx.moveTo(xOf(ser.floor), pad.t);
+		ctx.lineTo(xOf(ser.floor), H - pad.b);
 		ctx.stroke();
 		ctx.setLineDash([]);
 		ctx.globalAlpha = 1;
 	}
 
+	drawCosmoKey(ctx, colours, W, H, pad, keyRows, "tr");
+	rightAxisLabel(ctx, colours, "dn/dlnM  [(Mpc/h)\u207b\u00b3]   (dashed)", W, H, pad);
 	axisLabels(
 		ctx,
 		colours,
-		"halo mass  [M☉/h]   dashed line = 32-particle limit",
-		cumulative ? "halos in the box above M" : "dn / dlnM  [(Mpc/h)⁻³]",
+		"halo mass  [M\u2609/h]   dotted = 32-particle limit",
+		"halos above M   (solid)",
 		W,
 		H,
 		pad,
@@ -768,6 +801,8 @@ function drawHaloTime(canvas, d, halos, state, colours, yMax, keyRows) {
 	ctx.stroke();
 	ctx.globalAlpha = 1;
 
+	// The count rises to the right, leaving the top left clear.
+	drawCosmoKey(ctx, colours, W, H, pad, keyRows, "tl");
 	axisLabels(ctx, colours, "redshift  (earlier to the left)", "halos above 10¹³ M☉/h", W, H, pad);
 }
 
@@ -838,7 +873,10 @@ export async function init(root) {
 		b: { om: num(urlState.bom, grid.omegaM, 0.15), w0: num(urlState.bw, grid.w0, -1.0), tag: null },
 		norm: grid.normalisation.includes(urlState.n) ? urlState.n : "today",
 		i: Number.isFinite(+urlState.i) ? Math.min(38, Math.max(0, +urlState.i | 0)) : 0,
-		view: VIEWS.some((v) => v.id === urlState.v) ? urlState.v : "halotime",
+		view: (() => {
+			const v = VIEW_ALIASES[urlState.v] ?? urlState.v;
+			return VIEWS.some((x) => x.id === v) ? v : "halotime";
+		})(),
 		panel: "a",
 		playing: false,
 	};
@@ -998,7 +1036,14 @@ export async function init(root) {
 		const out = [];
 		for (const mark of ["1", "2"]) {
 			const h = tracked[mark]?.[state.i];
-			if (h) out.push({ fx: h.fx, fy: h.fy, r: ringRadius512(h.m, om), label: mark });
+			if (h) {
+				out.push({
+					fx: h.fx,
+					fy: h.fy,
+					r: ringRadius512(h.m, om),
+					label: mark + side.toUpperCase(),
+				});
+			}
 		}
 		return out;
 	}
@@ -1042,12 +1087,9 @@ export async function init(root) {
 		switch (state.view) {
 			case "growth":
 				if (gA && gB) {
-					txt += ` Structure is growing at a rate of ${fmtF(gA.f[state.i])} in Universe A and ${fmtF(gB.f[state.i])} in Universe B.`;
-				}
-				break;
-			case "amplitude":
-				if (gA && gB) {
-					txt += ` Clumpiness \u03c3\u2088 is ${fmtF(gA.sigma8[state.i])} in Universe A and ${fmtF(gB.sigma8[state.i])} in Universe B.`;
+					txt +=
+						` Universe A grows at ${fmtF(gA.f[state.i])} with clumpiness ${fmtF(gA.sigma8[state.i])};` +
+						` Universe B at ${fmtF(gB.f[state.i])} with ${fmtF(gB.sigma8[state.i])}.`;
 				}
 				break;
 			case "pk": {
@@ -1059,7 +1101,6 @@ export async function init(root) {
 				break;
 			}
 			case "hmf":
-			case "cumulative":
 			case "halotime": {
 				const nA = nAbove13("a");
 				const nB = nAbove13("b");
@@ -1145,9 +1186,9 @@ export async function init(root) {
 				drawHaloTime(chart, d, halos, state, colours, haloYMax, keyRows);
 			} else if (state.view === "halogrowth") {
 				drawHaloGrowth(chart, d, halos, state, colours, keyRows);
-			} else if (HALO_VIEWS.has(state.view)) {
-				drawHalos(chart, halos, state, colours, state.view === "cumulative", keyRows);
-			} else drawHistory(chart, d, state, colours, state.view, keyRows);
+			} else if (state.view === "hmf") {
+				drawHalos(chart, halos, state, colours, keyRows);
+			} else drawHistory(chart, d, state, colours, keyRows);
 			// The chart's accessible name has to say what is currently plotted;
 			// naming the control's options instead tells a screen reader nothing.
 			chart.setAttribute("aria-label", chartLabel());

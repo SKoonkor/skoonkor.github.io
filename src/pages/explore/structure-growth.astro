@@ -153,7 +153,8 @@ const meta = {
 				That is the whole method of modern cosmology in one image. We cannot rerun
 				the Universe with a different amount of matter, so we run the simulation
 				instead, and compare the web it grows against the one we see in galaxy
-				surveys. The growth rate chart is where the difference is starkest: across the
+				surveys. The <em>growth &amp; clumpiness</em> chart is where the difference is
+				starkest: across the
 				matter axis it nearly doubles. Redshift-space distortions in galaxy surveys
 				constrain the combination <i>f</i>&sigma;<sub>8</sub> rather than <i>f</i> on its
 				own, because <i>f</i> alone cannot be separated from how galaxies
@@ -176,7 +177,7 @@ const meta = {
 				makes them agree now and differ only in how they got here. Match them
 				at the <em>start</em> instead and they begin together and end apart. Neither
 				is more correct — they answer different questions, and switching between
-				them on the clumpiness chart is the quickest way to see why that matters.
+				them on that same chart is the quickest way to see why that matters.
 			</p>
 		</div>
 
@@ -238,6 +239,16 @@ const meta = {
 			</p>
 
 			<p>
+				Two of the charts carry two quantities at once, on independent left and
+				right axes: solid curves read against the left, dashed against the
+				right. <em>Mass function</em> shows how many halos exceed a given mass alongside
+				how many there are per unit log mass, and <em>growth &amp; clumpiness</em> shows
+				the growth rate beside &sigma;<sub>8</sub>. Each pair is two
+				conventional readings of one dataset, so putting them in one frame lets
+				either be read off the other.
+			</p>
+
+			<p>
 				Halos are found with friends-of-friends at a linking length of 0.2 times
 				the mean interparticle separation, which selects roughly the virialised
 				region and gives masses close
@@ -275,9 +286,9 @@ const meta = {
 				next-nearest massive halo sits three to seven megaparsecs away. A proper
 				merger tree would follow individual particles, which these snapshots cannot
 				support — they store positions only, and the code reorders particles every
-				time it writes a file. The ring is drawn at twice the virial radius with a
-				lower limit so it stays visible, so treat it as a pointer rather than a
-				measurement of the halo's size.
+				time it writes a file. Each ring is drawn in red at twice the virial radius,
+				with a small lower limit so it never disappears, and carries its own name
+				so it can be matched to its curve without counting panels.
 			</p>
 
 			<p>
