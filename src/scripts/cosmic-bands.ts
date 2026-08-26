@@ -25,7 +25,14 @@ const FRAME_VERSION = "2026-08b";
 const MIN_WIDTH = 1100;
 const MIN_HEIGHT = 600;
 
-/** Sharp frames kept decoded at once. 12 x ~4 MB ~= 47 MB. */
+/**
+ * Sharp frames kept decoded at once. 12 x ~4 MB ~= 47 MB.
+ *
+ * A page may ask for fewer through `data-cw-window` on the container. The
+ * structure-growth demo does, because it spends its own memory on two windows of
+ * simulation frames; the proxy atlas is drawn underneath every frame, so a gap
+ * during fast scrolling degrades in resolution rather than going blank.
+ */
 const WINDOW = 12;
 /** Lerp factor per frame toward the scroll target. */
 const EASE = 0.18;
@@ -112,6 +119,10 @@ export async function initCosmicBands(): Promise<void> {
 	let painted = false;
 
 	const container = leftEl.closest<HTMLElement>(".cw");
+	// Read from the DOM rather than passed in: initCosmicBands() takes no
+	// arguments, and the component's <script> may carry no attributes other than
+	// src -- Astro silently skips bundling a script that has any.
+	const windowSize = Number(container?.dataset.cwWindow) || WINDOW;
 	const ruleEl = document.querySelector<HTMLElement>("[data-cw-rule]");
 	const scaleLabelEl = document.querySelector<HTMLElement>("[data-cw-scale-label]");
 	const zEl = document.querySelector<HTMLElement>("[data-cw-z]");
@@ -167,10 +178,18 @@ export async function initCosmicBands(): Promise<void> {
 		}
 	}
 
-	/** Keep a window around `centre`, biased toward the direction of travel. */
+	/**
+	 * Keep a window around `centre`, biased toward the direction of travel.
+	 *
+	 * The trailing edge is a quarter of the window rather than a hardcoded 3. At
+	 * WINDOW = 12 that is the same 9-ahead/3-behind as before, but the constant
+	 * inverted the bias once the window got small: at 4 it kept 3 behind and 1
+	 * ahead, evicting precisely the frames about to be needed.
+	 */
 	function reconcileWindow(centre: number, dir: number) {
-		const ahead = dir >= 0 ? WINDOW - 3 : 3;
-		const lo = Math.max(0, Math.round(centre) - (WINDOW - ahead));
+		const behind = Math.max(1, Math.round(windowSize / 4));
+		const ahead = dir >= 0 ? windowSize - behind : behind;
+		const lo = Math.max(0, Math.round(centre) - (windowSize - ahead));
 		const hi = Math.min(N - 1, Math.round(centre) + ahead);
 
 		for (const [i, bmp] of sharp) {

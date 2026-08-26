@@ -20,10 +20,13 @@ const meta = {
 	therefore begins its line with the preceding word attached. Check the rendered
 	text, not the source, after editing this prose.
 
-	bands={false}: the margin animation holds ~47 MB of decoded frames on every
-	page, and this one needs its memory budget for two windows of its own.
+	bands="light": the margin animation runs, but with a 4-frame window (~16 MB)
+	rather than the usual 12 (~47 MB), because this page holds two windows of
+	512x512 simulation frames of its own. Paid for by keeping no spare frame
+	caches -- see structure-growth.js -- so peak memory is about what it was
+	with the bands switched off entirely.
 */}
-<PageLayout bands={false} meta={meta}>
+<PageLayout bands="light" meta={meta}>
 	<PageTitle
 		title="Watching a universe grow"
 		subtitle="Two universes from identical starting conditions. Change the recipe and watch where they part company."

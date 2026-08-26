@@ -19,10 +19,23 @@
  *
  * The <script> below must carry no attributes other than src -- Astro skips
  * bundling any script that has one, which would silently leave this unprocessed.
+ * That is also why `frameWindow` travels to the script as a data attribute rather
+ * than as an argument.
  */
+
+interface Props {
+	/**
+	 * Decoded frames held at once. Omitted means the script's own default of 12
+	 * (~47 MB). A page that spends its memory on its own imagery can ask for
+	 * fewer; the proxy atlas covers the gaps at reduced resolution.
+	 */
+	frameWindow?: number;
+}
+
+const { frameWindow } = Astro.props;
 ---
 
-<div class="cw" aria-hidden="true">
+<div class="cw" aria-hidden="true" data-cw-window={frameWindow}>
 	<canvas class="cw-band cw-band--left" data-cw-left></canvas>
 	<canvas class="cw-band cw-band--right" data-cw-right></canvas>
 	<div class="cw-readout cw-readout--scale" data-cw-scale>

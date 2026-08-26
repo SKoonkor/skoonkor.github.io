@@ -895,11 +895,16 @@ export async function init(root) {
 		// only ever grows: reconcile() runs for the two selected tags, so a
 		// deselected one freezes holding up to WINDOW decoded bitmaps forever.
 		// At 17 tags x 12 x 1 MB that is ~204 MB, which is exactly the tab-kill
-		// the frame-cache header warns about. Two kept beyond the current pair,
-		// so flicking A/B between a few cosmologies stays instant.
+		// the frame-cache header warns about.
+		//
+		// Nothing is kept beyond the two on screen. Two spares used to be held so
+		// that flicking back to a cosmology was instant; that 24 MB now pays for
+		// the margin bands instead. The cost is small because the COMPRESSED
+		// blobs stay resident either way -- revisiting a cosmology is a re-decode,
+		// not a re-download.
 		const keep = new Set([state.a.tag, state.b.tag].filter(Boolean));
 		const spare = [...caches.keys()].filter((t) => !keep.has(t));
-		for (const t of spare.slice(0, Math.max(0, spare.length - 2))) {
+		for (const t of spare) {
 			caches.get(t).destroy();
 			caches.delete(t);
 		}

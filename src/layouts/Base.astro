@@ -11,17 +11,24 @@ import type { SiteMeta } from "@/types";
 interface Props {
 	meta: SiteMeta;
 	/**
-	 * The margin animation is decorative and costs ~47 MB of decoded frames on
-	 * every page. A page that spends its own memory budget on imagery -- the
-	 * structure-growth demo holds two windows of 512x512 bitmaps -- opts out.
+	 * The margin animation is decorative and holds ~47 MB of decoded frames at its
+	 * default window.
+	 *
+	 *   true    full window, which is every page but one
+	 *   "light" a 4-frame window, ~16 MB, for a page that spends its own memory
+	 *           budget on imagery -- the structure-growth demo holds two windows
+	 *           of 512x512 bitmaps of its own
+	 *   false   not mounted at all
 	 */
-	bands?: boolean;
+	bands?: boolean | "light";
 }
 
 const {
 	meta: { articleDate, description = siteConfig.description, ogImage, title },
 	bands = true,
 } = Astro.props;
+
+const bandWindow = bands === "light" ? 4 : undefined;
 ---
 
 <html class="scroll-smooth" lang={siteConfig.lang}>
@@ -32,7 +39,7 @@ const {
 	<body
 		class="bg-global-bg text-global-text mx-auto flex min-h-screen max-w-3xl flex-col px-4 pt-16 font-mono text-sm font-normal antialiased sm:px-8"
 	>
-		{bands && <CosmicBands />}
+		{bands && <CosmicBands frameWindow={bandWindow} />}
 		<SkipLink />
 		<Header />
 		<main id="main">
