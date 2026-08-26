@@ -29,7 +29,7 @@ interface Props {
 	 * (~47 MB). A page that spends its memory on its own imagery can ask for
 	 * fewer; the proxy atlas covers the gaps at reduced resolution.
 	 */
-	frameWindow?: number;
+	frameWindow?: number | undefined;
 }
 
 const { frameWindow } = Astro.props;
