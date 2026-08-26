@@ -72,6 +72,40 @@ N_MIN_PARTICLES = 32
 #: Only halos above this are worth circling; below it there is nothing to see.
 CIRCLE_MIN_MASS = 1e12
 
+#: The two halos chosen by hand, from the red ovals on slide 9 of
+#: Web_design_suttikoon.pptx. Positions are box fractions as (fx, fy) where fx is
+#: the image ROW and fy the column; the ovals sit at the same place in both
+#: panels to better than 0.006, and the whole grid shares one random seed, so
+#: these marks are meaningful in every run.
+MARKS = {
+    "1": (0.1242, 0.2692),  # top left
+    "2": (0.8228, 0.6743),  # bottom right
+}
+
+#: Search radius for the pick at z = 0: the ovals' own radius, 5.85 Mpc.
+MARK_RADIUS = 0.0411
+
+#: How far a halo centre may move between adjacent snapshots and still be
+#: considered the same object. Measured: centres move ~0.3 Mpc per step while
+#: the next-nearest massive halo is 3-7 Mpc away. A first attempt at 3.0 Mpc
+#: hopped to a bigger neighbour on the very first backward step -- the tell was
+#: the mass rising as time ran backwards. 1.5 Mpc is what survives.
+TRACK_RADIUS = 1.5
+
+#: The search is always run at this radius, not TRACK_RADIUS. A major merger can
+#: shift a FOF centre by more than 1.5 Mpc in a single step, and searching only
+#: the narrow radius then finds some small neighbour instead of the real main
+#: progenitor -- one run showed this as a 16.6x mass discontinuity with the
+#: position barely moving, meaning a far larger halo was sitting right there.
+#: Widening is only safe because of MASS_TOLERANCE below.
+TRACK_RADIUS_WIDE = 3.5
+
+#: A progenitor cannot be more massive than what it grows into. Requiring that
+#: is what makes a wider search safe: the original 3 Mpc attempt failed precisely
+#: by hopping onto a *bigger* neighbour. The 20% slack absorbs FOF bridging,
+#: where a passing group briefly inflates a halo's mass.
+MASS_TOLERANCE = 1.2
+
 #: log10(M / [Msun/h]) bin edges, shared by every run so the browser can compare
 #: them directly. The range covers the lowest 32-particle floor on the grid
 #: (10^11.80 at Omega_m = 0.15) through the most massive halo seen (~10^14.8).
@@ -123,6 +157,88 @@ def periodic_centre(p: np.ndarray, box: float) -> np.ndarray:
     return np.mod(ref + d.mean(axis=0), box)
 
 
+def all_centres(labels, pos, box, ngroups):
+    """
+    Periodic centre of every group at once.
+
+    Calling periodic_centre per halo would mean a full 2.1e6-element boolean scan
+    for each of ~3,500 halos at each of 39 epochs. This does all of them in three
+    bincounts per axis by averaging on the unit circle -- the standard way to take
+    a mean of a periodic coordinate -- which is the difference between the
+    tracking pass being free and it being unusable.
+    """
+    two_pi = 2.0 * np.pi
+    n = np.bincount(labels, minlength=ngroups).astype(float)
+    n[n == 0] = 1.0
+    out = np.empty((ngroups, 3))
+    for ax in range(3):
+        th = pos[:, ax] * (two_pi / box)
+        c = np.bincount(labels, weights=np.cos(th), minlength=ngroups) / n
+        sn = np.bincount(labels, weights=np.sin(th), minlength=ngroups) / n
+        out[:, ax] = np.mod(np.arctan2(sn, c), two_pi) * (box / two_pi)
+    return out
+
+
+def track_marks(catalogues, box):
+    """
+    Follow each hand-picked halo backwards from z = 0.
+
+    The snapshots carry Coordinates and nothing else -- no ParticleIDs -- and
+    SWIFT reorders particles every snapshot on a space-filling curve, so array
+    index i is a different particle in each file (measured: only 4% of indices
+    move less than 1 Mpc between adjacent snapshots, median 9.97). Particle-
+    matched merger trees are therefore impossible from this data, and the
+    progenitor is identified positionally instead: the most massive halo within
+    TRACK_RADIUS of the descendant's centre.
+
+    `catalogues[i]` is (centres, masses) for epoch i. Returns, per mark, one
+    entry per epoch: {fx, fy, m} or None before the halo exists.
+    """
+    slab = SLAB_MPC_H / RENDER_H
+    last = len(catalogues) - 1
+    out = {}
+    for name, (fx, fy) in MARKS.items():
+        series = [None] * len(catalogues)
+        cen, mas = catalogues[last]
+        if len(cen):
+            dx = cen[:, 0] - fx * box
+            dy = cen[:, 1] - fy * box
+            dx -= box * np.round(dx / box)
+            dy -= box * np.round(dy / box)
+            # In projection AND in the slab: the ovals were drawn on a picture of
+            # the slab, so a halo behind it was never visible to choose.
+            inside = np.where((np.hypot(dx, dy) < MARK_RADIUS * box) & (cen[:, 2] <= slab))[0]
+            if len(inside):
+                j = inside[np.argmax(mas[inside])]
+                here = cen[j]
+                series[last] = {"fx": round(float(here[0] / box), 5),
+                                "fy": round(float(here[1] / box), 5),
+                                "m": float(f"{mas[j]:.4g}")}
+                mass = mas[j]
+                for i in range(last - 1, -1, -1):
+                    c2, m2 = catalogues[i]
+                    if not len(c2):
+                        break
+                    v = c2 - here
+                    v -= box * np.round(v / box)
+                    dist = np.linalg.norm(v, axis=1)
+                    # Most massive candidate that is not bigger than what it grows
+                    # into -- the standard main-progenitor rule, with the mass cap
+                    # standing in for the particle matching this data cannot do.
+                    ok = m2 <= mass * MASS_TOLERANCE
+                    near = np.where((dist < TRACK_RADIUS_WIDE) & ok)[0]
+                    if not len(near):
+                        break
+                    k = near[np.argmax(m2[near])]
+                    mass = m2[k]
+                    here = c2[k]
+                    series[i] = {"fx": round(float(here[0] / box), 5),
+                                 "fy": round(float(here[1] / box), 5),
+                                 "m": float(f"{m2[k]:.4g}")}
+        out[name] = series
+    return out
+
+
 def top_in_slab(sizes, labels, pos, box, m_p, keep=2):
     """
     The `keep` most massive halos whose centre falls inside the projected slab.
@@ -157,12 +273,20 @@ def run_one(run_dir: pathlib.Path, omega_m: float) -> dict:
         raise SystemExit(f"no snapshots in {run_dir}")
 
     counts, biggest, top, n_particles = [], [], [], None
+    # Held for the whole run so the marked halos can be tracked backwards once
+    # every epoch has been processed. Only resolved halos, so ~3.5k rows per
+    # epoch rather than the 175k groups FOF returns.
+    catalogues, box = [], None
     for snap in snaps:
         t0 = time.time()
         sizes, labels, pos, box = group_sizes(snap)
         if n_particles is None:
             n_particles = int(sizes.sum())
         m_p = particle_mass(omega_m, n_particles)
+
+        keep = np.where(sizes >= N_MIN_PARTICLES)[0]
+        cen_all = all_centres(labels, pos, box, len(sizes))
+        catalogues.append((cen_all[keep], sizes[keep] * m_p))
 
         # Singletons and pairs are not halos; drop them before binning so the
         # lowest bin is not dominated by unbound particles.
@@ -179,6 +303,7 @@ def run_one(run_dir: pathlib.Path, omega_m: float) -> dict:
         )
 
     return {
+        "tracked": track_marks(catalogues, box),
         "mParticle": float(particle_mass(omega_m, n_particles)),
         "nParticles": n_particles,
         "counts": counts,

@@ -92,13 +92,37 @@ const NORM = [
  */
 const VIEWS = [
 	{ id: "halotime", label: "over time" },
+	{ id: "halogrowth", label: "halo growth" },
 	{ id: "cumulative", label: "how many" },
 	{ id: "hmf", label: "mass function" },
 	{ id: "pk", label: "scale by scale" },
 	{ id: "amplitude", label: "clumpiness" },
 	{ id: "growth", label: "growth rate" },
 ];
-const HALO_VIEWS = new Set(["hmf", "cumulative", "halotime"]);
+const HALO_VIEWS = new Set(["hmf", "cumulative", "halotime", "halogrowth"]);
+
+/*
+ * Every number the caption prints is formatted to a fixed decimal count AND a
+ * fixed total width. Fixed decimals alone are not enough -- "45.11" and "0.00"
+ * are different lengths -- and a caption that changes length reflows and jumps
+ * about as the reader drags the time slider.
+ *
+ * The padding character is a FIGURE SPACE (U+2007), not an ordinary space: it
+ * has the width of a digit and browsers do not collapse it.
+ */
+const FIGSP = "\u2007";
+const padNum = (v, dp, width) => v.toFixed(dp).padStart(width, FIGSP);
+/** Redshift, always 5 characters: "45.11" ... "\u20070.00". */
+const fmtZ = (z) => padNum(z, 2, 5);
+/** Age in Gyr, always 5 characters. */
+const fmtAge = (t) => padNum(t, 2, 5);
+/** Growth rate, always 4 characters. */
+const fmtF = (f) => padNum(f, 2, 4);
+/** A mass as "1.2\u00d710^14", always the same length. */
+const fmtMass = (m) => {
+	const e = Math.floor(Math.log10(m));
+	return `${(m / 10 ** e).toFixed(1)}\u00d710^${String(e).padStart(2, FIGSP)}`;
+};
 
 const fmtOm = (v) => v.toFixed(2);
 const w0Label = (v) => W0.find((o) => Math.abs(o.v - v) < 1e-9)?.label ?? v.toFixed(1);
@@ -179,6 +203,32 @@ function drawPanel(canvas, bmp, colours, accent, rings) {
 	}
 }
 
+/**
+ * The two cosmologies, drawn inside every chart.
+ *
+ * Without it the reader has to look back up at the chips to know what the two
+ * colours mean, and on a phone the chips for the hidden panel are not even on
+ * screen. `corner` differs per view because the curves occupy different parts of
+ * the frame -- a key over the data is worse than no key.
+ */
+function drawCosmoKey(ctx, colours, W, H, pad, rows, corner = "tr") {
+	if (!rows.length) return;
+	ctx.font = FONT(10);
+	ctx.textBaseline = "middle";
+	const lh = 13;
+	const right = corner.endsWith("r");
+	const x = right ? W - pad.r - 8 : pad.l + 8;
+	const top = corner.startsWith("t");
+	const y0 = top ? pad.t + 10 : H - pad.b - 10 - lh * (rows.length - 1);
+	ctx.textAlign = right ? "right" : "left";
+	rows.forEach((row, i) => {
+		ctx.fillStyle = colours[row.side];
+		ctx.fillText(row.text, x, y0 + i * lh);
+	});
+	ctx.textBaseline = "alphabetic";
+	ctx.textAlign = "left";
+}
+
 /** Axis furniture shared by the three chart views. */
 function frame(ctx, W, H, colours, pad) {
 	ctx.strokeStyle = colours.line;
@@ -205,7 +255,7 @@ function axisLabels(ctx, colours, xLabel, yLabel, W, H, pad) {
  * single line; f runs 0.345 / 0.513 / 0.644 across the matter axis at z = 0,
  * a factor of 1.86 from end to end.
  */
-function drawHistory(canvas, d, state, colours, which) {
+function drawHistory(canvas, d, state, colours, which, keyRows) {
 	const [W, H] = fitCanvas(canvas);
 	const ctx = canvas.getContext("2d");
 	clear(ctx, W, H);
@@ -307,7 +357,7 @@ function drawHistory(canvas, d, state, colours, which) {
 }
 
 /** P(k), truncated honestly at the shot noise. */
-function drawPk(canvas, pk, state, colours) {
+function drawPk(canvas, pk, state, colours, keyRows) {
 	const [W, H] = fitCanvas(canvas);
 	const ctx = canvas.getContext("2d");
 	clear(ctx, W, H);
@@ -412,6 +462,101 @@ function drawPk(canvas, pk, state, colours) {
 	axisLabels(ctx, colours, "k  [Mpc⁻¹]   larger scales to the left", "P(k)  [Mpc³]", W, H, pad);
 }
 
+/**
+ * Mass growth of the two hand-picked halos, in both universes.
+ *
+ * Four curves: universe by colour, halo by solid or dashed. Each begins at the
+ * epoch its halo is first resolved, which is itself the point -- the object does
+ * not exist before then. Mass here is total FOF mass, so it grows by mergers AND
+ * by smooth accretion; separating the two would need a particle-matched merger
+ * tree, which these snapshots cannot support.
+ */
+function drawHaloGrowth(canvas, d, halos, state, colours, keyRows) {
+	const [W, H] = fitCanvas(canvas);
+	const ctx = canvas.getContext("2d");
+	clear(ctx, W, H);
+	if (W <= 0 || H <= 0) return;
+	const pad = { l: 56, r: 14, t: 14, b: 40 };
+	const w = W - pad.l - pad.r;
+	const h = H - pad.t - pad.b;
+	if (w <= 0 || h <= 0) return;
+
+	const zs = d.epochs.z;
+	const lo = Math.log10(1 + zs[zs.length - 1]);
+	const hi = Math.log10(1 + zs[0]);
+	const xOf = (z) => pad.l + w * (1 - (Math.log10(1 + z) - lo) / (hi - lo));
+	// Fixed, like every other axis here: rescaling would hide the growth.
+	const yLo = 11;
+	const yHi = 15;
+	const yOf = (lm) => pad.t + h * (1 - (lm - yLo) / (yHi - yLo));
+
+	frame(ctx, W, H, colours, pad);
+	ctx.fillStyle = colours.axis;
+	ctx.font = FONT(10);
+	ctx.textAlign = "center";
+	for (const z of [45, 20, 10, 5, 2, 1, 0]) {
+		const x = xOf(z);
+		if (x < pad.l - 1 || x > W - pad.r + 1) continue;
+		ctx.fillText(z === 0 ? "now" : String(z), x, H - pad.b + 14);
+	}
+	ctx.textAlign = "right";
+	for (let e = yLo; e <= yHi; e++) ctx.fillText(`1e${e}`, pad.l - 6, yOf(e) + 3);
+
+	if (halos) {
+		for (const side of ["a", "b"]) {
+			const tracked = state[side].tag && halos.runs[state[side].tag]?.tracked;
+			if (!tracked) continue;
+			for (const mark of ["1", "2"]) {
+				const series = tracked[mark];
+				if (!series) continue;
+				ctx.strokeStyle = colours[side];
+				ctx.lineWidth = 1.8;
+				ctx.setLineDash(mark === "2" ? [5, 3] : []);
+				ctx.beginPath();
+				let started = false;
+				for (let i = 0; i < series.length; i++) {
+					if (!series[i]) continue;
+					const x = xOf(zs[i]);
+					const y = yOf(Math.log10(series[i].m));
+					if (started) ctx.lineTo(x, y);
+					else {
+						ctx.moveTo(x, y);
+						started = true;
+					}
+				}
+				ctx.stroke();
+				ctx.setLineDash([]);
+				const at = series[state.i];
+				if (at) {
+					ctx.fillStyle = colours[side];
+					ctx.beginPath();
+					ctx.arc(xOf(zs[state.i]), yOf(Math.log10(at.m)), 3.5, 0, Math.PI * 2);
+					ctx.fill();
+				}
+			}
+		}
+	}
+
+	ctx.strokeStyle = colours.axis;
+	ctx.globalAlpha = 0.6;
+	ctx.beginPath();
+	ctx.moveTo(xOf(zs[state.i]), pad.t);
+	ctx.lineTo(xOf(zs[state.i]), H - pad.b);
+	ctx.stroke();
+	ctx.globalAlpha = 1;
+
+	drawCosmoKey(ctx, colours, W, H, pad, keyRows, "tl");
+	axisLabels(
+		ctx,
+		colours,
+		"redshift  (earlier to the left)  \u2014  solid: Halo 1, dashed: Halo 2",
+		"halo mass  [M\u2609/h]",
+		W,
+		H,
+		pad,
+	);
+}
+
 /* ---------------------------------------------------------------- halo views */
 
 /**
@@ -451,7 +596,7 @@ function countAbove(halos, tag, logM) {
 }
 
 /** dn/dlnM, or the cumulative N(>M), at the selected epoch. */
-function drawHalos(canvas, halos, state, colours, cumulative) {
+function drawHalos(canvas, halos, state, colours, cumulative, keyRows) {
 	const [W, H] = fitCanvas(canvas);
 	const ctx = canvas.getContext("2d");
 	clear(ctx, W, H);
@@ -562,7 +707,7 @@ function drawHalos(canvas, halos, state, colours, cumulative) {
 }
 
 /** Halos above 1e13 Msun/h against redshift -- structure assembling. */
-function drawHaloTime(canvas, d, halos, state, colours, yMax) {
+function drawHaloTime(canvas, d, halos, state, colours, yMax, keyRows) {
 	const [W, H] = fitCanvas(canvas);
 	const ctx = canvas.getContext("2d");
 	clear(ctx, W, H);
@@ -791,11 +936,14 @@ export async function init(root) {
 		if (s8 > 0.6) look = "Clusters have formed at the nodes";
 		else if (s8 > 0.35) look = "A web of filaments";
 		else if (s8 > 0.15) look = "The first filaments are appearing";
-		const rings = ringMassText(side);
-		const circled = rings
-			? ` The two most massive halos in this slice, ${rings} solar masses, are circled.`
-			: "";
-		return `${name}: matter ${fmtOm(s.om)}, dark energy ${w0Label(s.w0)}, redshift ${z.toFixed(2)}. ${look}.${circled}`;
+		const letter = side.toUpperCase();
+		const m1 = trackedMass(side, "1");
+		const m2 = trackedMass(side, "2");
+		const circled =
+			m1 || m2
+				? ` Halo 1${letter} at ${fmtMassOr(m1)} and Halo 2${letter} at ${fmtMassOr(m2)} solar masses are circled.`
+				: "";
+		return `${name}: matter ${fmtOm(s.om)}, dark energy ${w0Label(s.w0)}, redshift ${fmtZ(z)}. ${look}.${circled}`;
 	}
 
 	let lastIndex = 0;
@@ -833,27 +981,114 @@ export async function init(root) {
 			});
 	}
 
-	/** Up to two rings for one panel, or [] before halos exist at this epoch. */
+	/**
+	 * The two hand-picked halos for one panel, as rings.
+	 *
+	 * These replaced an automatic "two most massive in the slab" pick, which
+	 * jumped from object to object between epochs and so said nothing about
+	 * growth. These two are chosen once at z=0 inside the marks on slide 9 of the
+	 * design deck and followed backwards, so a ring stays on the same halo and
+	 * ties to its curve on the mass-growth chart.
+	 */
 	function ringsFor(side) {
 		const tag = state[side].tag;
-		const run = halos && tag && halos.runs[tag];
-		const top = run?.topHalos?.[state.i];
-		if (!top?.length) return [];
+		const tracked = tag && halos?.runs[tag]?.tracked;
+		if (!tracked) return [];
 		const om = state[side].om;
-		return top.map((hlo) => ({ fx: hlo.fx, fy: hlo.fy, r: ringRadius512(hlo.m, om) }));
+		const out = [];
+		for (const mark of ["1", "2"]) {
+			const h = tracked[mark]?.[state.i];
+			if (h) out.push({ fx: h.fx, fy: h.fy, r: ringRadius512(h.m, om), label: mark });
+		}
+		return out;
 	}
 
-	/** "3.1 and 2.4 x 10^14" for the caption and the panel's accessible name. */
-	function ringMassText(side) {
-		const top = ringsFor(side).length ? halos.runs[state[side].tag].topHalos[state.i] : [];
-		if (!top.length) return "";
-		// top holds {fx, fy, m} objects; the mass has to be pulled out before
-		// formatting, or every figure comes out NaN.
-		const fmt = (m) => {
-			const e = Math.floor(Math.log10(m));
-			return `${(m / 10 ** e).toFixed(1)}\u00d710^${e}`;
-		};
-		return top.map((hlo) => fmt(hlo.m)).join(" and ");
+	/** A count padded to three digits, so the caption cannot change length. */
+	const fmtCount = (n) => String(n).padStart(3, FIGSP);
+	/** A mass, or a same-width dash when the halo has not formed yet. */
+	const fmtMassOr = (m) => (m ? fmtMass(m) : "\u2014".padStart(9, FIGSP));
+
+	/** Halos above 1e13 in one panel at the current epoch, or null. */
+	function nAbove13(side) {
+		const tag = state[side].tag;
+		if (!halos || !tag || !halos.runs[tag]) return null;
+		const series = countAbove(halos, tag, 13);
+		return series ? series[state.i] : null;
+	}
+
+	/** Mass of a tracked halo in one panel now, or null before it forms. */
+	function trackedMass(side, mark) {
+		const tag = state[side].tag;
+		const t = halos?.runs[tag]?.tracked?.[mark]?.[state.i];
+		return t ? t.m : null;
+	}
+
+	/*
+	 * The caption describes the chart that is actually on screen, and names the
+	 * universes rather than "left" and "right" -- below 40em only one panel is
+	 * shown, so sides are meaningless there.
+	 *
+	 * Every number is fixed-width (see FIGSP above). The opening clause is
+	 * uniform rather than special-casing "Today", because that would change the
+	 * length at exactly the moment the reader reaches the end of the slider.
+	 */
+	function captionText() {
+		const z = d.epochs.z[state.i];
+		const gA = state.a.point && d.growth[state.a.point.tag];
+		const gB = state.b.point && d.growth[state.b.point.tag];
+		const age = gA?.tGyr ? gA.tGyr[state.i] : 0;
+		let txt = `Redshift ${fmtZ(z)} \u2014 ${fmtAge(age)} billion years after the Big Bang.`;
+
+		switch (state.view) {
+			case "growth":
+				if (gA && gB) {
+					txt += ` Structure is growing at a rate of ${fmtF(gA.f[state.i])} in Universe A and ${fmtF(gB.f[state.i])} in Universe B.`;
+				}
+				break;
+			case "amplitude":
+				if (gA && gB) {
+					txt += ` Clumpiness \u03c3\u2088 is ${fmtF(gA.sigma8[state.i])} in Universe A and ${fmtF(gB.sigma8[state.i])} in Universe B.`;
+				}
+				break;
+			case "pk": {
+				const rA = state.a.tag && pk?.runs[state.a.tag];
+				const rB = state.b.tag && pk?.runs[state.b.tag];
+				if (rA && rB) {
+					txt += ` Of ${pk.k.length} scales, ${fmtCount(rA.usableBins[state.i])} rise above the shot noise in Universe A and ${fmtCount(rB.usableBins[state.i])} in Universe B.`;
+				}
+				break;
+			}
+			case "hmf":
+			case "cumulative":
+			case "halotime": {
+				const nA = nAbove13("a");
+				const nB = nAbove13("b");
+				if (nA !== null && nB !== null) {
+					txt += ` Universe A holds ${fmtCount(nA)} halos above 10^13 solar masses, Universe B ${fmtCount(nB)}.`;
+				}
+				break;
+			}
+			case "halogrowth":
+				txt += ` Halo 1A is ${fmtMassOr(trackedMass("a", "1"))} solar masses and Halo 2A ${fmtMassOr(trackedMass("a", "2"))}; Halo 1B ${fmtMassOr(trackedMass("b", "1"))} and Halo 2B ${fmtMassOr(trackedMass("b", "2"))}.`;
+				break;
+			default:
+				break;
+		}
+		return txt;
+	}
+
+	/** The two cosmologies, as the key each chart draws in a free corner. */
+	function cosmoKeyRows() {
+		const rows = [];
+		for (const side of ["a", "b"]) {
+			const p = state[side].point;
+			if (!p) continue;
+			rows.push({
+				side,
+				text: `${side.toUpperCase()}  \u03a9m ${fmtOm(p.omegaM)}  w\u2080 ${fmtW0(p.w0)}  \u03c3\u2088 ${p.sigma8.toFixed(2)}`,
+			});
+		}
+		return rows;
 	}
 
 	function chartLabel() {
@@ -904,11 +1139,15 @@ export async function init(root) {
 		}
 
 		if (chart) {
-			if (state.view === "pk") drawPk(chart, pk, state, colours);
-			else if (state.view === "halotime") drawHaloTime(chart, d, halos, state, colours, haloYMax);
-			else if (HALO_VIEWS.has(state.view)) {
-				drawHalos(chart, halos, state, colours, state.view === "cumulative");
-			} else drawHistory(chart, d, state, colours, state.view);
+			const keyRows = cosmoKeyRows();
+			if (state.view === "pk") drawPk(chart, pk, state, colours, keyRows);
+			else if (state.view === "halotime") {
+				drawHaloTime(chart, d, halos, state, colours, haloYMax, keyRows);
+			} else if (state.view === "halogrowth") {
+				drawHaloGrowth(chart, d, halos, state, colours, keyRows);
+			} else if (HALO_VIEWS.has(state.view)) {
+				drawHalos(chart, halos, state, colours, state.view === "cumulative", keyRows);
+			} else drawHistory(chart, d, state, colours, state.view, keyRows);
 			// The chart's accessible name has to say what is currently plotted;
 			// naming the control's options instead tells a screen reader nothing.
 			chart.setAttribute("aria-label", chartLabel());
@@ -919,28 +1158,7 @@ export async function init(root) {
 		if (readout) readout.textContent = z >= 0.005 ? `z = ${z.toFixed(2)}` : "today";
 
 		const caption = $("[data-caption]");
-		if (caption) {
-			const same = state.a.tag && state.a.tag === state.b.tag;
-			const gA = state.a.point && d.growth[state.a.point.tag];
-			const gB = state.b.point && d.growth[state.b.point.tag];
-			const age = gA?.tGyr ? `${gA.tGyr[state.i].toFixed(2)} billion years after the Big Bang` : "";
-			let txt = z >= 0.005 ? `Redshift ${z.toFixed(2)} — ${age}.` : `Today, ${age}.`;
-			const ringsA = ringMassText("a");
-			if (ringsA) {
-				txt += ` The circled halos on the left are ${ringsA} solar masses.`;
-			}
-			if (same) txt += " Both panels are showing the same universe.";
-			else if (gA && gB) {
-				txt += ` Growth rate f = ${gA.f[state.i].toFixed(2)} on the left, ${gB.f[state.i].toFixed(2)} on the right.`;
-			}
-			if (state.view === "pk" && pk) {
-				const run = state.a.tag && pk.runs[state.a.tag];
-				if (run) {
-					txt += ` At this epoch only ${run.usableBins[state.i]} of ${pk.k.length} scales rise above the shot noise.`;
-				}
-			}
-			caption.textContent = txt;
-		}
+		if (caption) caption.textContent = captionText();
 
 		setPanelLabels();
 		if (!state.playing) announce(`${describe("a")} ${describe("b")}`);

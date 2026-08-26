@@ -247,17 +247,37 @@ const meta = {
 			</p>
 
 			<p>
-				The rings on the pictures mark the two most massive halos in that slice,
-				once anything has grown past
-				10<sup>12</sup>&thinsp;M<sub>&#9737;</sub>/<i>h</i> — which happens around
-				redshift 5. Only halos whose centre lies inside the projected slab are
-				marked, because a halo behind it is not in the picture at all; roughly one
-				in seven of the box's halos falls in the slice, so the circled pair are the
-				biggest things visible rather than the biggest things present. The ring is
-				drawn at twice the virial radius with a lower limit so it stays visible, so
-				treat it as a pointer rather than a measurement of the halo's size: the
-				actual virial radius of even the largest halo here is only a few pixels
-				across.
+				The rings mark two particular halos, chosen by hand rather than by size:
+				<strong>Halo 1</strong> at the top left and <strong>Halo 2</strong> at the
+				bottom right, picked once at redshift zero as the most massive halo inside
+				each marked region. Suffix A or B says which universe, so Halo 1A and
+				Halo 1B are the same structure grown under two different recipes. Only
+				halos whose centre lies inside the projected slab can be marked, because a
+				halo behind it is not in the picture at all.
+			</p>
+
+			<p>
+				Each is then followed backwards through cosmic time, and
+				the <em>halo growth</em> chart plots the mass it had at every epoch. Both halos
+				start life below 10<sup>12</sup>&thinsp;M<sub>&#9737;</sub>/<i>h</i> around
+				redshift 4 and end up around
+				10<sup>14</sup>&thinsp;M<sub>&#9737;</sub>/<i>h</i> — a hundredfold gain.
+				That mass arrives by <em>both</em> mergers with other halos and smooth
+				accretion of surrounding material; the total mass alone cannot separate the
+				two.
+			</p>
+
+			<p>
+				The tracking is positional rather than particle-matched: at each earlier
+				snapshot the progenitor is taken to be the most massive halo within
+				1.5&thinsp;Mpc of where the halo was. That works here because halo centres
+				drift only about 0.3&thinsp;Mpc between neighbouring snapshots while the
+				next-nearest massive halo sits three to seven megaparsecs away. A proper
+				merger tree would follow individual particles, which these snapshots cannot
+				support — they store positions only, and the code reorders particles every
+				time it writes a file. The ring is drawn at twice the virial radius with a
+				lower limit so it stays visible, so treat it as a pointer rather than a
+				measurement of the halo's size.
 			</p>
 
 			<p>

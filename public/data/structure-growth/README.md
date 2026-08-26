@@ -94,6 +94,21 @@ index as the row, so on screen the vertical axis is x. Verified by sampling the
 frames at each candidate mapping: the correct one lands on 250+/255, the others
 on 6 to 97.
 
+`tracked` holds the two hand-picked halos, keyed `"1"` (top left) and `"2"`
+(bottom right), with one `{fx, fy, m}` per epoch or `null` before the halo
+exists. They are chosen at z = 0 as the most massive in-slab halo inside a
+5.85 Mpc circle at fixed box positions — taken from the design deck — and then
+followed backwards by **positional main-branch matching**: the progenitor is the
+most massive halo within 1.5 Mpc of the descendant's centre.
+
+This is not a particle-matched merger tree. The snapshots hold `Coordinates`
+only, with no `ParticleIDs`, and SWIFT reorders particles on a space-filling
+curve every snapshot — measured, only 4% of array indices move less than 1 Mpc
+between adjacent files, median 9.97 Mpc. Positional matching is safe here because
+halo centres move ~0.3 Mpc per step while the next-nearest massive halo is 3–7
+Mpc away; a first attempt with a 3 Mpc radius hopped to a neighbour, which showed
+up as mass rising as time ran backwards.
+
 Groups of a single particle are dropped before binning, so the lowest bins are
 not stuffed with unbound particles. Even so, nothing below 32 particles should
 be read as a halo.

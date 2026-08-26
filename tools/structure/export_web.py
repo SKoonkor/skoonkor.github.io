@@ -359,6 +359,10 @@ def main() -> None:
                 # can be circled on a frame -- a halo behind the slab is not in
                 # the picture at all.
                 "topHalos": blk.get("topHalos", []),
+                # The two hand-picked halos, followed backwards from z=0. Keyed
+                # "1" (top left) and "2" (bottom right); one entry per epoch,
+                # null before the halo exists.
+                "tracked": blk.get("tracked", {}),
             }
         if runs_h:
             halos = {
@@ -376,6 +380,13 @@ def main() -> None:
                               "page can draw sqrt(N) Poisson bars -- the massive end "
                               "has tens of objects, not thousands",
                     "boxVolume": "(Mpc/h)^3, for turning counts into number densities",
+                    "tracked": "{'1'|'2'} -> [epoch] -> {fx, fy, m} or null. The two "
+                               "halos chosen by hand from the red ovals on slide 9 of "
+                               "the design deck, taken as the most massive halo inside "
+                               "each oval at z=0 and followed back by positional "
+                               "main-branch matching (most massive halo within 1.5 Mpc). "
+                               "Not a particle-matched merger tree -- the snapshots have "
+                               "no ParticleIDs.",
                     "topHalos": "[epoch] -> up to two {fx, fy, m}: box-fraction "
                                 "position and mass of the most massive halos inside "
                                 "the 15 Mpc/h slab the frames show. fx maps to the "
