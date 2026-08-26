@@ -32,11 +32,11 @@ const meta = {
 					<li class={href ? undefined : "soon"}>
 						{href ? (
 							<a href={href}>
-								{thumb && <DemoThumb name={thumb} />}
-								<span class="explore-cards__text">
-									<h2>{title}</h2>
+								<h2>{title}</h2>
+								<div class="explore-cards__body">
+									{thumb && <DemoThumb name={thumb} />}
 									<p>{blurb}</p>
-								</span>
+								</div>
 							</a>
 						) : (
 							<div class="block h-full p-6">

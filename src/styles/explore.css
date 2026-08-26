@@ -909,16 +909,24 @@
  * The grid stays two columns, so the square is small and the text beside it is
  * narrow -- everything here is sized around that rather than the other way round.
  */
+	/* The heading runs the full width of the card and the thumbnail sits beside
+	   the description only, not beside the title -- the arrangement on slide 10
+	   of the design deck. */
 	.explore-cards a {
-		display: flex;
-		align-items: flex-start;
-		gap: 0.9em;
+		display: block;
 		padding: 1.1em;
 	}
 
-		.explore-cards__text {
-			min-width: 0;
+		.explore-cards__body {
+			display: flex;
+			align-items: flex-start;
+			gap: 0.9em;
 		}
+
+			.explore-cards__body p {
+				min-width: 0;
+				margin: 0;
+			}
 
 .demo-thumb {
 	flex: 0 0 auto;
