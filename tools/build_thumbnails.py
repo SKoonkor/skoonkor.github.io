@@ -163,7 +163,9 @@ def thumb_lf() -> str:
     bins = np.asarray(d["bins"], dtype=float)
     slices = list(d["data"]["i"].keys())
 
-    mag = np.linspace(-23.5, -17.0, 80)
+    # Wide enough on the bright side to show the exponential cut-off, which is
+    # the shape that makes a Schechter function recognisable.
+    mag = np.linspace(-24.5, -18.0, 90)
     xs = 8 + (mag - mag[0]) / (mag[-1] - mag[0]) * (VB - 16)
 
     curves: list[tuple[float, np.ndarray]] = []
@@ -176,23 +178,34 @@ def thumb_lf() -> str:
         if ok.sum() < 5:
             continue
         try:
+            # alpha is bounded to a physical range. Unbounded, the four highest
+            # redshift slices fit +0.46 to +2.58 -- they only have data from
+            # -23.9 to -20.1, so the faint-end slope is unconstrained and runs
+            # away, and the curves then plunge at the FAINT end, which is both
+            # wrong and the opposite of what the picture is meant to show.
             p, _ = curve_fit(
-                schechter_log, bins[ok], y[ok], p0=(-2.5, -21.5, -1.3), maxfev=20000
+                schechter_log, bins[ok], y[ok], p0=(-2.5, -21.5, -1.3),
+                bounds=([-6.0, -24.0, -1.8], [0.0, -19.0, -0.8]), maxfev=40000,
             )
         except RuntimeError:
             continue
         curves.append((float(key), schechter_log(mag, *p)))
 
-    # One shared vertical scale, or the curves would not be comparable.
-    allv = np.concatenate([c for _, c in curves])
-    lo, hi = np.percentile(allv, 2), allv.max()
+    # One shared vertical scale, or the curves would not be comparable. Points
+    # outside it are DROPPED rather than clipped: clipping flattened the steep
+    # bright end onto the bottom edge, hiding the very cut-off this is meant to
+    # show.
+    lo, hi = -6.0, -1.2
     parts: list[str] = []
     for i, (_, c) in enumerate(curves):
-        y = 8 + (hi - np.clip(c, lo, hi)) / (hi - lo) * (VB - 16)
+        inside = (c >= lo) & (c <= hi)
+        if inside.sum() < 2:
+            continue
+        y = 8 + (hi - c[inside]) / (hi - lo) * (VB - 16)
         # Nearby is solid, distant is faint: the fade IS the time axis.
         op = 1.0 - 0.72 * (i / max(1, len(curves) - 1))
         parts.append(
-            f'<path d="{path_from(xs, y)}" fill="none" stroke="currentColor"'
+            f'<path d="{path_from(xs[inside], y)}" fill="none" stroke="currentColor"'
             f' stroke-width="1.5" opacity="{op:.2f}"/>'
         )
     return wrap(parts)

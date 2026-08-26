@@ -923,9 +923,15 @@
 			gap: 0.9em;
 		}
 
+			/* Sized so the blurb clears the 84px thumbnail rather than trailing a
+			   line or two beneath it. The blurbs in demos.ts were trimmed to suit:
+			   at the previous length nothing above 0.62rem fitted, and 10px type is
+			   not worth the tidiness. */
 			.explore-cards__body p {
 				min-width: 0;
 				margin: 0;
+				font-size: 0.75rem;
+				line-height: 1.45;
 			}
 
 .demo-thumb {
