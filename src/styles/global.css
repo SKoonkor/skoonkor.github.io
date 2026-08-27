@@ -66,6 +66,22 @@
 		accent-color: var(--color-accent);
 		scrollbar-gutter: stable;
 
+		/*
+		 * Type scales with the column, so a wider screen shows LARGER text rather
+		 * than longer lines. Holding text size proportional to column width keeps
+		 * the measure at the ~84 characters the 48rem/14px design had: without it,
+		 * a 2500px monitor gave nearly 190 characters a line.
+		 *
+		 * Set on the root rather than on body so headings, spacing and the column
+		 * itself -- all of which are in rem -- scale by the same factor. Above the
+		 * threshold 48rem and 54dvw are equal by construction, so --content-max
+		 * stays consistent rather than feeding back on itself.
+		 *
+		 * 1rem here is the browser's own default, not a hardcoded 16px, so a reader
+		 * who has set a larger default keeps it.
+		 */
+		font-size: max(1rem, min(1.125vw, 2.0833rem));
+
 		&[data-theme="light"] {
 			color-scheme: light;
 		}
@@ -119,13 +135,19 @@
 		 * it -- CosmicBands sizes its margins from the same value, so the two can
 		 * no longer drift apart.
 		 *
-		 * Below 1200px this is exactly 48rem, the width the site has always used,
-		 * so phones and tablets are untouched. Above it the column grows to 64% of
-		 * the viewport, which is where the design deck's page-13 marks fall, and
-		 * stops at 100rem so an ultra-wide monitor does not end up with 200-character
-		 * lines.
+		 * Below about 1420px this is exactly 48rem, the width the site has always
+		 * used, so phones and tablets are untouched. Above it the column is 54% of
+		 * the viewport, and stops at 1600px.
+		 *
+		 * The deck's page-13 marks were drawn by hand at roughly 64%; 54% is that
+		 * pulled in by five points a side, which is what looked right in place.
+		 *
+		 * The ceiling is px, not rem, on purpose: rem is fluid above the threshold,
+		 * so a rem ceiling grows with it and never binds -- at 3440px the column
+		 * reached 1858px instead of stopping. In px it agrees with where the font
+		 * scale tops out, because 48rem at the capped root size is also 1600px.
 		 */
-		--content-max: max(48rem, min(64dvw, 100rem));
+		--content-max: max(48rem, min(54dvw, 1600px));
 	}
 
 	.site-column {

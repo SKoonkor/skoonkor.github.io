@@ -535,7 +535,11 @@
 
 .explore-cards {
 	display: grid;
-	grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+	/* rem, not px. With a px minimum and a fluid root font, a wider viewport
+	   bought MORE, NARROWER columns while the type grew -- at 1920px the cards
+	   went from two tracks to three and the blurbs spilled past the thumbnail.
+	   In rem the track count stays put and everything scales together. */
+	grid-template-columns: repeat(auto-fit, minmax(16.25rem, 1fr));
 	gap: 1.5em;
 	margin-top: 2.5em;
 	list-style: none;
@@ -934,10 +938,14 @@
 				line-height: 1.45;
 			}
 
+/* rem, not px: the root font size is fluid above ~1420px, so a px square would
+   stay put while the blurb beside it grew -- which put the text back below the
+   thumbnail, the very thing the size was chosen to avoid. 5.25rem is the 84px
+   this was at the default root size. */
 .demo-thumb {
 	flex: 0 0 auto;
-	width: 84px;
-	height: 84px;
+	width: 5.25rem;
+	height: 5.25rem;
 	display: block;
 	border-radius: 4px;
 	color: var(--color-muted);
@@ -969,8 +977,14 @@
 	}
 
 @media screen and (max-width: 736px) {
+	/* One column below this: two tracks here leaves ~300px a card, which is not
+	   enough for a square plus a blurb without the text running past it. */
+	.explore-cards {
+		grid-template-columns: 1fr;
+	}
+
 	.demo-thumb {
-		width: 64px;
-		height: 64px;
+		width: 4.5rem;
+		height: 4.5rem;
 	}
 }
