@@ -113,6 +113,23 @@
 	*/
 	:root {
 		--page-title-h: 3.5rem;
+
+		/*
+		 * Width of the centred content column, and the single source of truth for
+		 * it -- CosmicBands sizes its margins from the same value, so the two can
+		 * no longer drift apart.
+		 *
+		 * Below 1200px this is exactly 48rem, the width the site has always used,
+		 * so phones and tablets are untouched. Above it the column grows to 64% of
+		 * the viewport, which is where the design deck's page-13 marks fall, and
+		 * stops at 100rem so an ultra-wide monitor does not end up with 200-character
+		 * lines.
+		 */
+		--content-max: max(48rem, min(64dvw, 100rem));
+	}
+
+	.site-column {
+		max-width: var(--content-max);
 	}
 
 	:target,

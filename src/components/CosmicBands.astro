@@ -65,13 +65,15 @@ const { frameWindow } = Astro.props;
 	.cw-band {
 		position: absolute;
 		inset-block: 0;
-		/* Whatever the centred column leaves over, less the gutter. 48rem is
-		   Base.astro's max-w-3xl.
+		/* Whatever the centred column leaves over, less the gutter. --content-max
+		   is that column's width, defined in global.css; it was a hardcoded 48rem
+		   here, which meant widening the column would have run the bands under the
+		   text.
 
 		   100dvw, not 100vw: 100vw includes the classic scrollbar while the centred
 		   body is laid out inside clientWidth, so on a machine set to always show
 		   scrollbars the right band used to creep ~7.5px under the column. */
-		inline-size: max(0px, calc((100dvw - 48rem) / 2 - var(--cw-gutter)));
+		inline-size: max(0px, calc((100dvw - var(--content-max)) / 2 - var(--cw-gutter)));
 		block-size: 100%;
 		opacity: 0.55;
 		/* Static frame, so the margins are never empty: covers no-JS, reduced

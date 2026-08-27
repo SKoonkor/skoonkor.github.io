@@ -37,7 +37,7 @@ const bandWindow = bands === "light" ? 4 : undefined;
 		<ThemeProvider />
 	</head>
 	<body
-		class="bg-global-bg text-global-text mx-auto flex min-h-screen max-w-3xl flex-col px-4 pt-16 font-mono text-sm font-normal antialiased sm:px-8"
+		class="bg-global-bg text-global-text site-column mx-auto flex min-h-screen flex-col px-4 pt-16 font-mono text-sm font-normal antialiased sm:px-8"
 	>
 		{bands && <CosmicBands frameWindow={bandWindow} />}
 		<SkipLink />
