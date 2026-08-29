@@ -1,0 +1,51 @@
+---
+import DemoThumb from "@/components/DemoThumb.astro";
+import PageTitle from "@/components/PageTitle.astro";
+import { software } from "@/data/software";
+import PageLayout from "@/layouts/Base.astro";
+import "@/styles/software.css";
+
+const meta = {
+	description:
+		"Software I write outside research, with something to play with in the browser before you install anything.",
+	title: "Software",
+};
+---
+
+<PageLayout meta={meta}>
+	<PageTitle title="Software" />
+
+	<div data-pagefind-body>
+		<p class="text-base leading-relaxed text-pretty">
+			I write software for the same reason I write papers: to find out whether I have actually
+			understood something. Most of it stays a script. This one outgrew the afternoon it was
+			started in and turned into something I use every day.
+		</p>
+
+		<ul class="explore-cards" role="list">
+			{
+				software.map(({ href, title, blurb, thumb, stack }) => (
+					<li class={href ? undefined : "soon"}>
+						{href ? (
+							<a href={href}>
+								<h2>{title}</h2>
+								<div class="explore-cards__body">
+									{thumb && <DemoThumb name={thumb} />}
+									<div>
+										<p>{blurb}</p>
+										{stack && <p class="explore-cards__stack">{stack}</p>}
+									</div>
+								</div>
+							</a>
+						) : (
+							<div class="block h-full p-6">
+								<h2>{title} &middot; coming soon</h2>
+								<p>{blurb}</p>
+							</div>
+						)}
+					</li>
+				))
+			}
+		</ul>
+	</div>
+</PageLayout>

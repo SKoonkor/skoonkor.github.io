@@ -1,8 +1,8 @@
 ---
 /**
- * The square picture on an /explore/ card.
+ * The square picture on an /explore/ or /software/ card.
  *
- * Two of the three are SVG and inlined rather than referenced with <img>. An
+ * Three of the four are SVG and inlined rather than referenced with <img>. An
  * <img src="...svg"> is an isolated document that the page's CSS cannot reach,
  * so its strokes could not follow the light/dark theme; inlined, they use
  * currentColor and simply inherit. The third is a stitched simulation frame --
@@ -11,18 +11,28 @@
  *
  * Decorative: the card's own title and blurb carry the meaning.
  *
- * Not lazy-loaded: all three cards are above the fold on /explore/, so deferring
- * the image only buys a reflow once it arrives.
+ * Not lazy-loaded: every card is above the fold on both hubs, so deferring the
+ * image only buys a reflow once it arrives.
+ *
+ * Note that the light-mode inversion below is for the simulation frame and
+ * nothing else. It is correct for monochrome astronomy imagery and would wreck
+ * anything with a palette, so a raster software thumbnail would need to opt out
+ * of it rather than inherit it.
  */
 import galaxyLf from "@/assets/thumbs/galaxy-lf.svg?raw";
 import pcaSed from "@/assets/thumbs/pca-sed.svg?raw";
+import wdmmg from "@/assets/thumbs/where-did-my-money-go.svg?raw";
 
 interface Props {
 	name: string;
 }
 
 const { name } = Astro.props;
-const inline: Record<string, string> = { "pca-sed": pcaSed, "galaxy-lf": galaxyLf };
+const inline: Record<string, string> = {
+	"pca-sed": pcaSed,
+	"galaxy-lf": galaxyLf,
+	"where-did-my-money-go": wdmmg,
+};
 const svg = inline[name];
 ---
 

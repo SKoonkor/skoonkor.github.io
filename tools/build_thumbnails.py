@@ -263,9 +263,115 @@ def thumb_structure(size: int = 256) -> None:
     print(f"  structure-growth.avif  z = {', '.join(f'{zs[i]:.2f}' for i in picks)}")
 
 
+# -------------------------------------------------- where-did-my-money-go --
+
+
+def thumb_money() -> str:
+    """
+    The running-balance staircase from the demo's own ledger.
+
+    Everything the Money Flow chart draws, minus everything that cannot survive
+    at 90 px: no axes, no month bands, no labels. Bars are merged to one a day,
+    because 245 of them across 84 pixels is a grey smear -- but the DAILY
+    silhouette is the shape the demo is about, so it is the shape that is kept.
+
+    Direction is carried without colour. A thumbnail inherits currentColor and
+    has exactly one of them, so income is drawn solid and spending at 0.5, and
+    the salary day gets the same up-arrow the chart itself puts on income bars.
+    """
+    seed = json.loads((ROOT / "public/data/money-flow/seed.json").read_text())
+    sign = seed["sign"]
+
+    # One net movement per day, in date order, standing on the running balance.
+    days: dict[str, float] = {}
+    for t in seed["txns"]:
+        days[t["period"]] = days.get(t["period"], 0.0) + sign[t["type"]] * t["amount"]
+    keys = sorted(days)
+
+    opening = sum(a["opening"] for a in seed["accounts"])
+    bases, tops = [], []
+    cum = opening
+    for k in keys:
+        bases.append(cum)
+        cum += days[k]
+        tops.append(cum)
+
+    lo = min(min(bases), min(tops))
+    hi = max(max(bases), max(tops))
+    span = max(hi - lo, 1e-9)
+
+    def y_of(v: float) -> float:
+        """Money to user space, 15 at the top and 92 at the bottom.
+
+        The top of the box is 15 rather than 8 so the payday arrow, which is
+        drawn five units above the bar it marks, has somewhere to go. At 8 the
+        taller of the two months had its arrow clipped by the viewBox.
+        """
+        return 92 - (v - lo) / span * 77
+
+    n = len(keys)
+    step = (VB - 12) / n
+    parts: list[str] = []
+
+    # Payday is any day that rises by more than half the biggest rise -- there
+    # are two months here and both should carry the marker, so this is not
+    # `max()`. The arrow is the same one the chart itself puts on income bars,
+    # and it is what tells direction apart without colour.
+    rises = [t - b for b, t in zip(bases, tops)]
+    big = max(rises) * 0.5
+
+    for i, (b, t) in enumerate(zip(bases, tops)):
+        x = 6 + i * step
+        # Bars touch. Sixty days across 84 rendered pixels is 1.4 px each, and
+        # with a gap that reads as a picket fence; butted together the run of
+        # them reads as one staircase silhouette, which is the shape wanted.
+        w = step
+        y0, y1 = y_of(b), y_of(t)
+        up = y1 < y0
+        top, height = (y1, y0 - y1) if up else (y0, y1 - y0)
+        if height < 0.6:
+            # A day that nets to nothing still has to carry the balance across,
+            # or the staircase gets a hole in it. The connector below does that,
+            # so the bar is simply dropped.
+            continue
+        parts.append(
+            f'<rect x="{x:.2f}" y="{top:.2f}" width="{w:.2f}" height="{height:.2f}"'
+            f' fill="currentColor" opacity="{0.85 if up else 0.35:.2f}"/>'
+        )
+        if up and rises[i] >= big:
+            cx = x + w / 2
+            parts.append(
+                f'<path d="M{cx - 2.6:.2f} {top - 1.4:.2f} L{cx:.2f} {top - 5.2:.2f}'
+                f' L{cx + 2.6:.2f} {top - 1.4:.2f} Z" fill="currentColor"/>'
+            )
+
+    # The running balance itself, drawn solid and on top. It is the subject --
+    # the chart is called Money Flow and this line is the flow -- and it was
+    # tried the other way round first, faint and dashed behind the bars, which
+    # left the thumbnail looking like two spikes and some noise. The daily bars
+    # are the texture underneath it.
+    #
+    # Stepped rather than smoothed: the balance holds flat through a day and
+    # then moves, and a diagonal between two days claims a continuity that a
+    # ledger does not have.
+    pts = [f"M{6:.2f},{y_of(opening):.2f}"]
+    for i, t in enumerate(tops):
+        x0 = 6 + i * step
+        pts.append(f"L{x0:.2f},{y_of(bases[i]):.2f} L{x0 + step:.2f},{y_of(t):.2f}")
+    parts.append(
+        f'<path d="{" ".join(pts)}" fill="none" stroke="currentColor"'
+        f' stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round"/>'
+    )
+    return wrap(parts)
+
+
 def main() -> None:
     SVG_OUT.mkdir(parents=True, exist_ok=True)
-    for name, fn in (("pca-sed", thumb_pca), ("galaxy-lf", thumb_lf)):
+    for name, fn in (
+        ("pca-sed", thumb_pca),
+        ("galaxy-lf", thumb_lf),
+        ("where-did-my-money-go", thumb_money),
+    ):
         svg = fn()
         (SVG_OUT / f"{name}.svg").write_text(svg)
         print(f"  {name}.svg  {len(svg)} bytes")

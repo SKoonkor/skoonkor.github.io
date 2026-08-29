@@ -1,0 +1,399 @@
+/* ------------------------------------------------------------------ software --
+ * /software/ and the project pages on it.
+ *
+ * explore.css is imported rather than duplicated. The demo primitives -- the
+ * chips, the chart frame, .demo-why, .demo-deep, .demo-downloads,
+ * .visually-hidden, .explore-cards and .demo-thumb -- are shared by every demo
+ * on the site, and they are not a clean layer to lift out: .explore-cards a and
+ * .explore-cards p are each DECLARED TWICE in that file, and the later block is
+ * the one that wins. Any extraction reorders a cascade that is currently
+ * correct by accident of source order. A few kilobytes is the cheaper price,
+ * and a reader arriving from /explore/ has the file cached already.
+ */
+@import "./explore.css";
+
+/*
+ * The one thing a software card has that a demo card does not: a line naming
+ * what the thing is written in. Below the blurb, in the thumbnail's column so
+ * it lines up with the text rather than the square, and quieter than the blurb
+ * -- it is a fact about the project, not a description of it.
+ */
+.explore-cards__stack {
+	margin: 0.7em 0 0;
+	font-size: 0.7rem;
+	line-height: 1.4;
+	color: color-mix(in oklab, var(--color-muted) 75%, transparent);
+}
+
+/* --- the call to action ------------------------------------------------- */
+.demo-cta {
+	margin-top: 3rem;
+	padding-top: 1.5rem;
+	border-top: 1px solid var(--demo-line, color-mix(in oklab, var(--color-muted) 25%, transparent));
+}
+
+	.demo-cta__note {
+		margin: 0;
+		font-size: 0.82rem;
+		line-height: 1.6;
+		color: var(--color-global-text);
+	}
+
+	.demo-cta__disclaimer {
+		margin: 1.25rem 0 0;
+		padding: 0.6rem 0.9rem;
+		border-inline-start: 2px solid var(--color-muted);
+		font-size: 0.72rem;
+		line-height: 1.6;
+		color: var(--color-muted);
+	}
+
+.demo-intro p {
+	margin-bottom: 1rem;
+	line-height: 1.7;
+}
+
+
+/* --- the coverflow -------------------------------------------------------- */
+/*
+ * Six screens from the phone app in a 3D coverflow, built on top of the
+ * scroll-snap strip it used to be and degrading back into it exactly.
+ *
+ * The whole effect is a function of two custom properties that ONLY the script
+ * writes. They are registered below with an initial value of 0, so with
+ * JavaScript off every card resolves to face-on and unrotated -- which is the
+ * old flat strip, with the arrows still hidden. The fallback is not a code
+ * path; it is the absence of one.
+ *
+ * The pictures are dark in both site themes on purpose. A screenshot cannot
+ * follow the site's palette, and the app's dark ground reads as A PHONE SCREEN
+ * against either of ours, while its light one dissolves into the light
+ * background. The bezel is what sells that: without it the dark rectangle reads
+ * as a hole punched in the page.
+ */
+
+/* Registered so the browser knows they are numbers -- an unregistered --d is a
+   token substitution and every write re-parses the transform from scratch.
+   inherits: true is deliberate: figcaption sits OUTSIDE the transformed card
+   and reads --a to fade itself. */
+@property --d {
+	syntax: "<number>";
+	inherits: true;
+	initial-value: 0;
+}
+
+@property --a {
+	syntax: "<number>";
+	inherits: true;
+	initial-value: 0;
+}
+
+.demo-slides {
+	margin-top: 3rem;
+
+	/* One slide width, named once, because the end spacers below must be exactly
+	   half of it and the two must never drift apart. 78vw rather than 100%: the
+	   neighbours peek past both edges, which is what tells a phone reader there
+	   is more to swipe to. */
+	--slide-w: min(19.5rem, 78vw);
+
+	/* The camera. About 3x the slide width: shallower reads as a fisheye and the
+	   far card's inner edge balloons; deeper flattens the tilt into a shear. */
+	--flow-persp: 62rem;
+	--flow-pull: 30%;
+	--flow-depth: 7rem;
+	--flow-tilt: 34deg;
+	/* How hard an off-centre caption fades. Floored at a quarter, so the strip
+	   still reads as six LABELLED screens rather than one screen and five
+	   blanks. */
+	--flow-caption: 0.75;
+}
+
+	.demo-slides__h {
+		font-size: 1rem;
+		color: var(--color-accent-2);
+		margin-bottom: 0.6em;
+	}
+
+	.demo-slides__lead {
+		margin: 0 0 1.25rem;
+		font-size: 0.85rem;
+		line-height: 1.65;
+		color: var(--color-muted);
+		text-wrap: pretty;
+	}
+
+/* The scroller is the wrapper; the list inside keeps its list semantics and
+   does the laying out.
+
+   There is deliberately no transform-style: preserve-3d anywhere. An overflow
+   other than `visible` forces transform-style back to flat, so a shared 3D
+   context is not available to us here at all -- each card carries its own
+   perspective() instead, and paint order is z-index written by the script
+   rather than the browser's depth sort. */
+	.demo-slides__scroller {
+		overflow-x: auto;
+		scroll-snap-type: x mandatory;
+		/* Without this a trackpad swipe past the last slide triggers the
+		   browser's back gesture, which loses the page. */
+		overscroll-behavior-x: contain;
+		scrollbar-width: thin;
+	}
+
+		.demo-slides__scroller:focus-visible {
+			outline: 2px solid var(--color-accent);
+			outline-offset: 4px;
+		}
+
+	.demo-slides__track {
+		display: flex;
+		gap: 1rem;
+		margin: 0;
+		padding: 0 0 0.75rem;
+		list-style: none;
+	}
+
+		/* Half a slide of runway at each end, so the FIRST and LAST cards can
+		   actually reach the middle. Without it scroll-snap-align: center pins
+		   them to the edges: they sit permanently rotated with no way to turn and
+		   face the reader, and the counter can never honestly reach "6 of 6".
+
+		   Pseudo-elements rather than padding-inline on the track: trailing
+		   padding on a flex scroll container is historically dropped, and a
+		   pseudo-element is not in the DOM at all, so it cannot disturb the
+		   "list of 6 items" a screen reader is counting. */
+		.demo-slides__track::before,
+		.demo-slides__track::after {
+			content: "";
+			flex: 0 0 max(0rem, calc((100% - var(--slide-w)) / 2));
+		}
+
+	.demo-slides__slide {
+		flex: 0 0 var(--slide-w);
+		scroll-snap-align: center;
+	}
+
+		.demo-slides__slide figure {
+			margin: 0;
+		}
+
+		/* The transform lives HERE, on a wrapper inside the li, and never on the
+		   li itself. The script finds the middle with getBoundingClientRect, and
+		   a rect that included this element's own translate would feed the
+		   transform straight back into its own input. The li is layout; this is
+		   paint. */
+		.demo-slides__card {
+			transform-origin: calc(50% - clamp(-1, var(--d), 1) * 50%) 50%;
+			transform:
+				perspective(var(--flow-persp))
+				translateX(calc(var(--d) * var(--flow-pull) * -1))
+				translateZ(calc(var(--a) * var(--flow-depth) * -1))
+				rotateY(calc(var(--d) * var(--flow-tilt)));
+			/* Dimmed AND desaturated: opacity alone against a light ground makes a
+			   dark screenshot go grey rather than go away. */
+			opacity: calc(1 - var(--a) * 0.35);
+			filter: saturate(calc(1 - var(--a) * 0.3));
+			/* Six elements, bounded and known. Deliberately NOT on the layers:
+			   fourteen promoted image planes is real GPU memory on a phone. */
+			will-change: transform;
+		}
+
+	.demo-slides__frame {
+		padding: 0.4rem;
+		border: 1px solid var(--demo-line, color-mix(in oklab, var(--color-muted) 25%, transparent));
+		border-radius: 1.25rem;
+		background: #14181f;
+	}
+
+		/* The stage carries the aspect ratio, and it HAS to: every layer inside is
+		   absolutely positioned and contributes no height, and a pan card's image
+		   is deliberately taller than the box it runs in. Without this the frame
+		   collapses to 0.8rem of bezel. 7 / 12 is the captures' own 840 x 1440;
+		   a re-capture at another ratio does not break, it CROPS. */
+		.demo-slides__stage {
+			position: relative;
+			aspect-ratio: 7 / 12;
+			overflow: hidden;
+			border-radius: 0.95rem;
+			background: #14181f;
+		}
+
+			.demo-slides__layer {
+				position: absolute;
+				inset: 0;
+				display: block;
+				width: 100%;
+				height: 100%;
+				object-fit: cover;
+				object-position: top center;
+				/* Frames past the first start invisible and are revealed by the
+				   keyframes below. Without this every state paints stacked in the
+				   moment before the script lands. */
+				opacity: 0;
+			}
+
+			/* Frame one is the still: what a reader without JavaScript sees, what
+			   an off-centre card holds, what a paused card holds, and what the alt
+			   text describes. It carries no animation at all. */
+			.demo-slides__layer[data-f="0"] {
+				opacity: 1;
+			}
+
+			/* A pan layer is one tall capture rather than a stack: it keeps its own
+			   ratio and overflows the stage downward, and that overflow is what
+			   gets translated. --pan is written per card by the template from the
+			   asset's real dimensions. */
+			.demo-slides__layer--pan {
+				inset: 0 0 auto;
+				height: auto;
+				object-fit: fill;
+			}
+
+	.demo-slides figcaption {
+		margin-top: 0.7rem;
+		font-size: 0.72rem;
+		line-height: 1.55;
+		color: var(--color-muted);
+		text-wrap: pretty;
+		/* Faded, never hidden: opacity keeps the text in the accessibility tree --
+		   it is the only place the animation is described in words -- and keeps
+		   the row height fixed, so nothing jumps as the middle moves. */
+		opacity: calc(1 - min(var(--a), 1) * var(--flow-caption));
+	}
+
+		.demo-slides figcaption b {
+			color: var(--color-accent-2);
+			font-weight: 400;
+		}
+
+/* --- the two switches ------------------------------------------------------ */
+/*
+ * Every moving pixel on this strip is a function of exactly two attributes:
+ *
+ *   [data-centre]  on the slide -> the animation EXISTS   (animation-name)
+ *   [data-playing] on the root  -> it is RUNNING          (animation-play-state)
+ *
+ * Applying the NAME only under [data-centre] is what makes leaving the middle
+ * reset a card for free: the animation is destroyed, the element falls back to
+ * its base style -- which is frame one -- and re-entering builds a fresh
+ * animation that starts at 0% rather than resuming halfway through a reveal.
+ * No timers, no per-card handles, no elapsed-time bookkeeping.
+ *
+ * animation-play-state: paused is a real pause in the WCAG 2.2.2 sense: the
+ * animation holds the frame it is on and resumes from there.
+ */
+	.demo-slides__layer {
+		animation-duration: var(--cycle, 9s);
+		animation-timing-function: ease-in-out;
+		animation-iteration-count: infinite;
+		/* `both` so a paused-at-0% layer shows its own first keyframe rather than
+		   falling back to the base rule mid-way. */
+		animation-fill-mode: both;
+		animation-play-state: paused;
+	}
+
+/* One block per (frame-count, frame-index) actually used, rather than one
+   formula: keyframe percentages cannot take custom properties, and writing them
+   out is what lets the payoff frame be held longer than the build-up. Each
+   layer reveals and STAYS, then the whole stack clears in the last few per
+   cent and the cycle begins again. */
+@keyframes wdmmg-r2-1 { 0%, 40% { opacity: 0 } 46%, 94% { opacity: 1 } 100% { opacity: 0 } }
+
+@keyframes wdmmg-r3-1 { 0%, 26% { opacity: 0 } 32%, 95% { opacity: 1 } 100% { opacity: 0 } }
+@keyframes wdmmg-r3-2 { 0%, 55% { opacity: 0 } 61%, 95% { opacity: 1 } 100% { opacity: 0 } }
+
+@keyframes wdmmg-r4-1 { 0%, 20% { opacity: 0 } 25%, 96% { opacity: 1 } 100% { opacity: 0 } }
+@keyframes wdmmg-r4-2 { 0%, 42% { opacity: 0 } 47%, 96% { opacity: 1 } 100% { opacity: 0 } }
+@keyframes wdmmg-r4-3 { 0%, 64% { opacity: 0 } 69%, 96% { opacity: 1 } 100% { opacity: 0 } }
+
+/* Held at each end -- a pan that turns round the instant it arrives reads as a
+   twitch rather than as reading the screen. */
+@keyframes wdmmg-pan {
+	0%, 8% { transform: translateY(0) }
+	46%, 58% { transform: translateY(calc(var(--pan) * -1)) }
+	96%, 100% { transform: translateY(0) }
+}
+
+.demo-slides__slide[data-centre] .demo-slides__layer[data-n="2"][data-f="1"] { animation-name: wdmmg-r2-1 }
+.demo-slides__slide[data-centre] .demo-slides__layer[data-n="3"][data-f="1"] { animation-name: wdmmg-r3-1 }
+.demo-slides__slide[data-centre] .demo-slides__layer[data-n="3"][data-f="2"] { animation-name: wdmmg-r3-2 }
+.demo-slides__slide[data-centre] .demo-slides__layer[data-n="4"][data-f="1"] { animation-name: wdmmg-r4-1 }
+.demo-slides__slide[data-centre] .demo-slides__layer[data-n="4"][data-f="2"] { animation-name: wdmmg-r4-2 }
+.demo-slides__slide[data-centre] .demo-slides__layer[data-n="4"][data-f="3"] { animation-name: wdmmg-r4-3 }
+.demo-slides__slide[data-centre] .demo-slides__layer--pan { animation-name: wdmmg-pan }
+
+[data-slides][data-playing] .demo-slides__slide[data-centre] .demo-slides__layer {
+	animation-play-state: running;
+}
+
+/* --- the transport -------------------------------------------------------- */
+
+	.demo-slides__nav {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		justify-content: center;
+		gap: 0.6rem 1rem;
+		margin-top: 0.75rem;
+	}
+
+		.demo-slides__nav button {
+			padding: 0.2rem 0.7rem;
+			border: 1px solid var(--demo-line, color-mix(in oklab, var(--color-muted) 25%, transparent));
+			border-radius: 4px;
+			background: none;
+			color: var(--color-muted);
+			font: inherit;
+			font-size: 0.7rem;
+			cursor: pointer;
+		}
+
+			.demo-slides__nav button:hover {
+				border-color: var(--color-accent);
+				color: var(--color-accent);
+			}
+
+			.demo-slides__nav button:focus-visible {
+				outline: 2px solid var(--color-accent);
+				outline-offset: 2px;
+			}
+
+		/* Wide enough for "Pause" so swapping the label does not resize the row
+		   and shift the counter under the reader's pointer. */
+		.demo-slides__play {
+			min-width: 4.5rem;
+		}
+
+	.demo-slides__count {
+		margin: 0;
+		font-size: 0.7rem;
+		color: var(--color-muted);
+		font-variant-numeric: tabular-nums;
+	}
+
+	/* .demo-hint from explore.css carries the type and colour -- it is the same
+	   motion hint the structure-growth transport uses. Only the placement is
+	   different here, because this transport is centred. */
+	.demo-slides__hint {
+		margin-top: 0.6rem;
+		text-align: center;
+	}
+
+/*
+ * Reduced motion, tier 2: the strip still MOUNTS, every control still WORKS,
+ * and pressing Play still runs the animation. So there is deliberately no
+ * `animation: none` here -- that would make the Play button lie, which is the
+ * trap this convention exists to avoid. The script is what declines to press
+ * it. What changes is the resting geometry: 34 degrees of rotation chasing a
+ * finger is a vestibular problem whoever started it.
+ */
+@media (prefers-reduced-motion: reduce) {
+
+	.demo-slides {
+		--flow-tilt: 0deg;
+		--flow-depth: 3.5rem;
+		--flow-pull: 12%;
+		--flow-caption: 0.4;
+	}
+
+}

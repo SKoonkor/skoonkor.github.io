@@ -5,25 +5,34 @@ const year = new Date().getFullYear();
 ---
 
 {/*
-	Both rows are sized to stay on ONE line at every width, including a 390px
-	phone. The type is text-xs everywhere (not just at sm:) and the links use
-	px-3 with no gap: five items then measure 333px against the 358px a phone
-	gives us, and 689px of the 704px column on desktop -- which is what stops the
-	copyright line wrapping too. It used to miss by under two pixels at 768px.
+	Each row stays on ONE line at every width, including a 390px phone. The type
+	is text-xs everywhere (not just at sm:).
 
-	The two rows sit side by side only from md:. At sm: (640px) the column is
-	just 576px, and copyright + nav need 668px, so they stack there instead --
-	still one line each.
+	The two rows no longer sit side by side, and that is what a SIXTH nav item
+	cost. Measured in the browser at 1280px: the copyright line wants 347px and
+	six links at px-3 want 416px, which with the 16px gap is 779px against the
+	768px the column gives (--content-max caps at 48rem until the viewport
+	passes ~1422px, and above that the root font grows with it, so the column
+	never gets relatively roomier). Five links needed 697px and fitted; six do
+	not, and no padding value rescues it -- at the 704px of content left at
+	1024px even px-1.5 lands at 707px. So they stack, which costs one line of
+	footer and removes the whole class of problem.
 
-	Do not restore flex-wrap. Wrapping was a previous fix for the nav overflowing
-	the viewport; the real fix is fitting, and any change here must be re-checked
-	for horizontal overflow at 390px, not just for line count. 640px is the
-	tightest desktop case, not 768px.
+	The nav padding is still responsive, because stacking does not help the
+	phone: six labels are 272px of text on their own, and only px-1.5 fits them
+	into the 358px a 390px phone gives us.
+
+	  390px   px-1.5   344px of 358px
+	  640px   px-3     416px of 576px
+
+	Do not restore flex-wrap. Wrapping was a previous fix for the nav
+	overflowing the viewport; the real fix is fitting, and any change here must
+	be re-checked for horizontal overflow at 390px, not just for line count.
 */}
 <footer
-	class="text-muted mt-auto flex w-full flex-col items-center justify-center gap-y-2 pt-20 pb-4 text-center align-top text-xs font-semibold md:flex-row md:justify-between"
+	class="text-muted mt-auto flex w-full flex-col items-center justify-center gap-y-2 pt-20 pb-4 text-center align-top text-xs font-semibold"
 >
-	<div class="me-0 font-normal md:me-4">
+	<div class="font-normal">
 		{/* The space before <span> is written explicitly: Astro trims the newline
 		    between a text node and a following element, which ran the two
 		    sentences together as "Koonkor.Built on". */}
@@ -39,7 +48,7 @@ const year = new Date().getFullYear();
 	<nav aria-label="Footer" class="divide-muted flex justify-center divide-x">
 		{
 			menuLinks.map((link) => (
-				<a class="hover:text-global-text px-3 py-1 hover:underline md:py-0" href={link.path}>
+				<a class="hover:text-global-text px-1.5 py-1 hover:underline sm:px-3" href={link.path}>
 					{link.title}
 				</a>
 			))

@@ -1,0 +1,358 @@
+---
+import { Image } from "astro:assets";
+import budget1 from "@/assets/software/wdmmg-budget-1.webp";
+import budget2 from "@/assets/software/wdmmg-budget-2.webp";
+import flow1 from "@/assets/software/wdmmg-flow-1.webp";
+import flow2 from "@/assets/software/wdmmg-flow-2.webp";
+import goals1 from "@/assets/software/wdmmg-goal-savings-1.webp";
+import goals2 from "@/assets/software/wdmmg-goal-savings-2.webp";
+import goals3 from "@/assets/software/wdmmg-goal-savings-3.webp";
+import homeTall from "@/assets/software/wdmmg-home-tall.webp";
+import ret1 from "@/assets/software/wdmmg-retirement-1.webp";
+import ret2 from "@/assets/software/wdmmg-retirement-2.webp";
+import ret3 from "@/assets/software/wdmmg-retirement-3.webp";
+import ret4 from "@/assets/software/wdmmg-retirement-4.webp";
+import transactionsTall from "@/assets/software/wdmmg-transactions-tall.webp";
+import PageTitle from "@/components/PageTitle.astro";
+import PageLayout from "@/layouts/Base.astro";
+import "@/styles/software.css";
+
+const meta = {
+	description:
+		"Where Did My Money Go? — a local-first personal-finance tracker for phone and desktop. Six of its screens, animated, and how it is built.",
+	title: "Where did my money go?",
+	// A real card rather than the site-wide fallback, because this is the page
+	// most likely to be pasted into a chat window. In public/ rather than
+	// src/assets/ so no prerender ever pulls it: Base.astro prefetches every
+	// internal link eagerly.
+	ogImage: "/images/wdmmg-og.webp",
+};
+
+const REPO = "https://github.com/SKoonkor/WhereDidMyMoneyGo";
+const APP = "https://skoonkor.github.io/WhereDidMyMoneyGo/";
+
+/*
+ * The coverflow.
+ *
+ * Real screens from the live phone app, captured at a 390px viewport at 2x and
+ * running an anonymised copy of my own ledger -- which is why the balances
+ * agree from one card to the next.
+ *
+ * A card is a list of STATES, and the animation is the move between them. Two
+ * kinds only:
+ *
+ *   fade  2-4 stills cross-fading -- a thing being switched on, a month being
+ *         stepped, a goal being ticked.
+ *   pan   ONE tall still translated up inside the frame and back, for a screen
+ *         that is a long list rather than a thing you toggle.
+ *
+ * A card with a single state simply does not animate, which is what makes this
+ * safe to fill in one screen at a time.
+ *
+ * The pictures are dark in both site themes on purpose: a screenshot cannot
+ * follow the site's palette, and the app's dark ground reads as a phone screen
+ * against either of ours. They are NOT given the light-mode inversion that
+ * DemoThumb applies to the simulation frame -- that rule is for monochrome
+ * astronomy imagery and would wreck a UI palette.
+ */
+type Card = {
+	name: string;
+	kind: "fade" | "pan";
+	caption: string;
+	/* Describes FRAME ONE and only frame one -- it is what a reader without
+	   JavaScript, a reader with the strip paused, and every off-centre card
+	   actually show. */
+	alt: string;
+	/* One loop. A two-frame card must not be held as long as a four-frame one. */
+	cycle: string;
+	frames: ImageMetadata[];
+};
+
+const cards: Card[] = [
+	{
+		name: "Money Flow",
+		kind: "fade",
+		cycle: "8s",
+		caption:
+			"Every transaction is a bar standing on whatever the one before it left behind, so the top of the last bar is the balance now. Hold a day and it tells you what happened on it. Direction is carried by a transaction's type and never by the sign of its amount — fussy right up until you inherit a ledger where somebody typed a minus into a refund.",
+		alt: "The Money Flow screen: a running-balance waterfall across July and August with a blue forecast fan running into September, a net-worth line at 2,985 pounds, and the account balances listed underneath.",
+		frames: [flow1, flow2],
+	},
+	{
+		name: "Transactions",
+		kind: "pan",
+		cycle: "15s",
+		caption:
+			"A month of the ledger, grouped by day, each day carrying its own in and out. It scrolls here from the 28th back through payday to the 25th.",
+		alt: "The Transactions screen for August 2026: income 2,182.70, expense 1,711.25, net 471.45, then days listed newest first with per-day totals.",
+		frames: [transactionsTall],
+	},
+	{
+		name: "Budget",
+		kind: "fade",
+		cycle: "7s",
+		caption:
+			"Needs, Wants and Savings against 50/30/20, stepping from August back to July. Savings is the residual — income minus what you actually spent, not a figure you set — which is why it flips from 33 ahead to 80 short when the month changes.",
+		alt: "The Budget screen for August 2026: Needs 1,323 of 1,090 and 233 over, Wants 388 of 654 with 266 left, Savings 469 of 436 and 33 ahead, and a doughnut showing 79 per cent of the budget used.",
+		frames: [budget1, budget2],
+	},
+	{
+		name: "Goal savings",
+		kind: "fade",
+		cycle: "9s",
+		caption:
+			"The Savings Pool being divided: the Emergency Fund first, then a bike, then a house deposit. Nothing here moves real money — a goal move only changes which goal a slice of the existing pool belongs to.",
+		alt: "The Goal savings screen: a savings pool of 2,985 pounds with an Emergency Fund 40 per cent of the way to its 4,500 target, and four further goals still at zero.",
+		frames: [goals1, goals2, goals3],
+	},
+	{
+		name: "Home",
+		kind: "pan",
+		cycle: "15s",
+		caption:
+			"Widgets you choose and arrange yourself, because nobody's first screen should be somebody else's idea of one. It runs from net worth down past Money Flow and the budget to the Savings Pool.",
+		alt: "The home dashboard: net worth 2,985 pounds, a prompt to reconcile, and Money Flow and Budget widgets stacked below it.",
+		frames: [homeTall],
+	},
+	{
+		name: "Retirement",
+		kind: "fade",
+		cycle: "12s",
+		caption:
+			"Thirty-five to eighty-five on 500 pounds a month, and what four goals do to it as each is added: a bike, a house deposit, a trip, then a car. Each goal waits until the pot is a multiple of its price — the ×rule — so the car lands at 51 and takes the projection with it. Adding all four moves the money running out from past a hundred to ninety.",
+		alt: "The Retirement Planning screen with no goals overlaid: a single green curve climbing past 1.5 million by 85, financial freedom marked at 35, funds lasting past 100, and four unticked goal checkboxes below.",
+		frames: [ret1, ret2, ret3, ret4],
+	},
+];
+
+/**
+ * How far a tall capture has to travel to show its own bottom edge, as a
+ * fraction of ITS OWN height -- which is what a percentage in translateY
+ * resolves against.
+ *
+ *   overflow / imageHeight = 1 - stageHeight / imageHeight
+ *                          = 1 - (12 / 7) * (imageWidth / imageHeight)
+ *
+ * 12/7 is the stage's aspect ratio inverted. Computed here rather than measured
+ * in the browser because it is exact, resolution-independent, and needs no
+ * layout read on a scroller the script is already reading every frame. Floored
+ * at 0: a capture no taller than the frame simply holds still rather than
+ * panning up into the bezel.
+ */
+const panOf = (img: ImageMetadata) =>
+	`${(Math.max(0, 1 - (12 / 7) * (img.width / img.height)) * 100).toFixed(2)}%`;
+---
+
+<PageLayout meta={meta}>
+	<PageTitle
+		title="Where did my money go?"
+		subtitle="A ledger, a running balance, and a projection forty years long."
+	/>
+
+	<div data-pagefind-body>
+		<div class="demo-intro">
+			<p>
+				I have kept a spreadsheet of my own spending since I was a student, and every version of
+				it failed the same way. It could tell me what a month cost. It could never tell me{" "}
+				<em>when</em> the money was low. A monthly total hides the week where the rent and the
+				council tax land four days apart, and that is the week you actually feel.
+			</p>
+			<p>
+				So the chart it is built around is not a pie. It is a running balance, called
+				<strong>Money Flow</strong>, and it answers the question the spreadsheet could not. The app
+				grew a second half after that, pointed the other way: the first half tells you what a month
+				actually did, and the second asks what forty years might. Both are below, from the live
+				phone app, running an anonymised copy of my own ledger.
+			</p>
+		</div>
+
+		<div class="demo-slides" data-slides>
+			<h2 class="demo-slides__h">The screens</h2>
+			<p class="demo-slides__lead">
+				Swipe, or use the arrows. Only the card in the middle animates.
+			</p>
+
+			{/*
+				The scroll container is a div wrapping the list, not the list itself:
+				role="region" on a <ul> would override its implicit list role and
+				leave the <li> children without the list context they require, which
+				is invalid ARIA and costs a screen-reader user the "list of N items"
+				that tells them how much is here.
+			*/}
+			<div
+				class="demo-slides__scroller"
+				data-track
+				role="region"
+				aria-label="Screens from the phone app. Use the left and right arrow keys."
+				tabindex="0"
+			>
+				<ul class="demo-slides__track">
+					{
+						cards.map((card, i) => (
+							<li class="demo-slides__slide">
+								<figure>
+									{/*
+										The transform lives on this wrapper and never on the li.
+										The script finds the middle with getBoundingClientRect, and
+										a rect that included the element's own translate would feed
+										the transform back into its own input and oscillate under a
+										trackpad. The li is layout; this is paint.
+									*/}
+									<div class="demo-slides__card">
+										<div class="demo-slides__frame">
+											<div
+												class="demo-slides__stage"
+												style={`--cycle: ${card.cycle}${card.kind === "pan" ? `; --pan: ${panOf(card.frames[0]!)}` : ""}`}
+											>
+												{card.frames.map((src, f) => (
+													<Image
+														class:list={[
+															"demo-slides__layer",
+															card.kind === "pan" && "demo-slides__layer--pan",
+														]}
+														src={src}
+														alt={f === 0 ? card.alt : ""}
+														widths={[390, 780]}
+														sizes="(min-width: 736px) 19.5rem, 78vw"
+														loading={i === 0 && f === 0 ? "eager" : "lazy"}
+														decoding="async"
+														data-f={f}
+														data-n={card.frames.length}
+													/>
+												))}
+											</div>
+										</div>
+									</div>
+									{/* Outside the card on purpose: text rotated in 3D is blurry,
+									    and this is the only prose on the strip. */}
+									<figcaption>
+										<b>{card.name}</b> &mdash; {card.caption}
+									</figcaption>
+								</figure>
+							</li>
+						))
+					}
+				</ul>
+			</div>
+
+			{/*
+				Written into the HTML hidden and unhidden by the script below, so a
+				reader without JavaScript gets a clean scrollable strip rather than
+				three dead buttons.
+			*/}
+			<div class="demo-slides__nav" data-nav hidden>
+				<button type="button" data-prev aria-label="Previous screen">&#9664;</button>
+				{/*
+					The label carries the state rather than aria-pressed, which is the
+					convention the structure-growth transport already uses: a control
+					whose accessible name changes is read correctly by everything,
+					where a pressed toggle called "Play" is ambiguous.
+				*/}
+				<button type="button" class="demo-slides__play" data-play>Play</button>
+				<p class="demo-slides__count" data-count aria-live="polite">1 of {cards.length}</p>
+				<button type="button" data-next aria-label="Next screen">&#9654;</button>
+			</div>
+
+			{/*
+				Unhidden by the script only when the reader has asked for reduced
+				motion, in which case nothing is played for them and this says how to
+				start it. Same shape as the structure-growth demo's motion hint.
+			*/}
+			<p class="demo-hint demo-slides__hint" data-motion-hint hidden>
+				Motion is off because your system asks for it. Press Play to run a card.
+			</p>
+		</div>
+
+		<div class="demo-deep">
+			<h2>The detail</h2>
+
+			<p>
+				The phone app is the one I actually use. Vite, React&nbsp;19 and TypeScript, built as a
+				progressive web app &mdash; installable, offline, English and Thai &mdash; keeping
+				everything in IndexedDB through Dexie, on the device, inside the browser you installed it
+				into. There is no account, no sign-in and no server of mine anywhere. One feature breaks
+				that on purpose: if you paste in your own Anthropic or Gemini key, a photographed receipt
+				goes to that provider to be read, and nothing else does. Leave the key blank, which is how
+				it ships, and nothing about your money has anywhere to go. That is a design decision and it
+				has a price: you own the backup. The backup screen writes a JSON file, and that file is the
+				only copy. Routing is a hash router, which is what lets the whole application be served as
+				static files from GitHub Pages with no backend at all.
+			</p>
+
+			<p>
+				The desktop half is older and built differently: Python, Dash and Plotly over pandas,
+				writing to a local SQLite file called <code>ledger.db</code> and serving itself at
+				127.0.0.1:8050. Same principle, wider reach &mdash; it does the investing side too, and it
+				runs against one file on one machine.
+			</p>
+
+			<p>
+				Two things past the six screens above are worth more than a list. Reconciliation, against
+				what the bank actually says, writes an Adjustment row rather than quietly editing history
+				&mdash; there are three such rows in the ledger these pictures run on. And the debt screen
+				measures what you owe against the 36, 50 and 70 per cent lines that lenders actually use,
+				which is a more useful number than a total.
+			</p>
+
+			<p>
+				The part that took longest to get right is also the hardest to fit in a caption. The
+				<strong>Savings Pool</strong> is the summed balance of whichever accounts you have ticked as
+				savings. The <strong>Emergency Fund</strong> always sits at the base of it, with a target of
+				your monthly requirement times the number of months you want covered, and your other goals
+				stack on top. A <strong>goal move</strong> shifts a slice of the pool from Unallocated to a
+				goal, or from one goal to another. Nothing there moves real money. A goal move only changes
+				which goal a slice of the existing pool belongs to &mdash; which is, I think, what people
+				are actually doing in their heads when they say they are &ldquo;saving for&rdquo; something.
+			</p>
+
+			<p>
+				It is MIT-licensed, about a hundred and sixty commits in, written by one person, and
+				pre-1.0 in the way that means it.
+			</p>
+
+			<div class="demo-downloads">
+				<a href="/data/money-flow/README.md">What was kept and what was thrown away</a>
+				<a href="/data/money-flow/seed.json">seed.json</a>
+				<a
+					href="https://github.com/SKoonkor/skoonkor.github.io/blob/main/tools/build_money_seed.py"
+					rel="noopener"
+					target="_blank">build script</a
+				>
+			</div>
+		</div>
+
+		<div class="demo-cta">
+			<p class="demo-cta__note">
+				The app starts empty. Everything above is a ledger I made for it out of my own, and it
+				lives on one device &mdash; which is the whole idea.
+			</p>
+			<div class="demo-downloads">
+				<a href={APP} rel="noopener" target="_blank">Open the phone app</a>
+				<a href={REPO} rel="noopener" target="_blank">The repository (MIT)</a>
+			</div>
+			<p class="demo-cta__disclaimer">
+				This is a personal-finance tool for tracking and learning. Nothing here is financial
+				advice.
+			</p>
+		</div>
+	</div>
+
+	<noscript>
+		<p>
+			The cards above are ordinary pictures and the strip scrolls sideways without JavaScript
+			&mdash; only the animation between each card's states needs it, so you are seeing the first
+			state of each. The ledger they run on is a plain file:
+			<a class="cactus-link" href="/data/money-flow/seed.json">seed.json</a>, with
+			<a class="cactus-link" href="/data/money-flow/README.md">notes on how it was made</a>. The
+			app itself is at
+			<a class="cactus-link" href={APP}>skoonkor.github.io/WhereDidMyMoneyGo</a>.
+		</p>
+	</noscript>
+</PageLayout>
+
+<script>
+	import { init } from "@/scripts/software/coverflow.js";
+
+	const root = document.querySelector<HTMLElement>("[data-slides]");
+	if (root) init(root);
+</script>
