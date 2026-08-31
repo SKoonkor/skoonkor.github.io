@@ -25,6 +25,67 @@
 	color: color-mix(in oklab, var(--color-muted) 75%, transparent);
 }
 
+/* --- the two big buttons -------------------------------------------------- */
+/*
+ * The app and the source, above the coverflow, centred and at body size.
+ *
+ * A class of its own rather than a modifier on .demo-downloads (explore.css):
+ * that primitive means "a small file link" and is shared by every demo page on
+ * the site -- including the seed/README row further down THIS page, which is
+ * still exactly that. Widening it would grow buttons on pages that want text.
+ *
+ * The fill is --color-accent on --color-global-bg, and both flip with the
+ * theme: dark red on near-white in light mode, bright green on dark navy in
+ * dark. One rule, contrast holds either way, no second block.
+ */
+.demo-actions {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
+	gap: 0.75rem;
+	margin: 2rem 0 0;
+}
+
+	.demo-actions__a {
+		/* Grow to share the row, and drop to one per line below about 30rem
+		   rather than shrinking into two cramped columns. No media query: the
+		   min-width is the breakpoint. */
+		flex: 1 1 auto;
+		min-width: 14rem;
+		max-width: 20rem;
+		padding: 0.7em 1.4em;
+		border: 1px solid var(--demo-line, color-mix(in oklab, var(--color-muted) 25%, transparent));
+		border-radius: 6px;
+		font-size: 1rem;
+		line-height: 1.4;
+		text-align: center;
+		text-decoration: none;
+	}
+
+		.demo-actions__a:hover {
+			border-color: var(--color-accent);
+			color: var(--color-accent);
+		}
+
+		.demo-actions__a:focus-visible {
+			outline: 2px solid var(--color-accent);
+			outline-offset: 2px;
+		}
+
+	.demo-actions__a--primary {
+		border-color: var(--color-accent);
+		background: var(--color-accent);
+		color: var(--color-global-bg);
+	}
+
+		/* Repeated rather than inherited from the rule above: that one sets
+		   `color`, which on a filled button would put accent-on-accent. */
+		.demo-actions__a--primary:hover {
+			border-color: color-mix(in oklab, var(--color-accent) 85%, black);
+			background: color-mix(in oklab, var(--color-accent) 85%, black);
+			color: var(--color-global-bg);
+		}
+
 /* --- the call to action ------------------------------------------------- */
 .demo-cta {
 	margin-top: 3rem;

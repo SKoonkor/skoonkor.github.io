@@ -72,54 +72,54 @@ const cards: Card[] = [
 	{
 		name: "Money Flow",
 		kind: "fade",
-		cycle: "8s",
+		cycle: "4s",
 		caption:
-			"Every transaction is a bar standing on whatever the one before it left behind, so the top of the last bar is the balance now. Hold a day and it tells you what happened on it. Direction is carried by a transaction's type and never by the sign of its amount — fussy right up until you inherit a ledger where somebody typed a minus into a refund.",
+			"Every transaction is a bar standing on what the one before it left, so the top of the last bar is the balance now. Hold a day and it tells you what happened on it.",
 		alt: "The Money Flow screen: a running-balance waterfall across July and August with a blue forecast fan running into September, a net-worth line at 2,985 pounds, and the account balances listed underneath.",
 		frames: [flow1, flow2],
 	},
 	{
 		name: "Transactions",
 		kind: "pan",
-		cycle: "15s",
+		cycle: "7.5s",
 		caption:
-			"A month of the ledger, grouped by day, each day carrying its own in and out. It scrolls here from the 28th back through payday to the 25th.",
+			"A month of the ledger, grouped by day, each day carrying its own in and out. It scrolls from the 28th back past payday to the 25th.",
 		alt: "The Transactions screen for August 2026: income 2,182.70, expense 1,711.25, net 471.45, then days listed newest first with per-day totals.",
 		frames: [transactionsTall],
 	},
 	{
 		name: "Budget",
 		kind: "fade",
-		cycle: "7s",
+		cycle: "3.5s",
 		caption:
-			"Needs, Wants and Savings against 50/30/20, stepping from August back to July. Savings is the residual — income minus what you actually spent, not a figure you set — which is why it flips from 33 ahead to 80 short when the month changes.",
+			"Needs, Wants and Savings against 50/30/20, stepping from August back to July. Savings is the residual, which is why it flips from 33 ahead to 80 short.",
 		alt: "The Budget screen for August 2026: Needs 1,323 of 1,090 and 233 over, Wants 388 of 654 with 266 left, Savings 469 of 436 and 33 ahead, and a doughnut showing 79 per cent of the budget used.",
 		frames: [budget1, budget2],
 	},
 	{
 		name: "Goal savings",
 		kind: "fade",
-		cycle: "9s",
+		cycle: "4.5s",
 		caption:
-			"The Savings Pool being divided: the Emergency Fund first, then a bike, then a house deposit. Nothing here moves real money — a goal move only changes which goal a slice of the existing pool belongs to.",
+			"The Savings Pool being divided: the Emergency Fund first, then a bike, then a house deposit. Nothing moves real money — a goal move only re-labels a slice of the pool.",
 		alt: "The Goal savings screen: a savings pool of 2,985 pounds with an Emergency Fund 40 per cent of the way to its 4,500 target, and four further goals still at zero.",
 		frames: [goals1, goals2, goals3],
 	},
 	{
 		name: "Home",
 		kind: "pan",
-		cycle: "15s",
+		cycle: "7.5s",
 		caption:
-			"Widgets you choose and arrange yourself, because nobody's first screen should be somebody else's idea of one. It runs from net worth down past Money Flow and the budget to the Savings Pool.",
+			"Widgets you choose and arrange yourself. It runs from net worth down past Money Flow and the budget to the Savings Pool.",
 		alt: "The home dashboard: net worth 2,985 pounds, a prompt to reconcile, and Money Flow and Budget widgets stacked below it.",
 		frames: [homeTall],
 	},
 	{
 		name: "Retirement",
 		kind: "fade",
-		cycle: "12s",
+		cycle: "6s",
 		caption:
-			"Thirty-five to eighty-five on 500 pounds a month, and what four goals do to it as each is added: a bike, a house deposit, a trip, then a car. Each goal waits until the pot is a multiple of its price — the ×rule — so the car lands at 51 and takes the projection with it. Adding all four moves the money running out from past a hundred to ninety.",
+			"Thirty-five to eighty-five on 500 pounds a month, and what four goals do to it as each is added. All four together move the money running out from past a hundred to ninety.",
 		alt: "The Retirement Planning screen with no goals overlaid: a single green curve climbing past 1.5 million by 85, financial freedom marked at 35, funds lasting past 100, and four unticked goal checkboxes below.",
 		frames: [ret1, ret2, ret3, ret4],
 	},
@@ -152,18 +152,27 @@ const panOf = (img: ImageMetadata) =>
 	<div data-pagefind-body>
 		<div class="demo-intro">
 			<p>
-				I have kept a spreadsheet of my own spending since I was a student, and every version of
-				it failed the same way. It could tell me what a month cost. It could never tell me{" "}
-				<em>when</em> the money was low. A monthly total hides the week where the rent and the
-				council tax land four days apart, and that is the week you actually feel.
+				I kept a spreadsheet of my own spending for years and it always failed the same way: it
+				could tell me what a month cost, never <em>when</em> the money was low. So the chart this is
+				built around is a running balance, not a pie. Below are six screens from the live phone app,
+				running an anonymised copy of my own ledger.
 			</p>
-			<p>
-				So the chart it is built around is not a pie. It is a running balance, called
-				<strong>Money Flow</strong>, and it answers the question the spreadsheet could not. The app
-				grew a second half after that, pointed the other way: the first half tells you what a month
-				actually did, and the second asks what forty years might. Both are below, from the live
-				phone app, running an anonymised copy of my own ledger.
-			</p>
+		</div>
+
+		{/*
+			The two links that matter, above the strip rather than under everything
+			else: a reader who only ever sees the screens should still be one click
+			from the app. A class of its own and not .demo-downloads -- that
+			primitive is shared by every demo page and means "small file link",
+			which is what the seed/README row further down still is.
+		*/}
+		<div class="demo-actions">
+			<a class="demo-actions__a demo-actions__a--primary" href={APP} rel="noopener" target="_blank"
+				>Open the phone app</a
+			>
+			<a class="demo-actions__a" href={REPO} rel="noopener" target="_blank"
+				>The repository (MIT)</a
+			>
 		</div>
 
 		<div class="demo-slides" data-slides>
@@ -267,47 +276,19 @@ const panOf = (img: ImageMetadata) =>
 			<h2>The detail</h2>
 
 			<p>
-				The phone app is the one I actually use. Vite, React&nbsp;19 and TypeScript, built as a
-				progressive web app &mdash; installable, offline, English and Thai &mdash; keeping
-				everything in IndexedDB through Dexie, on the device, inside the browser you installed it
-				into. There is no account, no sign-in and no server of mine anywhere. One feature breaks
-				that on purpose: if you paste in your own Anthropic or Gemini key, a photographed receipt
-				goes to that provider to be read, and nothing else does. Leave the key blank, which is how
-				it ships, and nothing about your money has anywhere to go. That is a design decision and it
-				has a price: you own the backup. The backup screen writes a JSON file, and that file is the
-				only copy. Routing is a hash router, which is what lets the whole application be served as
-				static files from GitHub Pages with no backend at all.
+				The phone app is the one I actually use: Vite, React&nbsp;19 and TypeScript, built as an
+				installable offline progressive web app in English and Thai, keeping everything in IndexedDB
+				through Dexie, on the device. No account, no sign-in, no server of mine anywhere. One feature
+				breaks that on purpose: paste in your own Anthropic or Gemini key and a photographed receipt
+				goes to that provider to be read &mdash; nothing else does. The price is that you own the
+				backup: the backup screen writes a JSON file, and that file is the only copy.
 			</p>
 
 			<p>
-				The desktop half is older and built differently: Python, Dash and Plotly over pandas,
-				writing to a local SQLite file called <code>ledger.db</code> and serving itself at
-				127.0.0.1:8050. Same principle, wider reach &mdash; it does the investing side too, and it
-				runs against one file on one machine.
-			</p>
-
-			<p>
-				Two things past the six screens above are worth more than a list. Reconciliation, against
-				what the bank actually says, writes an Adjustment row rather than quietly editing history
-				&mdash; there are three such rows in the ledger these pictures run on. And the debt screen
-				measures what you owe against the 36, 50 and 70 per cent lines that lenders actually use,
-				which is a more useful number than a total.
-			</p>
-
-			<p>
-				The part that took longest to get right is also the hardest to fit in a caption. The
-				<strong>Savings Pool</strong> is the summed balance of whichever accounts you have ticked as
-				savings. The <strong>Emergency Fund</strong> always sits at the base of it, with a target of
-				your monthly requirement times the number of months you want covered, and your other goals
-				stack on top. A <strong>goal move</strong> shifts a slice of the pool from Unallocated to a
-				goal, or from one goal to another. Nothing there moves real money. A goal move only changes
-				which goal a slice of the existing pool belongs to &mdash; which is, I think, what people
-				are actually doing in their heads when they say they are &ldquo;saving for&rdquo; something.
-			</p>
-
-			<p>
-				It is MIT-licensed, about a hundred and sixty commits in, written by one person, and
-				pre-1.0 in the way that means it.
+				The desktop half is older and built differently &mdash; Python, Dash and Plotly over pandas,
+				writing a local <code>ledger.db</code> and serving itself at 127.0.0.1:8050 &mdash; and it does
+				the investing side too. It is MIT-licensed, about a hundred and sixty commits in, written by
+				one person, and pre-1.0 in the way that means it.
 			</p>
 
 			<div class="demo-downloads">
@@ -326,10 +307,6 @@ const panOf = (img: ImageMetadata) =>
 				The app starts empty. Everything above is a ledger I made for it out of my own, and it
 				lives on one device &mdash; which is the whole idea.
 			</p>
-			<div class="demo-downloads">
-				<a href={APP} rel="noopener" target="_blank">Open the phone app</a>
-				<a href={REPO} rel="noopener" target="_blank">The repository (MIT)</a>
-			</div>
 			<p class="demo-cta__disclaimer">
 				This is a personal-finance tool for tracking and learning. Nothing here is financial
 				advice.
