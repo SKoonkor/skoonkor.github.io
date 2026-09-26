@@ -1,0 +1,220 @@
+---
+import MochaDoodle from "@/components/mocha/MochaDoodle.astro";
+import MochaGallery from "@/components/mocha/MochaGallery.astro";
+import "@/styles/mocha.css";
+
+const title = "MOCHA Journal Club";
+const description =
+	"MOCHA (Morning Coffee Hurried arXiv) is the NARIT journal club. Sign up to present a paper.";
+const canonicalURL = new URL(Astro.url.pathname, Astro.site);
+const signupURL =
+	"https://docs.google.com/spreadsheets/d/1uJb8ZK7za-fO_ZEdrVMgbhhhc9AX6DzrX1DDyohzH5A/edit?gid=0#gid=0";
+---
+
+<!doctype html>
+<html lang="en" class="mocha-root" data-mocha-theme="light">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>{title}</title>
+		<meta name="description" content={description} />
+		<link rel="canonical" href={canonicalURL} />
+		<link rel="icon" href="/icon.svg" type="image/svg+xml" />
+		<meta property="og:type" content="website" />
+		<meta property="og:title" content={title} />
+		<meta property="og:description" content={description} />
+		<meta property="og:url" content={canonicalURL} />
+		<meta name="theme-color" content="#ECEBE7" />
+		<link rel="preconnect" href="https://fonts.googleapis.com" />
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+		<link
+			href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Caveat:wght@600&family=Klee+One:wght@600&display=swap"
+			rel="stylesheet"
+		/>
+		<link rel="preload" href="/mocha/fonts/Akrobat-Black.woff" as="font" type="font/woff" crossorigin />
+		<script is:inline>
+			// Light is the default; only an explicit saved choice (or ?theme=dark) overrides it.
+			// "motion" gates all animation on the visitor allowing motion.
+			(function () {
+				var root = document.documentElement;
+				try {
+					var q = new URLSearchParams(location.search).get("theme");
+					var saved = localStorage.getItem("mocha-theme");
+					if (q === "dark" || (q !== "light" && saved === "dark")) root.dataset.mochaTheme = "dark";
+				} catch (e) {}
+				// ?static skips motion (used for screenshots/audits); reduced-motion visitors get the same.
+				var still = new URLSearchParams(location.search).has("static");
+				if (!still && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) root.classList.add("motion");
+				// Failsafe: if the page script never runs, show everything.
+				setTimeout(function () {
+					if (!root.classList.contains("theme-ready")) root.classList.remove("motion");
+				}, 2500);
+			})();
+		</script>
+	</head>
+	<body class="mocha" id="top">
+		<header class="site-header">
+			<div class="inner">
+				<nav class="nav" aria-label="Page sections">
+					<a href="#top" aria-current="true" data-spy="top">Home page</a>
+					<a href="#format" data-spy="format">Format</a>
+					<a href="#signup" data-spy="signup">Sign up</a>
+					<a href="#gallery" data-spy="gallery">Gallery</a>
+				</nav>
+				<button class="theme-toggle" id="theme-toggle" type="button" aria-label="Dark mode" aria-pressed="false">
+					<span class="track" aria-hidden="true"><span class="knob"></span></span>
+					<span class="label" aria-hidden="true">
+						<span class="on-light">Light</span>
+						<span class="on-dark">Dark</span>
+					</span>
+				</button>
+			</div>
+		</header>
+
+		<main data-pagefind-body>
+			<section class="hero wrap" aria-labelledby="hero-title">
+				<h1 id="hero-title" aria-label="MOCHA Journal Club">
+					<span class="l1">Mocha</span>
+					<span class="l2">Journal</span>
+				</h1>
+				<div class="l3-row">
+					<span class="l3" aria-hidden="true">Club</span>
+					<p class="intro">
+						<strong>MO</strong>rning <strong>C</strong>offee <strong>H</strong>urried <strong>A</strong>rXiv
+						(<strong>MOCHA</strong>) is a journal club created to help everyone stay up to date with the
+						latest research in their field, and to share interesting discoveries with fellow researchers at
+						NARIT in a relaxed, social setting. Along the way, we get to know each other's research better,
+						which opens the door to future collaborations.
+					</p>
+				</div>
+			</section>
+
+			<MochaDoodle />
+
+			<section class="block" id="format" data-spy-section="format">
+				<div class="wrap">
+					<div class="cols">
+						<h2 class="reveal">Format</h2>
+						<ul class="list">
+							<li class="reveal" style="--rd:0.05s">Every Tuesday at 11:00 AM in the Cassiopeia Room.</li>
+							<li class="reveal" style="--rd:0.15s">One speaker presents one paper (~20 minutes).</li>
+							<li class="reveal" style="--rd:0.25s">
+								<span>
+									The rest of the hour is open discussion of papers voted on at{" "}
+									<a href="https://www.benty-fields.com" target="_blank" rel="noopener">Benty-fields</a>.
+								</span>
+							</li>
+							<li class="reveal" style="--rd:0.35s">Totally casual: grab your coffee and join in.</li>
+						</ul>
+					</div>
+					<a class="btn to-top" href="#top">Back to top <span aria-hidden="true">↑</span></a>
+				</div>
+			</section>
+
+			<hr class="rule wrap" />
+
+			<section class="block" id="signup" data-spy-section="signup">
+				<div class="wrap">
+					<div class="cols">
+						<h2 class="reveal">Want to sign up?</h2>
+						<div class="signup-body">
+							<ol class="steps">
+								<li class="reveal" style="--rd:0.05s">Open the schedule and pick a date.</li>
+								<li class="reveal" style="--rd:0.15s">Add your paper's arXiv number at least one week before your slot.</li>
+							</ol>
+							<a class="btn btn--gold reveal" style="--rd:0.25s" href={signupURL} target="_blank" rel="noopener">Open the schedule →</a>
+							<p class="reveal" style="--rd:0.35s">Or contact the organisers: Tinn, Sujeeporn, Adipol.</p>
+						</div>
+					</div>
+					<a class="btn to-top" href="#top">Back to top <span aria-hidden="true">↑</span></a>
+				</div>
+			</section>
+
+			<hr class="rule wrap" />
+
+			<section class="block" id="gallery" data-spy-section="gallery">
+				<div class="wrap wrap--wide">
+					<h2 class="reveal">Gallery</h2>
+					<MochaGallery />
+					<a class="btn to-top" href="#top">Back to top <span aria-hidden="true">↑</span></a>
+				</div>
+			</section>
+		</main>
+
+		<footer>
+			<div class="wrap">
+				<p>Website designed by <strong>SKOONKOR</strong> · <a href="/">skoonkor.github.io</a></p>
+				<p>Theme inspired by <a href="https://aprilstudio.rs" target="_blank" rel="noopener">APRIL</a></p>
+			</div>
+		</footer>
+
+		<script>
+			const root = document.documentElement;
+
+			// Theme toggle
+			const toggle = document.getElementById("theme-toggle");
+			const syncToggle = () => toggle?.setAttribute("aria-pressed", String(root.dataset.mochaTheme === "dark"));
+			syncToggle();
+			toggle?.addEventListener("click", () => {
+				const next = root.dataset.mochaTheme === "dark" ? "light" : "dark";
+				root.dataset.mochaTheme = next;
+				syncToggle();
+				try {
+					localStorage.setItem("mocha-theme", next);
+				} catch (e) {}
+			});
+
+			// Enable colour transitions only after first paint
+			requestAnimationFrame(() => requestAnimationFrame(() => root.classList.add("theme-ready")));
+
+			// Scroll-triggered reveal + doodle draw-in
+			const reveals = document.querySelectorAll<HTMLElement>(".reveal");
+			const doodle = document.querySelector<HTMLElement>(".doodle");
+			if ("IntersectionObserver" in window && root.classList.contains("motion")) {
+				const io = new IntersectionObserver(
+					(entries) => {
+						for (const e of entries) {
+							if (!e.isIntersecting) continue;
+							e.target.classList.add("in");
+							io.unobserve(e.target);
+						}
+					},
+					{ rootMargin: "0px 0px -8% 0px", threshold: 0.1 },
+				);
+				reveals.forEach((el) => io.observe(el));
+				if (doodle) {
+					const dio = new IntersectionObserver(
+						(entries) => {
+							if (entries.some((e) => e.isIntersecting)) {
+								doodle.classList.add("play");
+								dio.disconnect();
+							}
+						},
+						{ threshold: 0.15 },
+					);
+					dio.observe(doodle);
+				}
+			} else {
+				reveals.forEach((el) => el.classList.add("in"));
+				doodle?.classList.add("play");
+			}
+
+			// Highlight the current section in the nav
+			const links = new Map<string, HTMLElement>();
+			document.querySelectorAll<HTMLElement>(".nav a[data-spy]").forEach((a) => links.set(a.dataset.spy!, a));
+			const setActive = (key: string) =>
+				links.forEach((a, k) => (k === key ? a.setAttribute("aria-current", "true") : a.removeAttribute("aria-current")));
+			const spies = [
+				...document.querySelectorAll<HTMLElement>("[data-spy-section]"),
+			];
+			const onScroll = () => {
+				let key = "top";
+				const y = window.innerHeight * 0.4;
+				for (const s of spies) if (s.getBoundingClientRect().top <= y) key = s.dataset.spySection!;
+				setActive(key);
+			};
+			window.addEventListener("scroll", onScroll, { passive: true });
+			onScroll();
+		</script>
+	</body>
+</html>

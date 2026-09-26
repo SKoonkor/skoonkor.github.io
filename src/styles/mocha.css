@@ -1,0 +1,759 @@
+/* MOCHA journal club: standalone theme inspired by coffeeroastingman.rs.
+   Colours/fonts mirror that site's kit: bg #ECEBE7, text #322E2F, accent #C4A65B,
+   Akrobat Black headings, DM Mono body. Scoped to .mocha / html.mocha-root. */
+
+@font-face {
+	font-family: "Akrobat";
+	src: url("/mocha/fonts/Akrobat-Black.woff") format("woff");
+	font-weight: 900;
+	font-style: normal;
+	font-display: swap;
+}
+
+html.mocha-root {
+	scroll-behavior: smooth;
+	background: #ecebe7;
+	overflow-x: clip;
+}
+
+html.mocha-root[data-mocha-theme="dark"] {
+	background: #322e2f;
+}
+
+.mocha {
+	--bg: #ecebe7;
+	--fg: #322e2f;
+	--gold: #c4a65b;
+	--gold-text: #7a5f16;
+	--footer-accent: #c4a65b;
+	--rule: color-mix(in srgb, var(--fg) 22%, transparent);
+	--ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+	--font-head: "Akrobat", "Arial Black", "Helvetica Neue", Arial, sans-serif;
+	--font-body: "DM Mono", ui-monospace, "SF Mono", Menlo, monospace;
+	--fs-hero: clamp(80px, 13.2vw, 190px);
+	--header-h: 72px;
+
+	margin: 0;
+	background: var(--bg);
+	color: var(--fg);
+	font-family: var(--font-body);
+	font-size: 16px;
+	font-weight: 400;
+	line-height: 24px;
+	letter-spacing: -0.02em;
+	overflow-x: clip;
+	max-width: 100%;
+}
+
+html.mocha-root[data-mocha-theme="dark"] .mocha {
+	--bg: #322e2f;
+	--fg: #ecebe7;
+	--gold-text: #c4a65b;
+	--footer-accent: #7a5f16;
+}
+
+.mocha *,
+.mocha *::before,
+.mocha *::after {
+	box-sizing: border-box;
+}
+
+/* Smooth theme switching (only after first paint, see .theme-ready) */
+html.theme-ready :where(.mocha, .mocha *) {
+	transition:
+		background-color 0.4s var(--ease),
+		color 0.4s var(--ease),
+		border-color 0.4s var(--ease),
+		fill 0.4s var(--ease),
+		stroke 0.4s var(--ease);
+}
+
+/* Page-load fade (template uses a 500ms fade) */
+html.motion .mocha {
+	animation: mocha-fade 0.5s var(--ease) both;
+}
+
+.mocha a {
+	color: inherit;
+	text-decoration-color: color-mix(in srgb, currentColor 40%, transparent);
+	text-underline-offset: 3px;
+}
+
+.mocha p a:hover,
+.mocha li a:hover,
+.mocha footer a:hover {
+	color: var(--gold);
+}
+
+.mocha h1,
+.mocha h2 {
+	font-family: var(--font-head);
+	font-weight: 900;
+	text-transform: uppercase;
+	margin: 0;
+	color: var(--fg);
+}
+
+.mocha .wrap {
+	width: min(1110px, 100% - 40px);
+	margin-inline: auto;
+}
+
+.mocha .wrap--wide {
+	width: min(1440px, 100% - clamp(32px, 6vw, 120px));
+}
+
+/* ---------- Header / nav ---------- */
+.mocha .site-header {
+	position: sticky;
+	top: 0;
+	z-index: 20;
+	background: color-mix(in srgb, var(--bg) 88%, transparent);
+	backdrop-filter: blur(8px);
+	-webkit-backdrop-filter: blur(8px);
+}
+
+.mocha .site-header .inner {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	min-height: var(--header-h);
+	padding: 0 clamp(16px, 4.2vw, 60px);
+}
+
+.mocha .nav {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 4px;
+}
+
+.mocha .nav a,
+.mocha .btn,
+.mocha .theme-toggle {
+	font-family: var(--font-head);
+	font-weight: 900;
+	font-size: 16px;
+	line-height: 16px;
+	letter-spacing: 0.05em;
+	text-transform: uppercase;
+	text-decoration: none;
+	border: 0;
+	cursor: pointer;
+}
+
+.mocha .nav a {
+	color: var(--fg);
+	padding: 9px 26px 10px;
+	border-radius: 999px;
+	background: transparent;
+	transition:
+		background-color 0.35s var(--ease),
+		color 0.35s var(--ease),
+		translate 0.25s var(--ease);
+}
+
+.mocha .nav a:hover {
+	color: var(--gold);
+}
+
+.mocha .nav a[aria-current="true"] {
+	background: var(--fg);
+	color: var(--bg);
+}
+
+.mocha .nav a[aria-current="true"]:hover {
+	color: var(--gold);
+}
+
+.mocha .theme-toggle {
+	display: inline-flex;
+	align-items: center;
+	gap: 10px;
+	color: var(--fg);
+	background: transparent;
+	padding: 9px 4px;
+	transition: color 0.3s var(--ease);
+}
+
+.mocha .theme-toggle:hover {
+	color: var(--gold);
+}
+
+.mocha .theme-toggle .track {
+	position: relative;
+	width: 44px;
+	height: 24px;
+	border: 1.5px solid currentColor;
+	border-radius: 999px;
+	transition: border-color 0.4s var(--ease);
+}
+
+.mocha .theme-toggle .knob {
+	position: absolute;
+	top: 3px;
+	left: 3px;
+	width: 15px;
+	height: 15px;
+	border-radius: 50%;
+	background: var(--gold);
+	transition: translate 0.4s var(--ease);
+}
+
+html[data-mocha-theme="dark"] .mocha .theme-toggle .knob {
+	translate: 20px 0;
+}
+
+.mocha .theme-toggle .label {
+	position: relative;
+	display: inline-block;
+	min-width: 4.4em;
+	text-align: left;
+}
+
+.mocha .theme-toggle .label span {
+	transition:
+		opacity 0.35s var(--ease),
+		translate 0.35s var(--ease);
+}
+
+.mocha .theme-toggle .label .on-dark {
+	position: absolute;
+	inset: 0;
+	opacity: 0;
+	translate: 0 6px;
+}
+
+html[data-mocha-theme="dark"] .mocha .theme-toggle .label .on-light {
+	opacity: 0;
+	translate: 0 -6px;
+}
+
+html[data-mocha-theme="dark"] .mocha .theme-toggle .label .on-dark {
+	opacity: 1;
+	translate: 0 0;
+}
+
+.mocha .theme-toggle:focus-visible,
+.mocha .nav a:focus-visible,
+.mocha .btn:focus-visible,
+.mocha a:focus-visible {
+	outline: 2px solid var(--gold);
+	outline-offset: 3px;
+}
+
+/* ---------- Hero (layout mirrors the template) ---------- */
+.mocha .hero {
+	position: relative;
+	padding: clamp(24px, 4vw, 56px) 0 clamp(32px, 5vw, 64px);
+}
+
+.mocha .hero {
+	z-index: 1;
+}
+
+.mocha .hero h1 {
+	font-size: var(--fs-hero);
+	line-height: 1;
+	letter-spacing: -0.04em;
+	position: relative;
+	z-index: 1;
+}
+
+.mocha .hero h1 span {
+	display: block;
+}
+
+.mocha .hero .l1 {
+	text-align: left;
+}
+
+.mocha .hero .l2 {
+	text-align: right;
+	margin-top: -0.06em;
+	padding-right: 0.6em;
+}
+
+.mocha .hero .l3-row {
+	display: flex;
+	align-items: flex-start;
+	justify-content: flex-end;
+	width: 78%;
+	margin-left: auto;
+	margin-top: -0.04em;
+	gap: clamp(20px, 3vw, 44px);
+}
+
+.mocha .hero .l3 {
+	font-family: var(--font-head);
+	font-weight: 900;
+	text-transform: uppercase;
+	font-size: var(--fs-hero);
+	line-height: 1;
+	letter-spacing: -0.04em;
+	flex: none;
+}
+
+.mocha .hero .intro {
+	flex: 0 1 534px;
+	max-width: 534px;
+	margin: 0;
+	padding-top: clamp(4px, 1.6vw, 24px);
+	font-size: 16px;
+	line-height: 24px;
+	letter-spacing: -0.02em;
+}
+
+.mocha .hero .intro strong {
+	font-weight: 500;
+	color: var(--gold-text);
+}
+
+.mocha .hero .l3-row,
+.mocha .hero .intro,
+.mocha .cols > * {
+	min-width: 0;
+}
+
+/* ---------- Doodle banner ---------- */
+.mocha .doodle {
+	position: relative;
+	z-index: 0;
+	width: 100%;
+	color: var(--fg);
+	overflow: hidden;
+	pointer-events: none;
+}
+
+/* Wide screens: pull the banner up so its cup + galaxy sit in the empty
+   space left of CLUB (the template's bottom banner, flipped). */
+@media (min-width: 1360px) {
+	.mocha .doodle {
+		margin-top: max(-30vw, -430px);
+	}
+}
+
+.mocha .doodle svg {
+	display: block;
+	width: 100%;
+	aspect-ratio: 1440 / 760;
+	height: auto;
+}
+
+.mocha .doodle .eq {
+	font-family: "Caveat", "Klee One", "Segoe Print", "Bradley Hand", cursive;
+	font-weight: 600;
+}
+
+/* ---------- Sections ---------- */
+.mocha section.block {
+	padding: clamp(56px, 9vw, 128px) 0 clamp(40px, 6vw, 80px);
+	scroll-margin-top: var(--header-h);
+}
+
+.mocha .rule {
+	height: 1px;
+	background: var(--rule);
+	border: 0;
+	margin: 0 auto;
+}
+
+.mocha .cols {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr);
+	gap: clamp(24px, 5vw, 80px);
+	align-items: start;
+}
+
+.mocha h2 {
+	font-size: clamp(44px, 6.4vw, 90px);
+	line-height: 0.95;
+	letter-spacing: -0.03em;
+}
+
+.mocha .list {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	font-size: 18px;
+	line-height: 26px;
+	letter-spacing: 0;
+}
+
+.mocha .list li {
+	display: flex;
+	gap: 14px;
+	padding: 18px 0;
+	border-bottom: 1px solid var(--rule);
+}
+
+.mocha .list li:first-child {
+	padding-top: 6px;
+}
+
+.mocha .list li::before {
+	content: "";
+	flex: none;
+	width: 10px;
+	height: 10px;
+	margin-top: 8px;
+	border-radius: 50%;
+	background: var(--gold);
+}
+
+.mocha .steps {
+	margin: 0 0 32px;
+	padding: 0;
+	list-style: none;
+	counter-reset: step;
+	font-size: 18px;
+	line-height: 26px;
+	letter-spacing: 0;
+}
+
+.mocha .steps li {
+	counter-increment: step;
+	display: flex;
+	gap: 16px;
+	padding: 14px 0;
+	border-bottom: 1px solid var(--rule);
+}
+
+.mocha .steps li::before {
+	content: counter(step);
+	flex: none;
+	width: 30px;
+	height: 30px;
+	display: grid;
+	place-items: center;
+	border-radius: 50%;
+	background: var(--gold);
+	color: #322e2f;
+	font-family: var(--font-head);
+	font-weight: 900;
+	font-size: 16px;
+	line-height: 1;
+}
+
+.mocha .signup-body p {
+	margin: 32px 0 0;
+	font-size: 18px;
+	line-height: 26px;
+	letter-spacing: 0;
+}
+
+/* ---------- Buttons ---------- */
+.mocha .btn {
+	display: inline-block;
+	padding: 14px 30px 15px;
+	border-radius: 999px;
+	background: var(--fg);
+	color: var(--bg);
+	transition:
+		background-color 0.3s var(--ease),
+		color 0.3s var(--ease),
+		translate 0.3s var(--ease),
+		box-shadow 0.3s var(--ease);
+}
+
+.mocha .btn:hover,
+.mocha .btn:focus-visible {
+	background: var(--gold);
+	color: #322e2f;
+	translate: 0 -2px;
+}
+
+.mocha .btn--gold {
+	background: var(--gold);
+	color: #322e2f;
+	font-size: 20px;
+	line-height: 20px;
+	padding: 20px 40px 21px;
+}
+
+.mocha .btn--gold:hover,
+.mocha .btn--gold:focus-visible {
+	background: var(--fg);
+	color: var(--bg);
+}
+
+.mocha .to-top {
+	display: flex;
+	width: fit-content;
+	margin: clamp(32px, 5vw, 64px) 0 0 auto;
+	padding: 10px 20px 11px;
+	font-size: 14px;
+	line-height: 14px;
+	background: transparent;
+	color: var(--fg);
+	box-shadow: inset 0 0 0 1.5px var(--fg);
+	gap: 8px;
+}
+
+.mocha .to-top:hover,
+.mocha .to-top:focus-visible {
+	box-shadow: inset 0 0 0 1.5px var(--gold);
+}
+
+/* ---------- Gallery: 14 x 10 grid mirroring Grid.png ---------- */
+.mocha .gallery {
+	display: grid;
+	grid-template-columns: repeat(14, 1fr);
+	grid-template-rows: repeat(10, 1fr);
+	gap: clamp(6px, 1vw, 12px);
+	width: 100%;
+	height: min(70vh, 720px);
+	margin-top: clamp(24px, 4vw, 48px);
+}
+
+.mocha .gallery figure {
+	margin: 0;
+	overflow: hidden;
+	border-radius: 6px;
+	background: var(--rule);
+}
+
+.mocha .gallery img {
+	display: block;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	transition: scale 0.6s var(--ease);
+}
+
+.mocha .gallery figure:hover img {
+	scale: 1.05;
+}
+
+.mocha .g1 { grid-column: 1 / 6;   grid-row: 1 / 6; }
+.mocha .g2 { grid-column: 6 / 9;   grid-row: 1 / 6; }
+.mocha .g3 { grid-column: 9 / 15;  grid-row: 1 / 7; }
+.mocha .g4 { grid-column: 1 / 4;   grid-row: 6 / 11; }
+.mocha .g5 { grid-column: 4 / 9;   grid-row: 6 / 11; }
+.mocha .g6 { grid-column: 9 / 12;  grid-row: 7 / 11; }
+.mocha .g7 { grid-column: 12 / 15; grid-row: 7 / 11; }
+
+/* ---------- Credits ---------- */
+.mocha footer {
+	margin-top: clamp(56px, 8vw, 112px);
+	background: var(--fg);
+	color: var(--bg);
+	padding: clamp(32px, 5vw, 56px) 0;
+	font-size: 14px;
+	line-height: 22px;
+}
+
+.mocha footer .wrap {
+	display: grid;
+	gap: 6px;
+}
+
+.mocha footer p {
+	margin: 0;
+}
+
+.mocha footer strong {
+	font-family: var(--font-head);
+	font-weight: 900;
+	font-size: 18px;
+	letter-spacing: 0.08em;
+	color: var(--footer-accent);
+}
+
+.mocha footer a {
+	color: var(--bg);
+}
+
+/* ---------- Motion (only when the visitor allows it) ---------- */
+@keyframes mocha-fade {
+	from {
+		opacity: 0;
+	}
+	to {
+		opacity: 1;
+	}
+}
+
+@keyframes mocha-rise {
+	from {
+		opacity: 0;
+		translate: 0 24px;
+	}
+	to {
+		opacity: 1;
+		translate: 0 0;
+	}
+}
+
+@keyframes mocha-draw {
+	0% {
+		opacity: 0;
+		stroke-dashoffset: 1;
+	}
+	4% {
+		opacity: 1;
+	}
+	100% {
+		opacity: 1;
+		stroke-dashoffset: 0;
+	}
+}
+
+@keyframes mocha-float {
+	0%,
+	100% {
+		translate: 0 0;
+	}
+	50% {
+		translate: 0 -8px;
+	}
+}
+
+html.motion .mocha .hero h1 span,
+html.motion .mocha .hero .l3,
+html.motion .mocha .hero .intro {
+	animation: mocha-rise 0.9s var(--ease) both;
+}
+
+html.motion .mocha .hero .l1 { animation-delay: 0.1s; }
+html.motion .mocha .hero .l2 { animation-delay: 0.22s; }
+html.motion .mocha .hero .l3 { animation-delay: 0.34s; }
+html.motion .mocha .hero .intro { animation-delay: 0.5s; }
+
+html.motion .mocha .reveal:not(.in) {
+	opacity: 0;
+}
+
+html.motion .mocha .reveal.in {
+	animation: mocha-rise 0.8s var(--ease) var(--rd, 0s) backwards;
+}
+
+/* Doodle: strokes draw in, then fills fade, then equations float */
+html.motion .mocha .doodle .d {
+	stroke-dasharray: 1;
+	stroke-dashoffset: 1;
+	opacity: 0;
+}
+
+html.motion .mocha .doodle .f,
+html.motion .mocha .doodle .eq {
+	opacity: 0;
+}
+
+html.motion .mocha .doodle.play .d {
+	animation: mocha-draw 1.5s var(--ease) var(--t, 0s) both;
+}
+
+html.motion .mocha .doodle.play .f {
+	animation: mocha-fade 0.9s var(--ease) 1.5s both;
+}
+
+html.motion .mocha .doodle.play .eq {
+	animation:
+		mocha-fade 1s var(--ease) 2s both,
+		mocha-float 8s ease-in-out var(--fl, 0s) infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	html.mocha-root {
+		scroll-behavior: auto;
+	}
+	.mocha *,
+	.mocha *::before,
+	.mocha *::after {
+		animation: none !important;
+		transition: none !important;
+	}
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 700px) {
+	/* Centre-crop the banner on the giant cup (x≈215 of 1440) */
+	.mocha .doodle svg {
+		width: 960px;
+		max-width: none;
+		height: 507px;
+		aspect-ratio: auto;
+		margin-left: min(0px, calc(50% - 155px));
+	}
+}
+
+@media (max-width: 1024px) {
+	.mocha .hero .l3-row {
+		width: 100%;
+	}
+}
+
+@media (max-width: 767px) {
+	.mocha {
+		--header-h: 96px;
+	}
+
+	.mocha .site-header .inner {
+		flex-wrap: wrap;
+		padding-top: 8px;
+		padding-bottom: 8px;
+	}
+
+	.mocha .theme-toggle {
+		order: -1;
+		margin-left: auto;
+		padding: 4px;
+	}
+
+	.mocha .nav {
+		width: 100%;
+		gap: 2px;
+	}
+
+	.mocha .nav a {
+		padding: 8px 14px 9px;
+		font-size: 14px;
+		line-height: 14px;
+	}
+
+	.mocha .hero .l2 {
+		padding-right: 0;
+	}
+
+	.mocha .hero .l3-row {
+		flex-direction: column;
+		align-items: flex-end;
+		gap: 12px;
+	}
+
+	.mocha .hero .l3 {
+		align-self: flex-start;
+	}
+
+	.mocha .hero .intro {
+		flex: none;
+		width: 100%;
+		max-width: none;
+		font-size: 14px;
+		line-height: 22px;
+		padding-top: 0;
+	}
+
+	.mocha .cols {
+		grid-template-columns: 1fr;
+	}
+
+	.mocha .gallery {
+		height: auto;
+		aspect-ratio: auto;
+		grid-template-columns: repeat(2, 1fr);
+		grid-template-rows: none;
+		grid-auto-rows: 42vw;
+	}
+
+	.mocha .gallery figure {
+		grid-column: auto !important;
+		grid-row: auto !important;
+	}
+
+	.mocha .gallery .g1 {
+		grid-column: 1 / 3 !important;
+	}
+}
