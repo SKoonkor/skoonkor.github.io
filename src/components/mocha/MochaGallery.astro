@@ -1,13 +1,39 @@
 ---
 // Real photos from past sessions. `pos` is a CSS object-position, tuned per
 // photo so the crop in its grid cell keeps the screen/speaker/audience in
-// frame instead of the ceiling or floor.
+// frame instead of the ceiling or floor. `altTh` is swapped in by the page's
+// language toggle (see the script in mocha/index.astro).
 const photos = [
-	{ src: "/mocha/gallery/session-slide-lrds.jpg", alt: "A talk slide on LRDs and AGN indicators, projected on screen", pos: "50% 45%" },
-	{ src: "/mocha/gallery/session-audience-wide.jpg", alt: "The group watching a presentation from the couches", pos: "45% 52%" },
-	{ src: "/mocha/gallery/session-speaker-portrait.jpg", alt: "A speaker smiling in front of the screen", pos: "50% 48%" },
-	{ src: "/mocha/gallery/session-audience-couch.jpg", alt: "Two people on the couch during a session", pos: "50% 41%" },
-	{ src: "/mocha/gallery/session-slide-galaxies.jpg", alt: "A talk slide on early-Universe galaxy candidates", pos: "50% 37%" },
+	{
+		src: "/mocha/gallery/session-slide-lrds.jpg",
+		alt: "A talk slide on LRDs and AGN indicators, projected on screen",
+		altTh: "สไลด์บรรยายเรื่อง LRDs และตัวชี้วัด AGN บนจอฉาย",
+		pos: "50% 45%",
+	},
+	{
+		src: "/mocha/gallery/session-audience-wide.jpg",
+		alt: "The group watching a presentation from the couches",
+		altTh: "กลุ่มผู้ฟังนั่งดูการนำเสนอบนโซฟา",
+		pos: "45% 52%",
+	},
+	{
+		src: "/mocha/gallery/session-speaker-portrait.jpg",
+		alt: "A speaker smiling in front of the screen",
+		altTh: "วิทยากรยิ้มอยู่หน้าจอฉาย",
+		pos: "50% 48%",
+	},
+	{
+		src: "/mocha/gallery/session-audience-couch.jpg",
+		alt: "Two people on the couch during a session",
+		altTh: "สองคนนั่งคุยกันบนโซฟาในช่วงกิจกรรม",
+		pos: "50% 41%",
+	},
+	{
+		src: "/mocha/gallery/session-slide-galaxies.jpg",
+		alt: "A talk slide on early-Universe galaxy candidates",
+		altTh: "สไลด์บรรยายเรื่องกาแล็กซีในยุคเริ่มต้นของเอกภพ",
+		pos: "50% 37%",
+	},
 ];
 ---
 
@@ -15,7 +41,15 @@ const photos = [
 	{
 		photos.map((p, i) => (
 			<figure class={`g${i + 1}`}>
-				<img src={p.src} alt={p.alt} loading="lazy" decoding="async" style={`object-position:${p.pos}`} />
+				<img
+					src={p.src}
+					alt={p.alt}
+					data-alt-en={p.alt}
+					data-alt-th={p.altTh}
+					loading="lazy"
+					decoding="async"
+					style={`object-position:${p.pos}`}
+				/>
 			</figure>
 		))
 	}

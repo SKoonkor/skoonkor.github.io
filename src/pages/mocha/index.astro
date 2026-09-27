@@ -28,19 +28,29 @@ const signupURL =
 		<link rel="preconnect" href="https://fonts.googleapis.com" />
 		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 		<link
-			href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Caveat:wght@600&family=Klee+One:wght@600&display=swap"
+			href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Caveat:wght@600&family=Klee+One:wght@600&family=Chakra+Petch:wght@400;700&display=swap"
 			rel="stylesheet"
 		/>
 		<link rel="preload" href="/mocha/fonts/Akrobat-Black.woff" as="font" type="font/woff" crossorigin />
 		<script is:inline>
 			// Light is the default; only an explicit saved choice (or ?theme=dark) overrides it.
+			// English is the default; only an explicit saved choice (or ?lang=th) overrides it.
 			// "motion" gates all animation on the visitor allowing motion.
 			(function () {
 				var root = document.documentElement;
+				var params = new URLSearchParams(location.search);
 				try {
-					var q = new URLSearchParams(location.search).get("theme");
+					var q = params.get("theme");
 					var saved = localStorage.getItem("mocha-theme");
 					if (q === "dark" || (q !== "light" && saved === "dark")) root.dataset.mochaTheme = "dark";
+				} catch (e) {}
+				try {
+					var lq = params.get("lang");
+					var savedLang = localStorage.getItem("mocha-lang");
+					if (lq === "th" || (lq !== "en" && savedLang === "th")) {
+						root.dataset.mochaLang = "th";
+						root.lang = "th";
+					}
 				} catch (e) {}
 				// ?static skips motion (used for screenshots/audits); reduced-motion visitors get the same.
 				var still = new URLSearchParams(location.search).has("static");
@@ -56,18 +66,42 @@ const signupURL =
 		<header class="site-header">
 			<div class="inner">
 				<nav class="nav" aria-label="Page sections">
-					<a href="#top" aria-current="true" data-spy="top">Home page</a>
-					<a href="#format" data-spy="format">Format</a>
-					<a href="#signup" data-spy="signup">Sign up</a>
-					<a href="#gallery" data-spy="gallery">Gallery</a>
+					<a href="#top" aria-current="true" data-spy="top">
+						<span data-lang="en">Home page</span>
+						<span data-lang="th">หน้าแรก</span>
+					</a>
+					<a href="#format" data-spy="format">
+						<span data-lang="en">Format</span>
+						<span data-lang="th">รูปแบบ</span>
+					</a>
+					<a href="#signup" data-spy="signup">
+						<span data-lang="en">Sign up</span>
+						<span data-lang="th">สมัคร</span>
+					</a>
+					<a href="#gallery" data-spy="gallery">
+						<span data-lang="en">Gallery</span>
+						<span data-lang="th">แกลเลอรี</span>
+					</a>
 				</nav>
-				<button class="theme-toggle" id="theme-toggle" type="button" aria-label="Dark mode" aria-pressed="false">
-					<span class="track" aria-hidden="true"><span class="knob"></span></span>
-					<span class="label" aria-hidden="true">
-						<span class="on-light">Light</span>
-						<span class="on-dark">Dark</span>
-					</span>
-				</button>
+				<div class="header-controls">
+					<div class="lang-toggle" role="group" aria-label="Language">
+						<button type="button" class="lang-btn" data-lang-btn="en" aria-pressed="true">EN</button>
+						<button type="button" class="lang-btn" data-lang-btn="th" aria-pressed="false">TH</button>
+					</div>
+					<button class="theme-toggle" id="theme-toggle" type="button" aria-label="Dark mode" aria-pressed="false">
+						<span class="track" aria-hidden="true"><span class="knob"></span></span>
+						<span class="label" aria-hidden="true">
+							<span class="on-light">
+								<span data-lang="en">Light</span>
+								<span data-lang="th">สว่าง</span>
+							</span>
+							<span class="on-dark">
+								<span data-lang="en">Dark</span>
+								<span data-lang="th">มืด</span>
+							</span>
+						</span>
+					</button>
+				</div>
 			</div>
 		</header>
 
@@ -83,11 +117,18 @@ const signupURL =
 				<div class="l3-row">
 					<span class="l3 reveal" style="--rd:0.34s" aria-hidden="true">Club</span>
 					<p class="intro reveal" style="--rd:0.5s">
-						<strong>MO</strong>rning <strong>C</strong>offee <strong>H</strong>urried <strong>A</strong>rXiv
-						(<strong>MOCHA</strong>) is a journal club created to help everyone stay up to date with the
-						latest research in their field, and to share interesting discoveries with fellow researchers at
-						NARIT in a relaxed, social setting. Along the way, we get to know each other's research better,
-						which opens the door to future collaborations.
+						<span data-lang="en">
+							<strong>MO</strong>rning <strong>C</strong>offee <strong>H</strong>urried <strong>A</strong>rXiv
+							(<strong>MOCHA</strong>) is a journal club created to help everyone stay up to date with the
+							latest research in their field, and to share interesting discoveries with fellow researchers
+							at NARIT in a relaxed, social setting. Along the way, we get to know each other's research
+							better, which opens the door to future collaborations.
+						</span>
+						<span data-lang="th">
+							<strong>MOCHA</strong> (Morning Coffee Hurried ArXiv) เป็นชมรม Journal Club ที่ตั้งขึ้นเพื่อชวนทุกคนติดตามงานวิจัยใหม่
+							ๆ ในสายของตัวเอง พร้อมแชร์เรื่องน่าสนใจให้เพื่อนนักวิจัยที่ NARIT ฟัง ในบรรยากาศสบาย ๆ เป็นกันเอง
+							ระหว่างทางเราจะได้รู้จักงานวิจัยของกันและกันมากขึ้น ซึ่งเปิดโอกาสให้เกิดความร่วมมือกันในอนาคต
+						</span>
 					</p>
 				</div>
 			</section>
@@ -97,20 +138,33 @@ const signupURL =
 			<section class="block" id="format" data-spy-section="format">
 				<div class="wrap">
 					<div class="cols">
-						<h2 class="reveal">Format</h2>
+						<h2 class="reveal">
+							<span data-lang="en">Format</span>
+							<span data-lang="th">รูปแบบ</span>
+						</h2>
 						<ul class="list">
-							<li class="reveal" style="--rd:0.05s">Every Tuesday at 11:00 AM in the Cassiopeia Room.</li>
-							<li class="reveal" style="--rd:0.15s">One speaker presents one paper (~20 minutes).</li>
+							<li class="reveal" style="--rd:0.05s">
+								<span data-lang="en">Every Tuesday at 11:00 AM in the Cassiopeia Room.</span>
+								<span data-lang="th">ทุกวันอังคาร 11:00 น. ที่ห้อง Cassiopeia</span>
+							</li>
+							<li class="reveal" style="--rd:0.15s">
+								<span data-lang="en">One speaker presents one paper (~20 minutes).</span>
+								<span data-lang="th">วิทยากร 1 คน นำเสนอ 1 เปเปอร์ (ประมาณ 20 นาที)</span>
+							</li>
 							<li class="reveal" style="--rd:0.25s">
 								<span>
-									The rest of the hour is open discussion of papers voted on at{" "}
+									<span data-lang="en">The rest of the hour is open discussion of papers voted on at </span>
+									<span data-lang="th">ที่เหลือเป็นช่วงพูดคุยเปเปอร์ที่โหวตผ่าน </span>
 									<a href="https://www.benty-fields.com" target="_blank" rel="noopener">Benty-fields</a>.
 								</span>
 							</li>
-							<li class="reveal" style="--rd:0.35s">Totally casual: grab your coffee and join in.</li>
+							<li class="reveal" style="--rd:0.35s">
+								<span data-lang="en">Totally casual: grab your coffee and join in.</span>
+								<span data-lang="th">แบบสบาย ๆ ไม่มีพิธีรีตอง ชงกาแฟแล้วมาร่วมวงกันได้เลย</span>
+							</li>
 						</ul>
 					</div>
-					<a class="btn to-top" href="#top">Back to top <span aria-hidden="true">↑</span></a>
+					<a class="btn to-top" href="#top"><span data-lang="en">Back to top</span><span data-lang="th">กลับขึ้นด้านบน</span> <span aria-hidden="true">↑</span></a>
 				</div>
 			</section>
 
@@ -119,17 +173,32 @@ const signupURL =
 			<section class="block" id="signup" data-spy-section="signup">
 				<div class="wrap">
 					<div class="cols">
-						<h2 class="reveal">Want to sign up?</h2>
+						<h2 class="reveal">
+							<span data-lang="en">Want to sign up?</span>
+							<span data-lang="th">อยากสมัครไหม?</span>
+						</h2>
 						<div class="signup-body">
 							<ol class="steps">
-								<li class="reveal" style="--rd:0.05s">Open the schedule and pick a date.</li>
-								<li class="reveal" style="--rd:0.15s">Add your paper's arXiv number at least one week before your slot.</li>
+								<li class="reveal" style="--rd:0.05s">
+									<span data-lang="en">Open the schedule and pick a date.</span>
+									<span data-lang="th">เปิดตารางแล้วเลือกวันที่สะดวก</span>
+								</li>
+								<li class="reveal" style="--rd:0.15s">
+									<span data-lang="en">Add your paper's arXiv number at least one week before your slot.</span>
+									<span data-lang="th">ใส่เลข arXiv ของเปเปอร์ล่วงหน้าอย่างน้อย 1 สัปดาห์ก่อนคิวของคุณ</span>
+								</li>
 							</ol>
-							<a class="btn btn--gold reveal" style="--rd:0.25s" href={signupURL} target="_blank" rel="noopener">Open the schedule →</a>
-							<p class="reveal" style="--rd:0.35s">Or contact the organisers: Tinn, Sujeeporn, Adipol.</p>
+							<a class="btn btn--gold reveal" style="--rd:0.25s" href={signupURL} target="_blank" rel="noopener">
+								<span data-lang="en">Open the schedule →</span>
+								<span data-lang="th">เปิดตารางเวลา →</span>
+							</a>
+							<p class="reveal" style="--rd:0.35s">
+								<span data-lang="en">Or contact the organisers: </span>
+								<span data-lang="th">หรือติดต่อทีมผู้จัดงาน: </span>Tinn, Sujeeporn, Adipol.
+							</p>
 						</div>
 					</div>
-					<a class="btn to-top" href="#top">Back to top <span aria-hidden="true">↑</span></a>
+					<a class="btn to-top" href="#top"><span data-lang="en">Back to top</span><span data-lang="th">กลับขึ้นด้านบน</span> <span aria-hidden="true">↑</span></a>
 				</div>
 			</section>
 
@@ -137,17 +206,17 @@ const signupURL =
 
 			<section class="block" id="gallery" data-spy-section="gallery">
 				<div class="wrap wrap--wide">
-					<h2 class="reveal">Gallery</h2>
+					<h2 class="reveal"><span data-lang="en">Gallery</span><span data-lang="th">แกลเลอรี</span></h2>
 					<MochaGallery />
-					<a class="btn to-top" href="#top">Back to top <span aria-hidden="true">↑</span></a>
+					<a class="btn to-top" href="#top"><span data-lang="en">Back to top</span><span data-lang="th">กลับขึ้นด้านบน</span> <span aria-hidden="true">↑</span></a>
 				</div>
 			</section>
 		</main>
 
 		<footer>
 			<div class="wrap">
-				<p>Website designed by <strong>SKOONKOR</strong> · <a href="/">skoonkor.github.io</a></p>
-				<p>Theme inspired by <a href="https://aprilstudio.rs" target="_blank" rel="noopener">APRIL</a></p>
+				<p><span data-lang="en">Website designed by </span><span data-lang="th">เว็บไซต์นี้ออกแบบโดย </span><strong>SKOONKOR</strong> · <a href="/">skoonkor.github.io</a></p>
+				<p><span data-lang="en">Theme inspired by </span><span data-lang="th">ธีมได้แรงบันดาลใจจาก </span><a href="https://aprilstudio.rs" target="_blank" rel="noopener">APRIL</a></p>
 			</div>
 		</footer>
 
@@ -224,6 +293,35 @@ const signupURL =
 			}
 			toggle?.addEventListener("click", () => restartAll());
 			document.querySelectorAll(".nav a, .to-top").forEach((a) => a.addEventListener("click", () => restartAll()));
+
+			// Language toggle. Visible copy is pre-rendered in both languages (see the
+			// [data-lang] spans and the CSS that shows only the active one); this just
+			// flips which one is shown, translates the few attribute-only strings
+			// (image alt text, the theme toggle's own aria-label), and replays whatever
+			// is currently on screen, same as the theme toggle.
+			const langButtons = [...document.querySelectorAll<HTMLButtonElement>(".lang-btn")];
+			const syncLang = () => {
+				const lang = root.dataset.mochaLang === "th" ? "th" : "en";
+				langButtons.forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.langBtn === lang)));
+				toggle?.setAttribute("aria-label", lang === "th" ? "โหมดมืด" : "Dark mode");
+				document.querySelectorAll<HTMLImageElement>("img[data-alt-th]").forEach((img) => {
+					img.alt = lang === "th" ? (img.dataset.altTh ?? img.alt) : (img.dataset.altEn ?? img.alt);
+				});
+			};
+			syncLang();
+			langButtons.forEach((b) =>
+				b.addEventListener("click", () => {
+					const next = b.dataset.langBtn === "th" ? "th" : "en";
+					if (root.dataset.mochaLang === next || (next === "en" && !root.dataset.mochaLang)) return;
+					root.dataset.mochaLang = next;
+					root.lang = next;
+					syncLang();
+					try {
+						localStorage.setItem("mocha-lang", next);
+					} catch (e) {}
+					restartAll();
+				}),
+			);
 
 			// Highlight the current section in the nav
 			const links = new Map<string, HTMLElement>();

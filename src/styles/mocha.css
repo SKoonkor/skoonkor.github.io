@@ -28,8 +28,11 @@ html.mocha-root[data-mocha-theme="dark"] {
 	--footer-accent: #c4a65b;
 	--rule: color-mix(in srgb, var(--fg) 22%, transparent);
 	--ease: cubic-bezier(0.22, 0.61, 0.36, 1);
-	--font-head: "Akrobat", "Arial Black", "Helvetica Neue", Arial, sans-serif;
-	--font-body: "DM Mono", ui-monospace, "SF Mono", Menlo, monospace;
+	/* Chakra Petch covers Thai + Latin at a heavy weight, so it slots in as the
+	   Thai fallback for both stacks: Latin characters still render in Akrobat /
+	   DM Mono (which cover them), only Thai characters fall through to it. */
+	--font-head: "Akrobat", "Chakra Petch", "Arial Black", "Helvetica Neue", Arial, sans-serif;
+	--font-body: "DM Mono", "Chakra Petch", ui-monospace, "SF Mono", Menlo, monospace;
 	--fs-hero: clamp(80px, 13.2vw, 190px);
 	--header-h: 72px;
 
@@ -167,6 +170,66 @@ html.motion .mocha {
 	color: var(--gold);
 }
 
+.mocha .header-controls {
+	display: flex;
+	align-items: center;
+	gap: 14px;
+}
+
+.mocha .lang-toggle {
+	display: inline-flex;
+	gap: 2px;
+	padding: 3px;
+	border: 1.5px solid currentColor;
+	border-radius: 999px;
+	transition: border-color 0.4s var(--ease);
+}
+
+.mocha .lang-btn {
+	font-family: var(--font-head);
+	font-weight: 900;
+	font-size: 12px;
+	line-height: 1;
+	letter-spacing: 0.05em;
+	padding: 7px 11px;
+	border: 0;
+	border-radius: 999px;
+	background: transparent;
+	color: var(--fg);
+	cursor: pointer;
+	transition:
+		background-color 0.3s var(--ease),
+		color 0.3s var(--ease);
+}
+
+.mocha .lang-btn:hover {
+	color: var(--gold);
+}
+
+/* Keyed off html[data-mocha-lang] (set before paint by the head script) and
+   the button's own static data-lang-btn, not the JS-updated aria-pressed —
+   so the correct pill is already highlighted on first paint for a returning
+   Thai-preferring visitor, with nothing to flash or cross-fade from. */
+.mocha .lang-btn[data-lang-btn="en"] {
+	background: var(--fg);
+	color: var(--bg);
+}
+
+html[data-mocha-lang="th"] .mocha .lang-btn[data-lang-btn="th"] {
+	background: var(--fg);
+	color: var(--bg);
+}
+
+html[data-mocha-lang="th"] .mocha .lang-btn[data-lang-btn="en"] {
+	background: transparent;
+	color: var(--fg);
+}
+
+.mocha .lang-btn[data-lang-btn="en"]:hover,
+html[data-mocha-lang="th"] .mocha .lang-btn[data-lang-btn="th"]:hover {
+	color: var(--gold);
+}
+
 .mocha .theme-toggle {
 	display: inline-flex;
 	align-items: center;
@@ -236,11 +299,27 @@ html[data-mocha-theme="dark"] .mocha .theme-toggle .label .on-dark {
 }
 
 .mocha .theme-toggle:focus-visible,
+.mocha .lang-btn:focus-visible,
 .mocha .nav a:focus-visible,
 .mocha .btn:focus-visible,
 .mocha a:focus-visible {
 	outline: 2px solid var(--gold);
 	outline-offset: 3px;
+}
+
+/* ---------- Language: EN is pre-rendered and visible by default; the TH
+   spans exist alongside it in the markup and are shown/hidden by CSS only,
+   so switching is instant and there's nothing to flash on load. ---------- */
+.mocha [data-lang="th"] {
+	display: none;
+}
+
+html[data-mocha-lang="th"] .mocha [data-lang="en"] {
+	display: none;
+}
+
+html[data-mocha-lang="th"] .mocha [data-lang="th"] {
+	display: inline;
 }
 
 /* ---------- Hero (layout mirrors the template) ---------- */
@@ -748,9 +827,13 @@ html.motion .mocha .doodle.play .eq {
 		padding-bottom: 8px;
 	}
 
-	.mocha .theme-toggle {
+	.mocha .header-controls {
 		order: -1;
 		margin-left: auto;
+		gap: 10px;
+	}
+
+	.mocha .theme-toggle {
 		padding: 4px;
 	}
 
@@ -822,6 +905,15 @@ html.motion .mocha .doodle.play .eq {
 		padding: 8px 8px 9px;
 		font-size: 12px;
 		line-height: 12px;
+	}
+
+	.mocha .header-controls {
+		gap: 8px;
+	}
+
+	.mocha .lang-btn {
+		padding: 6px 8px;
+		font-size: 11px;
 	}
 }
 
