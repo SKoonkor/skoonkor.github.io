@@ -74,12 +74,12 @@ const signupURL =
 		<main data-pagefind-body>
 			<section class="hero wrap" aria-labelledby="hero-title">
 				<h1 id="hero-title" aria-label="MOCHA Journal Club">
-					<span class="l1">Mocha</span>
-					<span class="l2">Journal</span>
+					<span class="l1 reveal" style="--rd:0.1s">Mocha</span>
+					<span class="l2 reveal" style="--rd:0.22s">Journal</span>
 				</h1>
 				<div class="l3-row">
-					<span class="l3" aria-hidden="true">Club</span>
-					<p class="intro">
+					<span class="l3 reveal" style="--rd:0.34s" aria-hidden="true">Club</span>
+					<p class="intro reveal" style="--rd:0.5s">
 						<strong>MO</strong>rning <strong>C</strong>offee <strong>H</strong>urried <strong>A</strong>rXiv
 						(<strong>MOCHA</strong>) is a journal club created to help everyone stay up to date with the
 						latest research in their field, and to share interesting discoveries with fellow researchers at
@@ -167,37 +167,60 @@ const signupURL =
 			// Enable colour transitions only after first paint
 			requestAnimationFrame(() => requestAnimationFrame(() => root.classList.add("theme-ready")));
 
-			// Scroll-triggered reveal + doodle draw-in
-			const reveals = document.querySelectorAll<HTMLElement>(".reveal");
-			const doodle = document.querySelector<HTMLElement>(".doodle");
+			// Replay-on-view animations. Every .reveal element and the doodle animate each
+			// time they come on screen: they play once >=10% visible, and reset only when
+			// fully off screen (so small scroll jitter never restarts anything). The strip
+			// under the sticky header counts as off screen. Theme switches and nav /
+			// back-to-top clicks restart whatever is currently visible.
+			const tracked = [...document.querySelectorAll<HTMLElement>(".reveal, .doodle")];
+			const cls = (el: HTMLElement) => (el.classList.contains("doodle") ? "play" : "in");
+			const header = document.querySelector<HTMLElement>(".site-header");
+			let restartAll = () => {};
 			if ("IntersectionObserver" in window && root.classList.contains("motion")) {
-				const io = new IntersectionObserver(
-					(entries) => {
-						for (const e of entries) {
-							if (!e.isIntersecting) continue;
-							e.target.classList.add("in");
-							io.unobserve(e.target);
-						}
-					},
-					{ rootMargin: "0px 0px -8% 0px", threshold: 0.1 },
-				);
-				reveals.forEach((el) => io.observe(el));
-				if (doodle) {
-					const dio = new IntersectionObserver(
+				let io: IntersectionObserver;
+				let observedHeader = -1;
+				const setup = () => {
+					io?.disconnect();
+					observedHeader = header?.offsetHeight ?? 0;
+					io = new IntersectionObserver(
 						(entries) => {
-							if (entries.some((e) => e.isIntersecting)) {
-								doodle.classList.add("play");
-								dio.disconnect();
+							for (const e of entries) {
+								const el = e.target as HTMLElement;
+								if (e.isIntersecting && e.intersectionRatio >= 0.1) el.classList.add(cls(el));
+								else if (!e.isIntersecting) el.classList.remove(cls(el));
 							}
 						},
-						{ threshold: 0.15 },
+						{ rootMargin: `-${observedHeader}px 0px -8% 0px`, threshold: [0, 0.1] },
 					);
-					dio.observe(doodle);
-				}
+					tracked.forEach((el) => io.observe(el));
+				};
+				setup();
+				let resizeTimer = 0;
+				window.addEventListener("resize", () => {
+					clearTimeout(resizeTimer);
+					resizeTimer = window.setTimeout(() => {
+						if ((header?.offsetHeight ?? 0) !== observedHeader) setup();
+					}, 200);
+				});
+				let pending = false;
+				restartAll = () => {
+					if (pending) return;
+					pending = true;
+					requestAnimationFrame(() => {
+						pending = false;
+						for (const el of tracked) {
+							el.classList.remove(cls(el));
+							void el.offsetWidth; // flush so the CSS animation starts from 0 again
+							io.unobserve(el);
+							io.observe(el); // re-observing delivers an immediate callback for visible items
+						}
+					});
+				};
 			} else {
-				reveals.forEach((el) => el.classList.add("in"));
-				doodle?.classList.add("play");
+				tracked.forEach((el) => el.classList.add(cls(el)));
 			}
+			toggle?.addEventListener("click", () => restartAll());
+			document.querySelectorAll(".nav a, .to-top").forEach((a) => a.addEventListener("click", () => restartAll()));
 
 			// Highlight the current section in the nav
 			const links = new Map<string, HTMLElement>();

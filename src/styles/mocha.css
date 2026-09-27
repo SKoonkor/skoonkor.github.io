@@ -326,19 +326,39 @@ html[data-mocha-theme="dark"] .mocha .theme-toggle .label .on-dark {
 	pointer-events: none;
 }
 
-/* Wide screens: pull the banner up so its cup + galaxy sit in the empty
-   space left of CLUB (the template's bottom banner, flipped). */
+/* Three purpose-built compositions, one shown per width (see MochaDoodle.astro):
+   wide   >= 1360px : cup + galaxy pulled up to sit left of CLUB (the template's
+                      bottom banner, flipped); the hero text zone stays clear
+   mid    601-1359  : sits under the hero, whole canvas filled
+   narrow <= 600px  : portrait stack, nothing cropped */
+.mocha .doodle .dv {
+	display: none;
+	width: 100%;
+	height: auto;
+}
+
 @media (min-width: 1360px) {
 	.mocha .doodle {
 		margin-top: max(-30vw, -430px);
 	}
+
+	.mocha .doodle .dv--wide {
+		display: block;
+	}
 }
 
-.mocha .doodle svg {
-	display: block;
-	width: 100%;
-	aspect-ratio: 1440 / 760;
-	height: auto;
+@media (min-width: 601px) and (max-width: 1359px) {
+	.mocha .doodle .dv--mid {
+		display: block;
+	}
+}
+
+@media (max-width: 600px) {
+	.mocha .doodle .dv--narrow {
+		display: block;
+		max-width: 520px;
+		margin-inline: auto;
+	}
 }
 
 .mocha .doodle .eq {
@@ -610,17 +630,6 @@ html[data-mocha-theme="dark"] .mocha .theme-toggle .label .on-dark {
 	}
 }
 
-html.motion .mocha .hero h1 span,
-html.motion .mocha .hero .l3,
-html.motion .mocha .hero .intro {
-	animation: mocha-rise 0.9s var(--ease) both;
-}
-
-html.motion .mocha .hero .l1 { animation-delay: 0.1s; }
-html.motion .mocha .hero .l2 { animation-delay: 0.22s; }
-html.motion .mocha .hero .l3 { animation-delay: 0.34s; }
-html.motion .mocha .hero .intro { animation-delay: 0.5s; }
-
 html.motion .mocha .reveal:not(.in) {
 	opacity: 0;
 }
@@ -667,18 +676,21 @@ html.motion .mocha .doodle.play .eq {
 	}
 }
 
-/* ---------- Responsive ---------- */
-@media (max-width: 700px) {
-	/* Centre-crop the banner on the giant cup (x≈215 of 1440) */
-	.mocha .doodle svg {
-		width: 960px;
-		max-width: none;
-		height: 507px;
-		aspect-ratio: auto;
-		margin-left: min(0px, calc(50% - 155px));
+/* Printing: show everything even if it was scrolled past or never reached */
+@media print {
+	html.motion .mocha .reveal:not(.in),
+	html.motion .mocha .doodle .f,
+	html.motion .mocha .doodle .eq {
+		opacity: 1 !important;
+	}
+
+	html.motion .mocha .doodle .d {
+		opacity: 1 !important;
+		stroke-dashoffset: 0 !important;
 	}
 }
 
+/* ---------- Responsive ---------- */
 @media (max-width: 1024px) {
 	.mocha .hero .l3-row {
 		width: 100%;
@@ -714,7 +726,8 @@ html.motion .mocha .doodle.play .eq {
 	}
 
 	.mocha .hero .l2 {
-		padding-right: 0;
+		/* keep JOURNAL off the right edge on phones */
+		padding-right: 0.16em;
 	}
 
 	.mocha .hero .l3-row {
@@ -755,5 +768,32 @@ html.motion .mocha .doodle.play .eq {
 
 	.mocha .gallery .g1 {
 		grid-column: 1 / 3 !important;
+	}
+}
+
+/* Very small phones: fit the four nav buttons on one row (must stay last so it
+   wins over the general <=767px nav rules above). */
+@media (max-width: 400px) {
+	.mocha .nav {
+		gap: 0;
+	}
+
+	.mocha .nav a {
+		padding: 8px 8px 9px;
+		font-size: 12px;
+		line-height: 12px;
+	}
+}
+
+@media (max-width: 360px) {
+	.mocha .site-header .inner {
+		padding-left: 10px;
+		padding-right: 10px;
+	}
+
+	.mocha .nav a {
+		padding: 7px 7px 8px;
+		font-size: 11px;
+		line-height: 11px;
 	}
 }
