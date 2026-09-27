@@ -269,6 +269,24 @@ html[data-mocha-theme="dark"] .mocha .theme-toggle .label .on-dark {
 	text-align: left;
 }
 
+.mocha .hero .l1-row {
+	display: flex;
+	align-items: baseline;
+	/* Break out of the centred .wrap so the line can reach the true edge of
+	   the viewport, not just the wrap's own (narrower, on wide screens) edge. */
+	margin-right: calc(-50vw + 50%);
+}
+
+.mocha .hero-line {
+	flex: 1 1 auto;
+	align-self: center;
+	min-width: 24px;
+	height: 2px;
+	margin-left: clamp(16px, 3vw, 48px);
+	background: currentColor;
+	transform-origin: left center;
+}
+
 .mocha .hero .l2 {
 	text-align: right;
 	margin-top: -0.06em;
@@ -609,6 +627,15 @@ html[data-mocha-theme="dark"] .mocha .theme-toggle .label .on-dark {
 	}
 }
 
+@keyframes mocha-draw-line {
+	from {
+		transform: scaleX(0);
+	}
+	to {
+		transform: scaleX(1);
+	}
+}
+
 @keyframes mocha-draw {
 	0% {
 		opacity: 0;
@@ -639,6 +666,16 @@ html.motion .mocha .reveal:not(.in) {
 
 html.motion .mocha .reveal.in {
 	animation: mocha-rise 0.8s var(--ease) var(--rd, 0s) backwards;
+}
+
+/* The line drawing out from the end of "MOCHA" replaces the generic rise
+   with a left-to-right sweep instead. */
+html.motion .mocha .hero-line {
+	transform: scaleX(0);
+}
+
+html.motion .mocha .hero-line.in {
+	animation: mocha-draw-line 1s var(--ease) var(--rd, 0s) both;
 }
 
 /* Doodle: strokes draw in, then fills fade, then equations float */
