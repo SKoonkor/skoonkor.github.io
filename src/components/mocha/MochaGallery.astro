@@ -1,13 +1,13 @@
 ---
-// Placeholder photos; replace `src` with files in public/mocha/gallery/ later.
+// Real photos from past sessions. `pos` is a CSS object-position, tuned per
+// photo so the crop in its grid cell keeps the screen/speaker/audience in
+// frame instead of the ceiling or floor.
 const photos = [
-	{ src: "https://picsum.photos/seed/mocha-1/900/600", alt: "MOCHA session photo 1" },
-	{ src: "https://picsum.photos/seed/mocha-2/600/700", alt: "MOCHA session photo 2" },
-	{ src: "https://picsum.photos/seed/mocha-3/1000/800", alt: "MOCHA session photo 3" },
-	{ src: "https://picsum.photos/seed/mocha-4/600/800", alt: "MOCHA session photo 4" },
-	{ src: "https://picsum.photos/seed/mocha-5/1000/700", alt: "MOCHA session photo 5" },
-	{ src: "https://picsum.photos/seed/mocha-6/700/600", alt: "MOCHA session photo 6" },
-	{ src: "https://picsum.photos/seed/mocha-7/700/600", alt: "MOCHA session photo 7" },
+	{ src: "/mocha/gallery/session-slide-lrds.jpg", alt: "A talk slide on LRDs and AGN indicators, projected on screen", pos: "50% 45%" },
+	{ src: "/mocha/gallery/session-audience-wide.jpg", alt: "The group watching a presentation from the couches", pos: "45% 52%" },
+	{ src: "/mocha/gallery/session-speaker-portrait.jpg", alt: "A speaker smiling in front of the screen", pos: "50% 48%" },
+	{ src: "/mocha/gallery/session-audience-couch.jpg", alt: "Two people on the couch during a session", pos: "50% 41%" },
+	{ src: "/mocha/gallery/session-slide-galaxies.jpg", alt: "A talk slide on early-Universe galaxy candidates", pos: "50% 37%" },
 ];
 ---
 
@@ -15,7 +15,7 @@ const photos = [
 	{
 		photos.map((p, i) => (
 			<figure class={`g${i + 1}`}>
-				<img src={p.src} alt={p.alt} loading="lazy" />
+				<img src={p.src} alt={p.alt} loading="lazy" decoding="async" style={`object-position:${p.pos}`} />
 			</figure>
 		))
 	}
