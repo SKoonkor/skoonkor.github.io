@@ -1,0 +1,324 @@
+/*
+ * Styles for /courses/ and its lecture pages ("Gravity from Scratch" and any course added
+ * later). Scoped to .nb-* (n-body / notes) so it cannot leak into the rest of the site.
+ *
+ * The callout boxes and figures are deliberately modelled on the LaTeX lecture PDFs rather
+ * than the site's own `.admonition` style: colour values below are the literal xcolor mixes
+ * from claudeMade/lectures/src/common/preamble.tex's tcolorbox definitions (e.g. `colframe=
+ * blue!50!black` = 50% blue + 50% black = #000080), so the boxes read the same as the PDF's.
+ * The body tint is written as an alpha-blend of that same colour (`rgb(... / N%)`) rather
+ * than a separate light/dark pair: composited over this site's near-white light background
+ * it reproduces the PDF's `colback=blue!4`-style pale tint almost exactly, and over the dark
+ * background it becomes a dark tint automatically, with no theme-conditional CSS needed.
+ */
+
+/* ---- Callout boxes: goals, key idea, pitfall, history aside, homework ---- */
+
+.nb-callout {
+	--nb-cb: 77 77 77; /* goals: gray!60!black = #4D4D4D */
+	border: 1px solid rgb(var(--nb-cb));
+	border-radius: 3px;
+	overflow: hidden;
+	background: rgb(var(--nb-cb) / 6%);
+}
+
+	.nb-callout__title {
+		margin: 0;
+		padding: 0.35em 0.75em;
+		font-weight: 700;
+		font-size: 0.85em;
+		color: #fff;
+		background: rgb(var(--nb-cb));
+	}
+
+	.nb-callout__body {
+		padding: 0.75em 0.9em;
+	}
+
+	.nb-callout__body > :last-child {
+		margin-bottom: 0;
+	}
+
+	.nb-callout[data-callout="goals"] {
+		--nb-cb: 77 77 77; /* gray!60!black */
+	}
+
+	.nb-callout[data-callout="idea"] {
+		--nb-cb: 0 0 128; /* blue!50!black */
+	}
+
+	.nb-callout[data-callout="pitfall"] {
+		--nb-cb: 140 0 0; /* red!55!black */
+	}
+
+	.nb-callout[data-callout="history"] {
+		--nb-cb: 153 77 0; /* orange!60!black */
+	}
+
+	.nb-callout[data-callout="homework"] {
+		--nb-cb: 0 102 0; /* green!40!black */
+	}
+
+/* ---- Equations ---- */
+
+/* Fixed-width outer columns, equal on both sides, so the middle column is the true
+   horizontal centre of the line regardless of whether a tag is present -- the same layout
+   principle as LaTeX's equation environment (number at the margin, equation on the centre
+   of the full text width, not the centre of the space left after the number). */
+.nb-eq {
+	display: grid;
+	grid-template-columns: 2.75rem 1fr 2.75rem;
+	align-items: center;
+	margin-block: 1.25em;
+}
+
+	.nb-eq__body {
+		grid-column: 2;
+		justify-self: center;
+		max-width: 100%;
+		overflow-x: auto;
+		scrollbar-width: thin;
+	}
+
+	.nb-eq__tag {
+		grid-column: 3;
+		justify-self: end;
+		font-size: 0.85em;
+		color: var(--color-muted);
+		text-decoration: none;
+		white-space: nowrap;
+	}
+
+	.nb-eq__tag:hover {
+		color: var(--color-accent);
+	}
+
+.nb-eq-inline {
+	white-space: nowrap;
+}
+
+/* KaTeX renders in a serif math font by default; the rest of the page is monospace, so
+   let the equations keep their own font rather than being forced into ui-monospace. */
+.katex {
+	font-size: 1.05em;
+}
+
+/* ---- Figures ----
+   No card, no border, no background: the SVGs (both the TikZ diagrams and the matplotlib
+   plots, recoloured so black ink is currentColor -- see Figure.astro) sit directly on the
+   page exactly like the PDF. `--nb-fig-w`, set inline per figure, is the fraction of the
+   prose column width the LaTeX source itself used, so a figure that was 55% of \textwidth
+   in the PDF is 55% of the column here too, not stretched to fill it. */
+
+.nb-figure {
+	margin-block: 1.75em;
+	width: var(--nb-fig-w, 100%);
+	max-width: 100%;
+	margin-inline: auto;
+}
+
+	.nb-figure__canvas {
+		display: flex;
+		justify-content: center;
+	}
+
+	.nb-figure__canvas svg {
+		width: 100%;
+		height: auto;
+		color: var(--color-global-text);
+	}
+
+	.nb-figure figcaption {
+		margin-top: 0.6em;
+		font-size: 0.82rem;
+		line-height: 1.6;
+		color: var(--color-muted);
+	}
+
+	.nb-figure__n {
+		font-weight: 700;
+		color: var(--color-global-text);
+	}
+
+/* ---- Course index / lecture list ---- */
+
+.nb-lectures {
+	display: flex;
+	flex-direction: column;
+	gap: 0;
+	list-style: none;
+	padding: 0;
+	margin: 0;
+	border-top: 1px dashed color-mix(in oklab, var(--color-muted) 40%, transparent);
+}
+
+	.nb-lecture {
+		display: grid;
+		grid-template-columns: 3.5rem 1fr;
+		gap: 0.25rem 1rem;
+		padding: 1rem 0;
+		border-bottom: 1px dashed color-mix(in oklab, var(--color-muted) 40%, transparent);
+	}
+
+	.nb-lecture__n {
+		font-weight: 700;
+		color: var(--color-muted);
+	}
+
+	.nb-lecture__title {
+		margin: 0;
+		font-size: 1rem;
+	}
+
+	.nb-lecture__blurb {
+		grid-column: 2;
+		color: var(--color-muted);
+		font-size: 0.85rem;
+		line-height: 1.6;
+		margin: 0.15em 0 0;
+	}
+
+	.nb-lecture.is-soon .nb-lecture__title {
+		color: var(--color-muted);
+	}
+
+	.nb-lecture__badge {
+		grid-column: 2;
+		display: inline-block;
+		margin-top: 0.3em;
+		font-size: 0.72rem;
+		letter-spacing: 0.03em;
+		color: var(--color-muted);
+	}
+
+/* ---- Draft banner (dev preview only) ---- */
+
+.nb-draft-banner {
+	border: 1px dashed var(--color-red-500, #ef4444);
+	color: var(--color-red-500, #ef4444);
+	background: color-mix(in oklab, var(--color-red-500, #ef4444) 6%, transparent);
+	padding: 0.6rem 1rem;
+	border-radius: 3px;
+	font-size: 0.8rem;
+	margin-bottom: 2rem;
+}
+
+/* ---- Downloads ---- */
+
+.nb-downloads {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.6em;
+	margin: 1em 0 1.5em;
+}
+
+	.nb-downloads a {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.4em;
+		padding: 0.4em 0.9em;
+		border: 1px solid color-mix(in oklab, var(--color-muted) 35%, transparent);
+		border-radius: 3px;
+		font-size: 0.85rem;
+		text-decoration: none;
+		color: var(--color-global-text);
+	}
+
+	.nb-downloads a:hover {
+		border-color: var(--color-accent);
+		color: var(--color-accent);
+	}
+
+/* ---- Pseudocode block (the double-loop \tabbing figure in L01) ---- */
+
+.nb-pseudocode {
+	font-size: 0.85rem;
+	line-height: 1.7;
+	white-space: pre;
+	overflow-x: auto;
+	background: color-mix(in oklab, var(--color-muted) 6%, transparent);
+	border-radius: 4px;
+	padding: 1rem 1.25rem;
+	margin-block: 1.5em;
+}
+
+/* ---- Lecture table of contents ----
+   Smaller than the shared blog TOC (src/components/blog/TOC is not reused here -- see
+   src/components/course/TOC.astro), and, below the 1100px breakpoint, just an in-flow
+   block under the intro with a top margin.
+
+   At 1100px and above -- the same breakpoint CosmicBands (src/components/CosmicBands.astro)
+   uses to show its margin decoration, including the "z = ..." redshift readout fixed at
+   inset-block-start: 1.5rem / inset-inline-end: 1.5rem -- the TOC instead becomes
+   position:fixed in that same right-hand margin, just below the readout, and stays in view
+   while the article scrolls (an in-flow "sticky" position with no wide sidebar to stick
+   *in* is not actually sticky, it just scrolls past like everything else; true `position:
+   fixed`, anchored the same way the readout is, is what makes it stay put). Width is capped
+   by the same margin-gutter arithmetic CosmicBands uses (half of viewport minus half of
+   --content-max, both defined in global.css), so it can never overlap the text column. No
+   box or border: styled like the readout it sits under (text-shadow glow in the page's own
+   background colour, right-aligned) so it reads as part of that margin annotation rather
+   than a floating card over the cosmic-web texture. */
+.nb-toc {
+	margin-top: 2.5rem;
+}
+
+	.nb-toc summary {
+		font-size: 0.85rem;
+		font-weight: 700;
+		cursor: pointer;
+	}
+
+	.nb-toc ol {
+		margin-top: 0.6rem;
+		font-size: 0.8rem;
+		line-height: 1.9;
+	}
+
+	.nb-toc li {
+		list-style: none;
+	}
+
+	.nb-toc a {
+		color: var(--color-global-text);
+		text-decoration: none;
+	}
+
+	.nb-toc a:hover {
+		color: var(--color-accent);
+		text-decoration: underline;
+	}
+
+@media (min-width: 1100px) and (min-height: 600px) {
+	.nb-toc {
+		position: fixed;
+		inset-block-start: 4rem;
+		inset-inline-end: 1.5rem;
+		margin-top: 0;
+		width: min(11rem, calc((100vw - var(--content-max)) / 2 - 3rem));
+		max-height: calc(100vh - 5rem);
+		overflow-y: auto;
+		text-align: end;
+		color: var(--color-muted);
+		text-shadow:
+			0 0 4px var(--color-global-bg),
+			0 0 8px var(--color-global-bg);
+	}
+
+		.nb-toc summary,
+		.nb-toc ol {
+			text-align: end;
+		}
+
+		.nb-toc nav {
+			/* .ms-3 (margin-inline-start) on the <nav>, from the in-flow layout, plus
+			   .lg:w-full (width:100%) adds up to wider than the fixed box's own width
+			   and overflows it -- drop the margin here, there's no sibling to indent
+			   away from once this is a standalone margin element. */
+			margin-inline-start: 0;
+		}
+
+		.nb-toc a {
+			color: var(--color-muted);
+		}
+}

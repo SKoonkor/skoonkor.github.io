@@ -1,0 +1,80 @@
+---
+import { getCollection } from "astro:content";
+import PageTitle from "@/components/PageTitle.astro";
+import { nbodyLectures } from "@/data/nbody";
+import PageLayout from "@/layouts/Base.astro";
+import "@/styles/course.css";
+
+/*
+ * import.meta.env.DEV keeps draft lectures linkable in local preview (`pnpm dev`), so the
+ * owner can review a finished-but-unpublished lecture before flipping draft: false. In a
+ * production build DEV is false, so this collapses to the usual "published only" filter and
+ * a draft lecture has no page and no link -- see src/pages/courses/nbody/[...slug].astro.
+ */
+const entries = await getCollection("nbody", ({ data }) => import.meta.env.DEV || !data.draft);
+const bySlug = new Map(entries.map((e) => [e.id, e]));
+const written = entries.filter((e) => !e.data.draft).length;
+
+const meta = {
+	title: "Gravity from Scratch",
+	description:
+		"Eleven lectures that build a dark-matter N-body code from nothing: direct summation, " +
+		"integrators, trees, particle-mesh methods and the fast multipole method, each built from a " +
+		"double loop up.",
+};
+---
+
+<PageLayout meta={meta}>
+	<PageTitle title="Gravity from Scratch" subtitle="Building N-body solvers, from direct summation to the fast multipole method" />
+
+	<div data-pagefind-body>
+		<p class="mb-4 text-base leading-relaxed text-pretty">
+			Every cosmological simulation does the same two things, over and over: work out the
+			gravitational pull on every particle, then move the particles a little. The second part is
+			cheap. The first is the entire difficulty of the field &mdash; done the naive way it costs
+			<code>O(N&sup2;)</code>, and a modern simulation has 10<sup>9</sup>&ndash;10<sup>12</sup>{" "}
+			particles. This course is eleven lectures on how real codes get around that, building every
+			method from nothing: a double loop first, then the integrators, trees, meshes and multipole
+			expansions that turn it into something that scales.
+		</p>
+		<p class="text-muted mb-10 text-sm leading-relaxed text-pretty">
+			Written for anyone comfortable with Python and NumPy and first-year calculus and mechanics;
+			nothing else is assumed. Each lecture ends with homework, a downloadable skeleton and a
+			checker script that grades it, and your own code from one lecture feeds the next. Expect an
+			evening for the early lectures and most of a weekend for the later ones.
+			<strong class="text-global-text font-semibold">{written} of {nbodyLectures.length}</strong> lectures
+			are published so far.
+		</p>
+
+		<h2 class="title mb-4 text-xl">Lectures</h2>
+		<ol class="nb-lectures" role="list">
+			{
+				nbodyLectures.map(({ n, slug, title, blurb }) => {
+					const entry = bySlug.get(slug);
+					const label = n === 0 ? "L00" : `L${String(n).padStart(2, "0")}`;
+					return (
+						<li class:list={["nb-lecture", !entry && "is-soon"]}>
+							<span class="nb-lecture__n">{label}</span>
+							<h3 class="nb-lecture__title">
+								{entry ? (
+									<a class="cactus-link" href={`/courses/nbody/${slug}/`}>
+										{title}
+									</a>
+								) : (
+									title
+								)}
+							</h3>
+							<p class="nb-lecture__blurb">{blurb}</p>
+							{!entry && <span class="nb-lecture__badge">COMING SOON</span>}
+							{entry?.data.draft && <span class="nb-lecture__badge">DRAFT &mdash; preview only</span>}
+						</li>
+					);
+				})
+			}
+		</ol>
+	</div>
+
+	<p class="mt-10">
+		<a class="cactus-link text-sm" href="/courses/">&larr; All courses</a>
+	</p>
+</PageLayout>

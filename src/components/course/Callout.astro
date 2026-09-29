@@ -1,0 +1,34 @@
+---
+/**
+ * A lecture-note callout box: goals, key idea, pitfall, history aside, or homework.
+ *
+ * Carries over the five tcolorbox environments from claudeMade/lectures/src/common/preamble.tex
+ * (goals, keyidea, pitfall, history, homework) -- a solid-colour title bar plus a pale tinted
+ * body plus a matching border, the same look as the PDF, not this site's own `.admonition`
+ * style. See src/styles/course.css for the colour values, taken from the LaTeX xcolor mixes.
+ */
+interface Props {
+	kind: "goals" | "idea" | "pitfall" | "history" | "homework";
+	/** Defaults to a title per kind; homework pages usually pass one, e.g. "Homework 1". */
+	title?: string;
+}
+
+const { kind, title } = Astro.props;
+
+const defaultTitle: Record<Props["kind"], string> = {
+	goals: "Learning goals",
+	idea: "Key idea",
+	pitfall: "Pitfall",
+	history: "Aside",
+	homework: "Homework",
+};
+
+const heading = title ?? defaultTitle[kind];
+---
+
+<aside class="nb-callout" data-callout={kind} aria-label={heading}>
+	<p class="nb-callout__title" aria-hidden="true">{heading}</p>
+	<div class="nb-callout__body">
+		<slot />
+	</div>
+</aside>

@@ -3,12 +3,16 @@ import { getCollection } from "astro:content";
 import DemoThumb from "@/components/DemoThumb.astro";
 import FormattedDate from "@/components/FormattedDate.astro";
 import PageTitle from "@/components/PageTitle.astro";
+import { course } from "@/data/course";
 import { demos } from "@/data/demos";
+import { software } from "@/data/software";
 import PageLayout from "@/layouts/Base.astro";
 import { collectionDateSort } from "@/utils/date";
-import "@/styles/explore.css";
+import "@/styles/software.css";
 
 const notes = (await getCollection("post", ({ data }) => !data.draft)).sort(collectionDateSort);
+const lessons = await getCollection("lesson", ({ data }) => !data.draft);
+const lessonsWritten = lessons.filter((l) => l.data.status === "published").length;
 
 const meta = {
 	description:
@@ -49,15 +53,61 @@ const meta = {
 			}
 		</ul>
 
-		{/* After the cards, not before them: the research demos are what this page
-		    is for, and this is a signpost on the way out rather than a preamble. */}
-		<p class="text-muted mt-10 text-sm leading-relaxed text-pretty">
-			Those are the research demos. The software I write outside research, including a money
-			tracker with a chart that works the same way, is on the <a
-				class="cactus-link"
-				href="/software/">Software</a
-			> page.
-		</p>
+		{/* Software: the things I build outside research. Was its own top-level nav
+		    item; folded in here so the nav bar has room for Courses instead. */}
+		<section class="mt-20" id="software">
+			<h2 class="title mb-6 text-xl">Software</h2>
+			<p class="mb-6 text-sm leading-relaxed text-pretty">
+				Software I write outside research, for the same reason I write papers: to find out
+				whether I have actually understood something.
+			</p>
+			<ul class="explore-cards" role="list">
+				{
+					software.map(({ href, title, blurb, thumb, stack }) => (
+						<li class={href ? undefined : "soon"}>
+							{href ? (
+								<a href={href}>
+									<h2>{title}</h2>
+									<div class="explore-cards__body">
+										{thumb && <DemoThumb name={thumb} />}
+										<div>
+											<p>{blurb}</p>
+											{stack && <p class="explore-cards__stack">{stack}</p>}
+										</div>
+									</div>
+								</a>
+							) : (
+								<div class="block h-full p-6">
+									<h2>{title} &middot; coming soon</h2>
+									<p>{blurb}</p>
+								</div>
+							)}
+						</li>
+					))
+				}
+			</ul>
+		</section>
+
+		{/*
+			A separate section, not another demo card. The copy above promises that everything
+			in the demo list runs in your browser; a course is something to read.
+		*/}
+		<section class="mt-20">
+			<h2 class="title mb-6 text-xl">A course</h2>
+			<ul class="explore-cards" role="list">
+				<li>
+					<a href={course.href}>
+						<h2>{course.title}</h2>
+						<div class="explore-cards__body">
+							<p>{course.blurb}</p>
+						</div>
+					</a>
+				</li>
+			</ul>
+			<p class="text-muted mt-4 text-sm">
+				{lessonsWritten} of {lessons.length} parts written so far.
+			</p>
+		</section>
 
 		{/* Journal club: a link out to the MOCHA page, which has its own theme. */}
 		<section class="mt-20">

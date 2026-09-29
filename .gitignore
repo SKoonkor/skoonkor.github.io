@@ -9,3 +9,7 @@ __pycache__/
 *.pyc
 .env
 .env.production
+
+# scratch tree for tools/nbody/package_downloads.py; a lecture's zips are copied
+# into public/downloads/nbody only once that lecture is actually published
+tools/nbody/staging/

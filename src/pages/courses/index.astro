@@ -1,0 +1,37 @@
+---
+import PageTitle from "@/components/PageTitle.astro";
+import { courses } from "@/data/courses";
+import PageLayout from "@/layouts/Base.astro";
+import "@/styles/explore.css";
+
+const meta = {
+	title: "Courses",
+	description: "Courses built from my own notes as I learn a subject, written up for anyone else learning it too.",
+};
+---
+
+<PageLayout meta={meta}>
+	<PageTitle title="Courses" />
+
+	<div data-pagefind-body>
+		<p class="mb-10 text-base leading-relaxed text-pretty">
+			I write these up as I learn the material myself, lecture by lecture, and publish each one
+			only once I am confident it is right.
+		</p>
+
+		<ul class="explore-cards" role="list">
+			{
+				courses.map(({ href, title, blurb }) => (
+					<li>
+						<a href={href}>
+							<h2>{title}</h2>
+							<div class="explore-cards__body">
+								<p>{blurb}</p>
+							</div>
+						</a>
+					</li>
+				))
+			}
+		</ul>
+	</div>
+</PageLayout>

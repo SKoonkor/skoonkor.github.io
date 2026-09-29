@@ -1,0 +1,31 @@
+---
+/**
+ * One entry in the lecture table of contents. A course-specific twin of
+ * src/components/blog/TOCHeading.astro: that one prefixes every entry with a "#" glyph,
+ * which reads fine for a blog post's anchor links but is just visual noise in a lecture's
+ * section list, so this drops it rather than changing the shared component's look
+ * everywhere else on the site.
+ */
+import type { TocItem } from "@/utils/generateToc";
+
+interface Props {
+	heading: TocItem;
+}
+
+const {
+	heading: { children, depth, slug, text },
+} = Astro.props;
+---
+
+<li class={depth > 2 ? "ms-3" : ""}>
+	<a class="line-clamp-2 hover:text-accent" href={`#${slug}`}>{text}</a>
+	{
+		!!children.length && (
+			<ol>
+				{children.map((subheading) => (
+					<Astro.self heading={subheading} />
+				))}
+			</ol>
+		)
+	}
+</li>

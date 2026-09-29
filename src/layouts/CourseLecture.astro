@@ -1,0 +1,126 @@
+---
+/**
+ * A lecture page at /courses/<course>/<slug>/.
+ *
+ * Modelled on src/layouts/Lesson.astro (the ml course's layout) but parameterised by course
+ * name and index href, rather than copying it and hardcoding "Gravity from Scratch" into a
+ * file meant for a different course -- Lesson.astro itself is left untouched.
+ */
+import type { CollectionEntry } from "astro:content";
+import type { MarkdownHeading } from "astro";
+import PageTitle from "@/components/PageTitle.astro";
+import TOC from "@/components/course/TOC.astro";
+import PageLayout from "@/layouts/Base.astro";
+import "katex/dist/katex.min.css";
+import "@/styles/course.css";
+
+interface Props {
+	entry: CollectionEntry<"nbody">;
+	courseTitle: string;
+	courseHref: string;
+	prev: CollectionEntry<"nbody"> | undefined;
+	next: CollectionEntry<"nbody"> | undefined;
+	headings: MarkdownHeading[];
+}
+
+const { entry, courseTitle, courseHref, prev, next, headings } = Astro.props;
+const { description, goal, lecture, title } = entry.data;
+
+const lectureLabel = lecture === 0 ? "L00" : `L${String(lecture).padStart(2, "0")}`;
+---
+
+<PageLayout meta={{ title: `${lectureLabel} — ${title}`, description }}>
+	<PageTitle title={`${lectureLabel} — ${title}`} />
+
+	<article data-pagefind-body>
+		<p class="text-muted -mt-6 mb-8 text-xs">
+			<a class="cactus-link" href="/courses/">Courses</a>
+			&nbsp;&rsaquo;&nbsp;
+			<a class="cactus-link" href={courseHref}>{courseTitle}</a>
+			&nbsp;&rsaquo;&nbsp; {lectureLabel}
+		</p>
+
+		<p class="mb-8 text-base leading-relaxed text-pretty">{goal}</p>
+
+		{
+			entry.data.draft && (
+				<p class="nb-draft-banner">
+					DRAFT &mdash; visible only in local preview. Set <code>draft: false</code> in the
+					lecture's front matter to publish it.
+				</p>
+			)
+		}
+
+		<div class="flex flex-col gap-10">
+			{!!headings.length && <TOC headings={headings} />}
+			<div class="prose prose-sm prose-cactus max-w-none">
+				<slot />
+			</div>
+		</div>
+	</article>
+
+	<nav class="mt-16 flex flex-wrap justify-between gap-4 text-sm">
+		{
+			prev ? (
+				<a class="cactus-link" href={`${courseHref}${prev.id}/`}>
+					&larr; L{String(prev.data.lecture).padStart(2, "0")} &middot; {prev.data.title}
+				</a>
+			) : (
+				<span />
+			)
+		}
+		{
+			next && (
+				<a class="cactus-link" href={`${courseHref}${next.id}/`}>
+					L{String(next.data.lecture).padStart(2, "0")} &middot; {next.data.title} &rarr;
+				</a>
+			)
+		}
+	</nav>
+</PageLayout>
+
+<script>
+	/*
+	 * In-page anchor links (the TOC, equation-number backlinks, prose cross-references like
+	 * "see Figure 6") don't reliably scroll on this site: <html> carries Tailwind's
+	 * `scroll-smooth` class, and on a lecture page the animated native anchor-jump gets cut
+	 * short by layout shift while it's still mid-scroll (KaTeX, the inlined SVG figures and
+	 * expressive-code blocks all settle their final size after first paint), so the jump
+	 * lands back near wherever it started -- reproduced even on a *fresh* load with the hash
+	 * already in the URL, not just on click. `scrollIntoView` doesn't have this problem, so
+	 * anchors inside the article are re-driven through it by hand instead of native hash
+	 * navigation. Scoped to `article` (this layout only) rather than changed site-wide,
+	 * since `scroll-smooth` itself may be doing exactly what's wanted elsewhere on pages
+	 * without this much async layout settling.
+	 */
+	function jumpTo(hash: string, behavior: ScrollBehavior) {
+		const id = hash.replace(/^#/, "");
+		if (!id) return;
+		document.getElementById(id)?.scrollIntoView({ behavior, block: "start" });
+	}
+
+	document.querySelectorAll<HTMLAnchorElement>("article a[href^='#']").forEach((a) => {
+		a.addEventListener("click", (e) => {
+			const hash = a.getAttribute("href");
+			if (!hash) return;
+			e.preventDefault();
+			history.pushState(null, "", hash);
+			jumpTo(hash, "smooth");
+		});
+	});
+
+	/*
+	 * A direct visit to a URL with a #hash already in it needs the same treatment, and it
+	 * needs it twice: `document.readyState` is often already "complete" by the time this
+	 * module runs (an `addEventListener("load", ...)` registered after the fact never
+	 * fires), so jump once right away; then jump again shortly after, snapping rather than
+	 * animating both times, to correct for the same late layout settling (KaTeX, figures,
+	 * expressive-code) that made the browser's own hash-jump land in the wrong place.
+	 */
+	if (location.hash) {
+		const jumpNow = () => jumpTo(location.hash, "auto");
+		if (document.readyState === "complete") jumpNow();
+		else window.addEventListener("load", jumpNow, { once: true });
+		setTimeout(jumpNow, 350);
+	}
+</script>

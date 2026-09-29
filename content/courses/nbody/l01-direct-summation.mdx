@@ -1,0 +1,331 @@
+---
+title: "The N-body problem and direct summation"
+description: "Newton's law for N particles, softening, units, the O(N^2) double loop, conserved-quantity checks, and explicit Euler."
+lecture: 1
+goal: "Write down the equations of motion of N gravitating particles, explain softening, choose sensible units, compute every particle's force with plain for loops, measure a simulation's health with conserved quantities, and show experimentally that direct summation costs O(N^2)."
+publishDate: "2026-09-29"
+tags: ["n-body", "gravity", "direct-summation", "euler"]
+draft: false
+downloads:
+  hints: "/downloads/nbody/L01-hints.zip"
+  solutions: "/downloads/nbody/L01-solution.zip"
+---
+
+import M from "@/components/course/M.astro";
+import Callout from "@/components/course/Callout.astro";
+import Figure from "@/components/course/Figure.astro";
+
+<Callout kind="goals">
+- Write down the equations of motion of <M t="N" /> gravitating particles and explain each term.
+- Explain **softening**: what problem it solves and what it changes.
+- Choose sensible units so that numbers in the computer are of order one.
+- Compute the force on every particle with plain `for` loops (**direct summation**).
+- Measure a simulation's health with conserved quantities (energy, momentum).
+- Show experimentally that direct summation costs <M t="\Oh{N^2}" />.
+</Callout>
+
+## The physical problem
+
+We have <M t="N" /> particles. Particle <M t="i" /> has mass <M t="m_i" />, position <M t="\vect{r}_i(t)" /> and velocity <M t="\vect{v}_i(t)" />. Newton's law of gravity says that particle <M t="j" /> pulls particle <M t="i" /> with the force
+
+<M d id="eq-l01-pairforce" tag="1" t="\vect{F}_{ij} = G\,\frac{m_i m_j}{|\vect{r}_j-\vect{r}_i|^2}\;\hat{\vect{d}}_{ij}, \qquad \hat{\vect{d}}_{ij}=\frac{\vect{r}_j-\vect{r}_i}{|\vect{r}_j-\vect{r}_i|}," />
+
+where <M t="G" /> is the gravitational constant and <M t="\hat{\vect{d}}_{ij}" /> is the unit vector pointing from <M t="i" /> to <M t="j" />. Gravity is attractive, so the force on <M t="i" /> points *towards* <M t="j" />.
+
+Gravity obeys **superposition**: the total force on <M t="i" /> is just the sum of the pair forces, as if each other particle acted alone.
+
+<M d t="\vect{F}_i=\sum_{j\ne i}\vect{F}_{ij}." />
+
+Using <M t="\vect{F}_i=m_i\vect{a}_i" />, the mass <M t="m_i" /> cancels and we get the acceleration
+
+<M d id="eq-l01-acc" tag="3" t="\boxed{\;\vect{a}_i \;=\; G\sum_{j\ne i} m_j\,\frac{\vect{r}_j-\vect{r}_i}{|\vect{r}_j-\vect{r}_i|^{3}}\;}" />
+
+(we wrote <M t="\hat{\vect d}/r^2=\vect d/r^3" />). Notice that the acceleration of <M t="i" /> does not depend on its *own* mass <M t="m_i" /> (the equality of inertial and gravitational mass, the weak equivalence principle: in a vacuum a feather and a hammer fall equally fast). It does depend on the masses <M t="m_j" /> of all the *other* particles.
+
+The motion is then given by two coupled first-order equations,
+
+<M d id="eq-l01-eom" tag="4" t="\frac{\dd\vect{r}_i}{\dd t}=\vect{v}_i,\qquad \frac{\dd\vect{v}_i}{\dd t}=\vect{a}_i(\vect{r}_1,\dots,\vect{r}_N)." />
+
+The hard part is that <M t="\vect{a}_i" /> depends on the positions of *all* particles, which all change in time. For <M t="N=2" /> this can be solved with pencil and paper (Kepler orbits). For <M t="N\ge3" /> there is no general closed-form solution, so we integrate numerically.
+
+<Figure svg="L01/pair" n={1} id="fig-l01-pair" widthPct={0.56} alt="Two particles i and j. Each acceleration points toward the other particle; a_i is proportional to the mass of j and a_j to the mass of i." caption="Two particles. Each acceleration points toward the other particle. a_i is proportional to m_j and a_j to m_i, so the heavier particle j (bigger dot) causes the larger a_i (longer blue arrow)." />
+
+## Softening
+
+Equation (3) has a problem: when two particles get very close, <M t="|\vect{r}_j-\vect{r}_i|\to0" /> and the acceleration blows up as <M t="1/r^2" />. A tiny time step would be needed to follow the close encounter, and one fast encounter can throw particles far away.
+
+There is a physical reason to avoid this too. Real dark matter is essentially *collisionless*: individual dark-matter particles almost never scatter off each other. A simulation particle is not a real particle. It is a sample of the smooth dark-matter fluid and stands for a huge amount of matter (millions of solar masses or more). Hard two-body scattering between such sample particles would be a numerical artefact, not physics. The remedy is **Plummer softening**: replace <M t="r^2" /> by <M t="r^2+\epsilon^2" /> in the force law,
+
+<M d id="eq-l01-softacc" tag="5" t="\vect{a}_i \;=\; G\sum_{j\ne i} m_j\,\frac{\vect{r}_j-\vect{r}_i}{\left(|\vect{r}_j-\vect{r}_i|^{2}+\epsilon^2\right)^{3/2}}." />
+
+The number <M t="\epsilon" /> is the **softening length**. Its effect:
+
+- For <M t="r\gg\epsilon" /> the force is Newtonian, <M t="\approx Gm/r^2" />.
+- For <M t="r\ll\epsilon" /> the force goes to zero linearly, <M t="\approx Gm\,r/\epsilon^3" />. It rises to a maximum of <M t="\tfrac{2}{3\sqrt3}\,Gm/\epsilon^2\approx0.385\,Gm/\epsilon^2" /> at exactly <M t="r=\epsilon/\sqrt2" />, then falls off as <M t="1/r^2" />.
+- For <M t="r=0" /> (two particles at exactly the same point) the force is <M t="0" />, not infinity or `nan`, as long as <M t="\epsilon>0" />.
+
+<Figure svg="L01/softening" n={2} id="fig-l01-soft" widthPct={0.62} alt="Force between two unit-strength particles plotted against separation, for Newtonian gravity and two softening lengths." caption="Force between two unit-strength particles against separation. The softened curves are Newtonian at large r and vanish as r approaches 0." />
+
+Physically, each particle is treated as a smooth, fuzzy ball of matter of scale <M t="\sim\epsilon" /> rather than a point. This ball is a *Plummer sphere*: a smooth cloud whose density is roughly constant inside <M t="\epsilon" /> and falls off smoothly outside. <M t="\epsilon" /> is a scale, not a hard edge. Strictly, Eq. (5) is the force that a Plummer sphere exerts on a *point* mass. Treating both particles as spheres would give a slightly different kernel, but this form is the standard, cheap choice. Softening also biases forces at <M t="r\lesssim\epsilon" />, so we only trust results on larger scales. The matching potential energy of a pair is
+
+<M d id="eq-l01-softphi" tag="6" t="\Phi_{ij}=-\frac{G\,m_i m_j}{\sqrt{r_{ij}^2+\epsilon^2}}." />
+
+You can check by differentiating that <M t="-\partial\Phi_{ij}/\partial r_{ij}" /> gives the magnitude of the softened force of Eq. (5) (the minus sign means the force is attractive). Using the *same* softening in the force and in the energy matters, otherwise energy won't be conserved.
+
+<Callout kind="idea">
+Softening is a modelling choice, not a numerical trick to be removed later. It sets the smallest scale on which the simulation's forces can be trusted. Cosmological simulations often use <M t="\epsilon" /> of a few percent of the mean distance between particles.
+</Callout>
+
+<Callout kind="pitfall">
+Some codes write <M t="\epsilon^2" /> as a single variable (`eps2` or `epsilon`). Decide once whether your variable is <M t="\epsilon" /> or <M t="\epsilon^2" />, and square it exactly once. In this course the function argument is `eps` (the length) and you compute `eps**2` inside.
+</Callout>
+
+## Units
+
+Real gravity has <M t="G=6.674\times10^{-11}\,\mathrm{m^3\,kg^{-1}\,s^{-2}}" />. Plugging in SI units is a bad idea: galaxies have masses of <M t="10^{41}" />&ndash;<M t="10^{42}" /> kg and sizes of <M t="10^{20}" />&ndash;<M t="10^{21}" /> m, so numbers span dozens of orders of magnitude and it is easy to lose track of what is big or small. Instead we choose units in which the numbers are of order one.
+
+Pick a mass unit <M t="M_0" /> and a length unit <M t="L_0" />. Eq. (3) says an acceleration is <M t="a\sim GM_0/L_0^2" />, and an acceleration has units of length/time<M t="^2" />, so <M t="L_0/T_0^2\sim GM_0/L_0^2" />. *Defining* the time unit <M t="T_0" /> so that this holds with equality means that, measured in these units, <M t="G=1" />:
+
+<M d id="eq-l01-t0def" tag="7" t="T_0=\sqrt{\frac{L_0^3}{G\,M_0}}." />
+
+Example: <M t="L_0=1" /> kpc and <M t="M_0=10^{10}\,M_\odot" />. With <M t="G=4.4985\times10^{-6}\ \mathrm{kpc^3\,M_\odot^{-1}\,Gyr^{-2}}" />,
+
+<M d tag="8" t="T_0=\sqrt{\frac{1}{4.4985\times10^{-6}\times10^{10}}}\ \mathrm{Gyr}\approx4.7\times10^{-3}\ \mathrm{Gyr}\approx4.7\ \mathrm{Myr}." />
+
+So the simulation runs with <M t="G=1" />, masses of order <M t="1" />, lengths of order <M t="1" />, and you convert results back to physical units at the end. The velocity unit is then <M t="L_0/T_0=\sqrt{GM_0/L_0}\approx207" /> km/s for this example. In this lecture all problems are already in these units: <M t="G=1" />.
+
+## Direct summation
+
+### Data layout
+
+We store the whole system in three NumPy arrays:
+
+```python title="s1_arrays.py"
+import numpy as np
+
+N = 4
+pos  = np.zeros((N, 3))          # row i = (x, y, z) of particle i
+vel  = np.zeros((N, 3))
+mass = np.ones(N)                # one number per particle, shape (N,)
+
+pos[2] = [1.0, 0.0, 0.5]         # set particle 2
+print(pos[2, 0])                 # x of particle 2 -> 1.0
+print(pos.shape, mass.shape)     # (4, 3) (4,)
+```
+
+<Figure svg="L01/layout" n={3} id="fig-l01-layout" widthPct={0.66} alt="Storage layout: row i of pos holds x, y, z of particle i; mass holds one number per particle." caption="Storage layout. Row i of pos holds (x, y, z) of particle i; mass holds one number per particle." />
+
+<Callout kind="pitfall">
+`mass` has shape `(N,)`, not `(N,1)`. With shape `(N,1)`, `mass[j]` is an array of length one, and you end up writing awkward things like `mass[j][0]`. Keep it one-dimensional.
+</Callout>
+
+### One pair
+
+The building block is the acceleration of <M t="i" /> due to a single <M t="j" />:
+
+```python title="s2_pair.py"
+import numpy as np
+
+def pair_acc(pos_i, pos_j, m_j, G=1.0, eps=0.0):
+    """Acceleration of particle i caused by particle j only."""
+    d = pos_j - pos_i                 # vector pointing i -> j
+    r2 = np.dot(d, d) + eps**2        # softened r^2
+    return G * m_j * d / r2**1.5
+
+# two unit masses, one unit apart
+a = pair_acc(np.array([0., 0., 0.]), np.array([1., 0., 0.]), 1.0)
+print(a)                              # [1. 0. 0.]
+```
+
+Check it by hand: two unit masses one unit apart, <M t="G=1" />, <M t="\epsilon=0" />, gives <M t="\vect{a}_i=(1,0,0)" />. With <M t="\epsilon=0.5" /> we get <M t="1/(1+0.25)^{3/2}\approx0.7155" /> instead.
+
+### All pairs
+
+To get <M t="\vect{a}_i" />, add the contributions of all <M t="j\ne i" />. Do this for every <M t="i" />. In pseudocode:
+
+<div class="nb-pseudocode">{`for i = 0, ..., N-1:
+    a_i <- 0
+    for j = 0, ..., N-1:
+        if j = i: skip                       (no self-force)
+        a_i <- a_i + (pair contribution of j on i)`}</div>
+
+Every pair <M t="(i,j)" /> is visited, so the work grows as the number of pairs. Each unordered pair <M t="\{i,j\}" /> appears twice (as <M t="(i,j)" /> and <M t="(j,i)" />), giving <M t="N(N-1)" /> ordered pair evaluations.
+
+<Figure svg="L01/pairs" n={4} id="fig-l01-pairs" widthPct={0.23} alt="Direct summation for N=6 particles. All 15 pairs interact; the 5 red lines are the terms in the sum for particle i=0." caption="Direct summation for N=6 particles. All C(6,2)=15 pairs (grey and red lines) interact. Red: the 5 terms in the sum for a_0 (particle i=0). Each of the 6 particles does the same, giving 6x5=30 ordered evaluations." />
+
+<Figure svg="L01/grid" n={5} id="fig-l01-grid" widthPct={0.63} alt="The double loop visits every cell (i, j) of a 6-by-6 table except the diagonal j=i; only the blue upper triangle j>i is strictly needed." caption="The double loop visits every cell (i, j) of an N x N table except the diagonal. Because F_ij = -F_ji, only the blue half is really needed (see the optional challenge in Homework 1)." />
+
+### Cost
+
+With <M t="N" /> particles we do <M t="N(N-1)\approx N^2" /> pair evaluations per force calculation. Doubling <M t="N" /> makes each step four times slower. Suppose one evaluation takes 1 ns (an optimistic compiled-code figure):
+
+| <M t="N" /> | pair evaluations | time per step |
+|---|---|---|
+| <M t="10^3" /> | <M t="10^6" /> | 1 ms |
+| <M t="10^5" /> | <M t="10^{10}" /> | 10 s |
+| <M t="10^6" /> | <M t="10^{12}" /> | 17 min |
+| <M t="10^9" /> | <M t="10^{18}" /> | 32 years |
+
+And one simulation needs <M t="10^4" />&ndash;<M t="10^6" /> steps. This is why the rest of the course exists. For pure-Python loops the cost per pair is about a microsecond or more, so even <M t="N=10^3" /> is slow.
+
+<Callout kind="idea">
+Direct summation is exact (up to rounding) and extremely simple. That is why it is the reference for every faster method: to test a tree or a mesh code you compare its forces with direct summation.
+</Callout>
+
+### Bug hunt
+
+The following function is a typical first attempt. It runs without errors and gives wrong answers. Find both bugs before reading on. A good way to find them: take three particles, work out one acceleration by hand with `pair_acc`, and compare.
+
+```python title="s5_buggy.py"
+import numpy as np
+
+
+def acceleration_buggy(pos, mass, G=1.0, eps=0.1):
+    N = len(mass)
+    acc = np.zeros((N, 3))
+    for i in range(N):
+        for j in range(N):
+            if i != j:
+                r2 = 0.0
+                for k in range(3):
+                    acc[i, k] = G * mass[j] * (pos[j, k] - pos[i, k])   # (a)
+                    r2 += (pos[j, k] - pos[i, k]) ** 2
+                acc[i, :] = acc[i, :] / (r2 + eps**2) ** 1.5              # (b)
+    return acc
+```
+
+<details>
+<summary>Answer (spoiler)</summary>
+
+**(a)** `=` overwrites the running total, so only the last <M t="j" /> survives; it must accumulate (`+=`). **(b)** The division by the softened distance is applied to the whole accumulated <M t="\vect a_i" /> after every <M t="j" />, and uses only the current pair's <M t="r^2" />. Each <M t="j" /> must be divided by *its own* distance *before* being added. Test with three particles and compare with adding up `pair_acc` by hand: this is how you would have caught it.
+
+</details>
+
+## Diagnostics: is my simulation right?
+
+For <M t="N\ge3" /> there is no exact answer to compare with, so we test with quantities that must stay constant.
+
+**Total momentum.** Newton's third law says <M t="\vect{F}_{ij}=-\vect{F}_{ji}" />, so the internal forces sum to zero:
+
+<M d t="\sum_i m_i\vect{a}_i=\vect{0} \quad\Rightarrow\quad \vect{P}=\sum_i m_i\vect{v}_i=\text{const}." />
+
+This gives an immediate test of your force function: the vector <M t="\sum_i m_i\vect a_i" /> must be zero, component by component, to rounding error (say below <M t="10^{-10}" />), for any positions and masses.
+
+**Total energy.** With kinetic energy <M t="K" /> and (softened) potential energy <M t="U" />,
+
+<M d id="eq-l01-energy" tag="9" t="E=K+U,\qquad K=\sum_i\tfrac12 m_i|\vect{v}_i|^2,\qquad U=-\sum_{i<j}\frac{G m_i m_j}{\sqrt{|\vect{r}_j-\vect{r}_i|^2+\epsilon^2}}." />
+
+The sum in <M t="U" /> runs over <M t="i<j" />, so each pair is counted *once*; summing over all <M t="i\ne j" /> counts each twice. <M t="E" /> is conserved by the true dynamics. Any drift in <M t="E" /> is numerical error, and its size tells you how much to trust the result.
+
+**Other checks.** Angular momentum <M t="\vect{L}=\sum_i m_i\,\vect{r}_i\times\vect{v}_i" /> is also conserved, and the centre of mass moves at constant velocity (it stays fixed if <M t="\vect P=\vect 0" />).
+
+## Advancing in time: explicit Euler
+
+Given positions and velocities at time <M t="t" />, the simplest way to get them at <M t="t+\Delta t" /> is to assume that velocity and acceleration are constant over the step:
+
+<M d id="eq-l01-euler" tag="10" t="\vect{r}_i(t+\Delta t)\approx\vect{r}_i(t)+\vect{v}_i(t)\,\Delta t,\qquad \vect{v}_i(t+\Delta t)\approx\vect{v}_i(t)+\vect{a}_i(t)\,\Delta t." />
+
+This is the **explicit Euler method**. Its error per step is <M t="\Oh{\Delta t^2}" />, so after <M t="T/\Delta t" /> steps the total error is <M t="\Oh{\Delta t}" />: *first order*. In words: compute the accelerations from the current positions, then use the *old* velocities to move the particles and the accelerations to change the velocities. Compute both new arrays first and return them; never write into the arrays you were given. Following an orbit for <M t="n" /> steps means calling `acceleration` and `euler_step` <M t="n" /> times, feeding each output back in as the next input. Writing the stepper as a function is Homework 1.3.
+
+<Callout kind="pitfall">
+Both updates in Eq. (10) use values from the *start* of the step. Watch out for updating an array in place before the other update has used its old value.
+</Callout>
+
+<Figure svg="L01/loop" n={6} id="fig-l01-loop" widthPct={0.94} alt="The simulation loop: initial state, accelerations, Euler step, energy check, then repeat." caption="The simulation loop. Blocks are labelled with the homework task that builds them." />
+
+Euler is used here deliberately because it is the simplest method, and it has a serious flaw for orbits that you'll measure in the homework: it systematically *adds* energy. For a circular orbit the energy grows every step and the orbit spirals outward.
+
+<Figure svg="L01/euler_orbit" n={7} id="fig-l01-eulerorbit" widthPct={0.95} alt="Explicit Euler applied to the circular two-body orbit, showing the orbit spiralling outward over successive steps." caption="Explicit Euler on the circular two-body orbit. Blue and red: the two particles' paths, starting at the dots. Left: three orbits with 200 steps per orbit; the orbit spirals outward. Right: one orbit with 2000 steps; the drift is smaller but still there." />
+
+Halving <M t="\Delta t" /> only halves the drift (first order), which is why real codes use better integrators. So ten times less drift needs ten times more steps (compare 2000 and 20000 steps in Homework 1.5). Better integrators are the subject of Lecture 2.
+
+<Figure svg="L01/eulergeo" n={8} id="fig-l01-eulergeo" widthPct={0.66} alt="Geometric explanation of why Euler adds energy: the position update follows the tangent to the orbit and always lands slightly outside the true circular path." caption="Why Euler adds energy. The position update moves the particle along the tangent of its orbit, so it always lands slightly outside the true circular path. Repeated every step, the orbit radius (and the energy) grows. The step is drawn much longer than a real one." />
+
+**Reading log&ndash;log plots.** If a quantity <M t="y" /> depends on <M t="x" /> as a power law, <M t="y\propto x^p" />, then <M t="\log y=p\log x+\text{const}" />. On log&ndash;log axes such data lie on a straight line of slope <M t="p" />, and you can measure <M t="p" /> by fitting a line to the logarithms, for example `np.polyfit(np.log(x), np.log(y), 1)[0]`. For Euler we expect error <M t="\propto\Delta t" /> (slope 1); for direct-summation timing we expect time <M t="\propto N^2" /> (slope 2, see [Measuring the cost](#measuring-the-cost) below).
+
+<Figure svg="L01/energy_vs_dt" n={9} id="fig-l01-edt" widthPct={0.55} alt="Relative energy error after one orbit plotted against time step on log-log axes, following a slope-1 line." caption="Relative energy error after one orbit against time step (log-log axes). The points follow the dashed slope-1 line: the error is proportional to Δt." />
+
+## Test problems
+
+**Circular two-body orbit.** Two equal masses <M t="m_1=m_2=1" /> at separation <M t="d=1" />, <M t="G=1" />, <M t="\epsilon=0" />, orbiting their common centre. Each moves on a circle of radius <M t="d/2" /> with the centripetal condition <M t="v^2/(d/2)=Gm/d^2" />, giving
+
+<M d tag="11" t="v=\sqrt{\frac{Gm}{2d}}=\sqrt{0.5}\approx0.7071,\qquad T=\frac{2\pi(d/2)}{v}=\pi\sqrt2\approx4.4429." />
+
+Set <M t="\vect r_{1,2}=(\mp0.5,0,0)" />, <M t="\vect v_{1,2}=(0,\mp v,0)" />. Then <M t="K=v^2=0.5" />, <M t="U=-1" />, so <M t="E_0=-0.5" /> and <M t="\vect P=\vect 0" />. To follow one orbit in <M t="n" /> steps use the time step <M t="\Delta t=T/n" /> and repeat the loop of Figure 6 <M t="n" /> times. The *relative energy error after one period* is <M t="|E(T)-E_0|/|E_0|" />.
+
+**Figure-8 three-body orbit.** A remarkable periodic solution for three equal masses (found numerically by Moore in 1993 and proved to exist by Chenciner &amp; Montgomery in 2000). With <M t="m=1" />, <M t="G=1" />, <M t="\epsilon=0" />:
+
+<M d t="\vect r_1=(0.97000436,\,-0.24308753,\,0), \quad \vect r_2=-\vect r_1, \quad \vect r_3=\vect 0," />
+<M d t="\vect v_3=(-0.93240737,\,-0.86473146,\,0), \quad \vect v_1=\vect v_2=-\tfrac12\vect v_3," />
+
+with period <M t="T\approx6.32591398" /> and <M t="E_0\approx-1.28714" />. All three bodies chase each other along the same figure-8 curve.
+
+<Figure svg="L01/figure8" n={10} id="fig-l01-fig8" widthPct={0.95} alt="The figure-8 three-body orbit: an accurate reference on the left, and explicit Euler after one period at 2000 steps on the right, visibly departing from the curve." caption="Figure-8 orbit of three equal masses (one colour per particle, dots mark the start). Left: accurate reference. Right: explicit Euler with 2000 steps per period after one period." />
+
+The right panel shows what Euler does with it after a single period at 2000 steps: the bodies have left the curve. Keep this picture in mind for Lecture 2.
+
+## Measuring the cost
+
+To measure the cost you need to time your force function. Python's `time.perf_counter` is the right clock:
+
+```python title="s4_timing.py"
+import time
+
+t0 = time.perf_counter()
+acc = acceleration(pos, mass)           # the thing being timed
+elapsed = time.perf_counter() - t0      # seconds
+```
+
+As explained in the box on reading log&ndash;log plots, time <M t="t\propto N^p" /> gives a line of slope <M t="p" />. For direct summation you should find <M t="p\approx2" />. Expect the slope at very small <M t="N" /> to look smaller, because fixed overheads dominate; use <M t="N" /> from about 60 to a few hundred, and fit the slope over several values of <M t="N" /> (`np.random.default_rng(seed)` gives reproducible random positions). Measured with pure-Python loops (numbers depend on your computer):
+
+<Figure svg="L01/timing" n={11} id="fig-l01-timing" widthPct={0.55} alt="Time of one force evaluation plotted against N for pure-Python loops, following a slope-2 line." caption="Time of one force evaluation against N for pure-Python loops (your numbers will differ). The dashed line has slope 2." />
+
+## Homework 1
+
+<Callout kind="homework" title="Homework 1: direct summation with loops">
+
+Create `myOwnCode/L01/direct.py` containing the functions below. **The rule for this lecture:** write explicit `for` loops over the particles <M t="i" /> and <M t="j" />. Arithmetic on a single 3-vector (subtracting two positions, a dot product, multiplying by a number) is fine, as in `pair_acc`. Whole-array arithmetic in `euler_step` (such as `pos + vel*dt`) is fine: the ban applies to the force sum and the energy sums. What is *not* allowed yet is vectorising those over particles (no <M t="(N,N,3)" /> arrays, no `np.sum` over the particle index): that is Lecture 3, and doing it now would skip the step that shows you why it is needed. The checker cannot detect vectorising, so this rule is on your honour: the point of the exercise is to feel the cost of loops first.
+
+Download the hints zip below, copy `hw1_direct_skeleton.py` to `myOwnCode/L01/direct.py` (it lists the required names and arguments; `euler_step` and `acceleration` must return NumPy arrays), and copy `hw1_run_experiments.py` next to it for the plots.
+
+**1.1 Acceleration.** `acceleration(pos, mass, G=1.0, eps=0.0)` &rarr; array `(N,3)`, Eq. (5). Verify by hand: two unit masses at distance 1 give <M t="a=1" />; with `eps=0.5` give <M t="0.7155" />; a single particle gives zero; two particles at the same position with `eps>0` give zero (no `nan`); the vector <M t="\sum m_i\vect a_i" /> vanishes for random positions and masses.
+
+**1.2 Energies.** `kinetic_energy(vel, mass)`, `potential_energy(pos, mass, G, eps)` (each pair once, Eq. (6)), `total_energy(pos, vel, mass, G, eps)`. Expect <M t="E_0=-0.5" /> for the circular orbit and <M t="E_0\approx-1.28714" /> for the figure-8.
+
+**1.3 Euler stepper.** `euler_step(pos, vel, mass, dt, G, eps)` &rarr; `(new_pos, new_vel)`, Eq. (10). It must not modify its inputs.
+
+**1.4 Circular orbit.** With <M t="\Delta t=T/n" />, evolve the two-body orbit for one period using <M t="n=500,1000,2000,4000" /> steps (write the time loop yourself, Figure 6). Plot the relative energy error after one period against <M t="\Delta t" /> on log&ndash;log axes and show that the fitted slope is <M t="\approx1" />. Reference values: <M t="12\%" />, <M t="6.8\%" />, <M t="3.7\%" />, <M t="1.9\%" />.
+
+**1.5 Figure-8.** Evolve the figure-8 with Euler for one period with 2000 steps and with 20000 steps. Plot both. Reference numbers: after one period the total energy is about <M t="-1.18" /> (2000 steps) and <M t="-1.27" /> (20000 steps) against <M t="E_0=-1.287" />, and the largest coordinate difference <M t="\max(|\Delta x|,|\Delta y|)" /> between any body's final and starting position is about <M t="0.42" /> and <M t="0.04" /> (the straight-line distance of the worst body is about <M t="0.54" /> and <M t="0.055" />). Explain in a sentence or two why 20000 steps still doesn't fully close the curve.
+
+**1.6 Scaling.** Time `acceleration` for <M t="N=60,120,240" /> random particles and fit the log&ndash;log slope. It should be about 2.
+
+The checker tests 1.1&ndash;1.3 and the numbers behind 1.4&ndash;1.6, but it can't judge your plots or explanations in 1.4&ndash;1.6: compare them with the reference numbers above. **Check yourself:** unzip the hints, `cd` into the unzipped `gravity-from-scratch/` folder, then run `python course/codeHints/L01/check_hw1.py` (or add a path to check a different folder). Each check prints PASS or FAIL; aim for *all* PASS. Only after your own attempt passes, open the reference solution below and compare styles. Later lectures build on your own `direct.py`, so finish this homework before starting Lecture 2.
+
+**Optional challenge.** Use <M t="\vect F_{ij}=-\vect F_{ji}" /> to visit each pair only once (the blue triangle of Figure 5). Your timing should drop by about a factor 2, and the results must not change. Which lines of your loops have to change?
+
+</Callout>
+
+## Summary
+
+- Gravitational acceleration is a sum over all other particles, Eq. (5); direct summation evaluates this sum literally and costs <M t="\Oh{N^2}" />.
+- Softening replaces <M t="r^2" /> by <M t="r^2+\epsilon^2" />; it removes infinities and suppresses spurious two-body scattering by treating particles as fuzzy clouds. Use the same <M t="\epsilon" /> in forces and energies.
+- Use units with <M t="G=1" />; convert back to physical units at the end.
+- Conserved momentum and energy are the tests for correct code.
+- Euler is first order and adds energy to orbits: fine as a first step, not fit for real work. Lecture 2 fixes this.
+
+## Further reading
+
+- S. Aarseth, *Gravitational N-Body Simulations* (Cambridge, 2003), the chapters on direct summation and softening.
+- J. Binney &amp; S. Tremaine, *Galactic Dynamics*, 2nd ed., Ch. 2: potential theory, including the Plummer model.
+- Moore (1993) Phys. Rev. Lett. 70, 3675; Chenciner &amp; Montgomery (2000) Ann. Math. 152, 881: the figure-8 orbit.
+- M. Vogelsberger et al. (2020), [arXiv:1909.07976](https://arxiv.org/abs/1909.07976), the section on simulating dark matter: how the review introduces direct summation and softening.
+
+## Downloads
+
+<div class="nb-downloads">
+	<a href="/downloads/nbody/L01-hints.zip">&#8681; Hints &amp; checker (L01-hints.zip)</a>
+	<a href="/downloads/nbody/L01-solution.zip">&#8681; Reference solution (L01-solution.zip)</a>
+</div>
+
+Only open the solution after your own `direct.py` passes every check &mdash; that's the point of the exercise.

@@ -22,6 +22,12 @@ import { expressiveCodeOptions, siteConfig } from "./src/site.config";
 // https://astro.build/config
 export default defineConfig({
 	site: siteConfig.url,
+	// Software moved from its own /software/ hub into a section of /explore/,
+	// to free up a nav slot for /courses/. Keep old links working.
+	redirects: {
+		"/software/": "/explore/#software",
+		"/software/where-did-my-money-go/": "/explore/where-did-my-money-go/",
+	},
 	integrations: [
 		expressiveCode(expressiveCodeOptions),
 		icon(),

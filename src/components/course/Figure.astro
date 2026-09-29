@@ -1,0 +1,49 @@
+---
+/**
+ * A lecture figure: an inlined, theme-aware SVG and its caption.
+ *
+ * Every figure is SVG now, including the matplotlib plots: both the hand-labelled TikZ
+ * diagrams and the matplotlib plots are recoloured so black ink becomes `currentColor`
+ * (see tools/nbody/README in the course source repo for how), which is what lets them sit
+ * directly on the page with no card behind them, exactly like the PDF -- a plot's axes and
+ * text follow the theme, and its data colours (already mid-saturation blues/reds/greens)
+ * read fine on both a white and a near-black background.
+ *
+ * `widthPct` mirrors the LaTeX source's own sizing: the TikZ figures are sized to the
+ * fraction of the compiled document's \textwidth they actually occupied (measured by
+ * compiling the real tikzpicture standalone), and the plot figures use the exact
+ * \includegraphics[width=...\textwidth] fraction from the lecture source. This keeps the
+ * figure-to-text size ratio the same as the PDF instead of every figure filling the column.
+ */
+interface Props {
+	/** SVG slug: renders src/assets/courses/nbody/<slug>.svg inline. */
+	svg: string;
+	alt: string;
+	caption: string;
+	/** Figure number within the lecture: 3 renders as "Figure 3." */
+	n: number;
+	/** Anchor id for cross-references, e.g. id="fig-pair" for \label{fig:pair}. */
+	id?: string;
+	/** Fraction of the prose column width, matching the LaTeX source's own sizing (0-1). */
+	widthPct: number;
+}
+
+const { svg, alt, caption, n, id, widthPct } = Astro.props;
+
+const svgSources = import.meta.glob<string>("/src/assets/courses/nbody/**/*.svg", {
+	query: "?raw",
+	import: "default",
+	eager: true,
+});
+
+const inlineSvg =
+	svgSources[`/src/assets/courses/nbody/${svg}.svg`] ??
+	(() => {
+		throw new Error(`Figure: no SVG at src/assets/courses/nbody/${svg}.svg`);
+	})();
+---
+
+<figure class="nb-figure" id={id} style={`--nb-fig-w: ${Math.round(widthPct * 100)}%`}>
+	<div class="nb-figure__canvas" aria-label={alt} set:html={inlineSvg} />
+	<figcaption><span class="nb-figure__n">Figure {n}.</span> {caption}</figcaption>
+</figure>

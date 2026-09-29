@@ -1,0 +1,33 @@
+---
+/**
+ * The lecture table of contents. A course-specific twin of src/components/blog/TOC.astro:
+ * smaller, drops the "#" prefix each entry otherwise gets (see TOCHeading.astro), and --
+ * above the 1100px breakpoint -- lives in the right-hand margin as a `position: fixed`
+ * element rather than inline in the article (see the `@media` block on .nb-toc in
+ * course.css). That is not the shared component's `lg:order-2 lg:sticky` combination:
+ * inside this layout's `flex flex-col` article container (a single vertical stack, not a
+ * row), `order-2` does not create a sidebar at all, it just pushes the TOC to the very end
+ * of the article on wide screens -- not a table of contents anyone can use. The shared blog
+ * TOC is left untouched for the pages that use it.
+ */
+import type { MarkdownHeading } from "astro";
+import { generateToc } from "@/utils/generateToc";
+import TOCHeading from "./TOCHeading.astro";
+
+interface Props {
+	headings: MarkdownHeading[];
+}
+
+const { headings } = Astro.props;
+
+const toc = generateToc(headings);
+---
+
+<details open class="nb-toc">
+	<summary class="hover:marker:text-accent cursor-pointer">Contents</summary>
+	<nav class="ms-3 lg:w-full">
+		<ol>
+			{toc.map((heading) => <TOCHeading heading={heading} />)}
+		</ol>
+	</nav>
+</details>

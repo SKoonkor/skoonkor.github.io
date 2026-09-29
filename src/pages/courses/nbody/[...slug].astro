@@ -1,0 +1,40 @@
+---
+import { getCollection, render } from "astro:content";
+import type { GetStaticPaths, InferGetStaticPropsType } from "astro";
+import CourseLecture from "@/layouts/CourseLecture.astro";
+
+/*
+ * Drafts build (and are linkable) only in `pnpm dev` (import.meta.env.DEV), so the owner can
+ * review a finished lecture locally before publishing it. A production build sets DEV to
+ * false, which collapses this to the usual "published only" filter -- a draft lecture then
+ * has no route, no HTML output, and never reaches pagefind or the sitemap. This intentionally
+ * differs from the `lesson` collection's routes, which always exclude drafts: those drafts are
+ * unfinished, but a course lecture can be finished and still deliberately held back for the
+ * owner's own review, which needs a way to actually see the rendered page.
+ */
+export const getStaticPaths = (async () => {
+	const entries = (
+		await getCollection("nbody", ({ data }) => import.meta.env.DEV || !data.draft)
+	).sort((a, b) => a.data.lecture - b.data.lecture);
+	return entries.map((entry, i) => ({
+		params: { slug: entry.id },
+		props: { entry, prev: entries[i - 1], next: entries[i + 1] },
+	}));
+}) satisfies GetStaticPaths;
+
+type Props = InferGetStaticPropsType<typeof getStaticPaths>;
+
+const { entry, prev, next } = Astro.props;
+const { Content, headings } = await render(entry);
+---
+
+<CourseLecture
+	entry={entry}
+	courseTitle="Gravity from Scratch"
+	courseHref="/courses/nbody/"
+	prev={prev}
+	next={next}
+	headings={headings}
+>
+	<Content />
+</CourseLecture>

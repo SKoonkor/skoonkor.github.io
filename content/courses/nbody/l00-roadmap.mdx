@@ -1,0 +1,120 @@
+---
+title: "Roadmap: how simulations compute gravity"
+description: "Why gravity is the expensive part of a dark-matter simulation, the two families of solver, and the order this course builds them in."
+lecture: 0
+goal: "See the big picture: why gravity is the hard part of a dark-matter simulation, the two families of solvers and the hybrids that combine them, why the course is ordered the way it is, and how the homework, hints and checkers work."
+publishDate: "2026-09-29"
+tags: ["n-body", "gravity", "simulation"]
+draft: false
+---
+
+import M from "@/components/course/M.astro";
+import Callout from "@/components/course/Callout.astro";
+import Figure from "@/components/course/Figure.astro";
+
+<Callout kind="goals">
+- See the big picture: why gravity is the hard part of a dark-matter simulation.
+- Know the two families of gravity solvers, and the hybrids that combine them.
+- Understand the order of the lectures, and *why* that order builds skill step by step.
+- Understand how the homework, checkers and reference solutions work.
+</Callout>
+
+## Why gravity is the hard part
+
+In a dark-matter-only simulation I represent the dark matter with <M t="N" /> "macro-particles". Each one stands for a huge clump of real particles. Every step of the simulation has the same shape:
+
+1. **Force:** compute the gravitational acceleration on every particle.
+2. **Integrate:** move the particles a little (a time step <M t="\Delta t" />).
+3. Repeat, thousands to millions of times.
+
+Step 2 is cheap. Step 1 is the bottleneck. The gravitational force on particle <M t="i" /> is a sum over *all* other particles,
+
+<M d id="eq-l00-newton" tag="1" t="\vect{a}_i = G\sum_{j\ne i} m_j\,\frac{\vect{r}_j-\vect{r}_i}{|\vect{r}_j-\vect{r}_i|^3}," />
+
+so doing it naively costs <M t="\Oh{N^2}" /> operations per step. Modern cosmological boxes use <M t="N \sim 10^9" />&ndash;<M t="10^{12}" /> particles, so <M t="N^2 \sim 10^{18}" />&ndash;<M t="10^{24}" /> per step is impossible. Every method in this course is a different answer to one question:
+
+> *How can we get an accurate enough <M t="\vect{a}_i" /> for every particle without paying <M t="N^2" />?*
+
+## Two families and their hybrids
+
+The review by Vogelsberger et al. ([2020, arXiv:1909.07976](https://arxiv.org/abs/1909.07976)) groups the gravity solvers by which form of Poisson's equation they attack:
+
+<M d t="\Phi(\vect{r}) = -G\!\int\!\frac{\rho(\vect{r}')}{|\vect{r}-\vect{r}'|}\,\dd^3r' \qquad \text{(integral form)}" />
+<M d t="\nabla^2\Phi = 4\pi G\rho \qquad \text{(differential form)}" />
+
+<Figure svg="L00/solver-map" n={1} id="fig-l00-solvermap" widthPct={0.93} alt="Map of the gravity solvers, grouped by integral form (direct sum, tree, fast multipole) and differential form (particle-mesh, multigrid), with the hybrid P3M/TreePM combining both." caption="Map of the gravity solvers. An arrow means 'is improved by' (down or right) or 'is combined into' (towards the hybrid). Numbers in brackets are the lecture in which you build it. FMM is a refinement of the tree idea; you build it in Lecture 9, after the tree and mesh hybrids of Lecture 8." />
+
+- **Integral form** (left column): approximate the sum in Eq. (1) directly. Direct summation is exact but slow. Trees and the fast multipole method group distant particles and treat each group as one object.
+- **Differential form** (right column): put the density on a grid, solve <M t="\nabla^2\Phi = 4\pi G\rho" /> with a Fast Fourier Transform (FFT), and interpolate the force back to the particles. For plain PM the cost does not depend on how clustered the particles are, but forces are blurred below the grid spacing.
+- **Hybrids**: use the mesh for the smooth long-range part and particles/tree for the short-range part. Most modern codes (GADGET, AREPO/IllustrisTNG) use a tree + mesh hybrid called TreePM.
+
+## Timeline
+
+Names such as P&sup3;M, TreePM or FMM appear here only as labels; each is explained in the lecture where you build it.
+
+| Year | Milestone |
+|---|---|
+| 1941 | Holmberg: first "N-body" galaxy encounter, done with light bulbs and photocells (light intensity <M t="\propto 1/r^2" /> mimics gravity), about 37 bulbs per galaxy. |
+| 1960&ndash;63 | von Hoerner (1960, N=16) and Aarseth (1963, N up to 100): among the first digital direct-summation codes. |
+| 1967 | Verlet: popularised the St&oslash;rmer&ndash;Verlet integrator (equivalent to leapfrog) in molecular dynamics. |
+| 1970 | Peebles: N-body model of the Coma cluster (N=300); Zel'dovich: approximation for the gravitational growth of structure (pancakes). |
+| 1981 | Hockney &amp; Eastwood, *Computer Simulation Using Particles*: Particle&ndash;Mesh and P&sup3;M. |
+| 1985 | Davis, Efstathiou, Frenk &amp; White: cold-dark-matter cosmological simulations with P&sup3;M. |
+| 1986 | Barnes &amp; Hut: the hierarchical tree, <M t="\Oh{N\log N}" />. |
+| 1987 | Greengard &amp; Rokhlin: the Fast Multipole Method, <M t="\Oh{N}" />. |
+| 1991 | Couchman: adaptive P&sup3;M (AP&sup3;M). |
+| 1995 | Xu: TPM, the first tree + mesh hybrid; Bagla (2002): TreePM, the force-splitting form later used in GADGET. |
+| 2000&ndash;02 | Dehnen: fast, momentum-conserving tree and tree-based FMM. |
+| 2005 | Springel: GADGET-2 (TreePM); Millennium Simulation with <M t="10^{10}" /> particles. |
+| 2010 | Springel: AREPO (moving mesh; TreePM gravity). |
+| 2021 | Springel et al.: GADGET-4 (adds an FMM option). |
+
+## The order of the course
+
+The historical order is not the best learning order. For example, FMM (1987) is older than TreePM (1995) but conceptually harder. The order below rises in difficulty, and **each lecture reuses code you wrote in the one before**.
+
+| # | Lecture | What you build |
+|---|---|---|
+| 1 | Direct summation with loops | Softened force by nested loops, energy, simple stepping; 2-body and figure-8 orbits |
+| 2 | Time integration | Euler vs. leapfrog; energy error and order of accuracy |
+| 3 | Vectorising with NumPy | Same force with array operations; Plummer sphere; cold collapse |
+| 4 | Barnes&ndash;Hut tree | Quadtree/octree, opening angle <M t="\theta" />, tree walk; error and timing vs. direct sum |
+| 5 | Multipoles &amp; better trees | Quadrupole terms; opening criteria; periodic forces and the Ewald sum |
+| 6 | Particle&ndash;Mesh | Mass assignment (NGP/CIC/TSC), FFT Poisson solver, gradient and interpolation, momentum conservation |
+| 7 | Cosmological N-body | Expanding background, growth factor, Gaussian initial conditions and <M t="P(k)" />, Zel'dovich pancake, cosmic web, friends-of-friends halos |
+| 8 | P&sup3;M and TreePM | Gaussian force split, mesh force with window deconvolution, chaining-mesh short-range sum, tree with a cutoff |
+| 9 | Fast Multipole Method | 2D complex-variable FMM: P2M, M2M, M2L, L2L, L2P, interaction lists; comparison with Barnes&ndash;Hut |
+| 10 | Production codes | Morton keys and key-sorted trees, domain decomposition, block (individual) time steps; multigrid/AMR and pipeline overview |
+
+**Why this order, and not the historical one?** The timeline above puts FMM (1987) before TreePM (1995), and PM (1981) before trees (1986). I deliberately don't follow it:
+
+- **L1&ndash;3** stay with particles and loops, the only prerequisite skill. You need a correct force and a trustworthy integrator before anything faster is worth building, and you get a reference answer to test every later method against.
+- **L4&ndash;5, trees** come next because they are still "sum over particles", just with groups. They reuse your L3 NumPy force as the test reference and introduce recursion, the first genuinely new programming idea.
+- **L6, PM** switches to the other family (grids and FFTs). It needs no tree knowledge, but it does need your L1&ndash;3 integrator and force check. It is placed after trees so that recursion and FFTs are never learned at the same time.
+- **L7, cosmology** needs a periodic force solver, which PM provides cheaply. Only now do expansion, initial conditions and halos make sense.
+- **L8, hybrids** combine what you have already written (tree and mesh), so they are a small step, not a big one.
+- **L9, FMM** comes last on the integral branch because it is the hardest idea (expansions of expansions), even though it is older than the hybrids. Everything before it makes it easier: you know multipoles from L5 and trees from L4.
+- **L10** shows how production codes combine everything: it needs no new physics, only data structures (space-filling-curve keys) and the time-step hierarchy, and it closes with an overview of multigrid/AMR, zoom-in simulations and where to go next.
+
+Each lecture reuses code from earlier ones: L6 uses your L3 force and integrator, L7 your L6 PM, L8 your L4 tree, L6 PM and L7 cosmology, L9 your L4 tree (for the Barnes&ndash;Hut comparison), L10's code stands alone (its optional capstone reuses L7&ndash;L8). The homework grows too: from L6 on, expect roughly 6&ndash;12 hours per lecture. Skills are added gradually: loops &rarr; vectors &rarr; recursion and trees &rarr; FFTs &rarr; cosmology &rarr; combining methods &rarr; the hardest algorithm. SPH (a gas-dynamics method) is not part of this dark-matter course.
+
+## How the homework works
+
+<Callout kind="idea">
+You build every component yourself, from scratch. Later lectures build on your own code, and I'd only open the reference solution *after* your own attempt passes the checker.
+</Callout>
+
+1. Read the lecture page. It explains the physics and shows the algorithm in words, equations, diagrams, pseudocode and small code fragments (for example, one pair interaction). Lecture 1 is a warm-up and is the most explicit; later lectures show less code and ask you to assemble more yourself. It never gives you the complete working program.
+2. Download the hints zip for the lecture and unpack it next to a `myOwnCode/` folder of your own. The zip has a skeleton (function names and TODO lists) and small helper scripts for plotting and timing.
+3. Run the checker that comes in the same zip. It imports your functions and prints PASS or FAIL for each task.
+4. When everything passes, download the solution zip and compare it with your own code. Then start the next lecture, which reuses what you wrote.
+
+Hints never contain the algorithm being taught, and later hints never supply earlier pieces. Lecture 4's code, for example, imports your own vectorised direct-summation code from Lecture 3 to test itself.
+
+## Reading list
+
+- M. Vogelsberger et al., *Cosmological simulations of galaxy formation*, Nat. Rev. Phys. 2, 42 (2020), [arXiv:1909.07976](https://arxiv.org/abs/1909.07976). The paper that motivates this course.
+- V. Springel, *The cosmological simulation code GADGET-2*, MNRAS 364, 1105 (2005).
+- R. Hockney &amp; J. Eastwood, *Computer Simulation Using Particles* (1981).
+- S. Aarseth, *Gravitational N-Body Simulations* (2003).
+- J. Barnes &amp; P. Hut, Nature 324, 446 (1986).

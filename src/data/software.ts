@@ -1,12 +1,14 @@
 /**
- * The software projects under /software/.
+ * The software projects shown in the "Software" section of /explore/.
  *
  * Same shape and the same reasons as src/data/demos.ts: one list, read by the
- * hub and by anything else that wants to name a project, so a title or a
- * tagline exists in exactly one place rather than in two that drift.
+ * Explore section and by anything else that wants to name a project, so a
+ * title or a tagline exists in exactly one place rather than in two that
+ * drift. This used to have its own top-level /software/ hub page; it was
+ * folded into Explore to make room for /courses/ in the nav bar.
  *
- * A project with no `href` has no page yet. It shows on the hub as "coming
- * soon" and is excluded from `liveProjects`.
+ * A project with no `href` has no page yet. It shows on the card list as
+ * "coming soon" and is excluded from `liveProjects`.
  *
  * Kept separate from demos.ts rather than merged with a `kind` field. The two
  * lists answer different questions -- "which bit of my research can you play
@@ -37,7 +39,7 @@ export type SoftwareProject = {
 
 export const software: SoftwareProject[] = [
 	{
-		href: "/software/where-did-my-money-go/",
+		href: "/explore/where-did-my-money-go/",
 		thumb: "where-did-my-money-go",
 		title: "Where did my money go?",
 		blurb:

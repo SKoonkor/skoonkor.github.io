@@ -1,0 +1,67 @@
+---
+/**
+ * A piece of maths, rendered to static HTML with KaTeX at build time.
+ *
+ * No client JS: `katex.renderToString` runs once in Node during the build, same as the
+ * ml course's hand-written MathML (see src/components/ml/Eq.astro) avoids a client-side
+ * renderer. KaTeX was chosen over hand-written MathML here because the lecture notes carry
+ * far more, and far more deeply nested, equations (softened forces, sums with limits, boxed
+ * results) than that course's few dozen -- MathML for all of them would be slow to write and
+ * easy to get subtly wrong.
+ *
+ * Usage:
+ *   <M t="a_i = G \\sum_{j \\ne i} m_j" />                 inline
+ *   <M d t="a_i = ..." id="eq-acc" tag="1.3" />             display, numbered, linkable
+ *
+ * Macros mirror claudeMade/lectures/src/common/preamble.tex, so LaTeX source can be copied
+ * across close to verbatim: \vect for bold vectors, \dd for an upright differential d,
+ * \Oh for the O(...) cost notation.
+ */
+import katex from "katex";
+
+interface Props {
+	/** The LaTeX source, exactly as it would appear inside $...$ or an equation environment. */
+	t: string;
+	/** Render as a centred display equation instead of an inline span. */
+	d?: boolean;
+	/** Anchor id, so other text can link to this equation as #id. Display only. */
+	id?: string;
+	/** Equation number shown at the right, e.g. "1.3". Display only. */
+	tag?: string;
+}
+
+const { t, d = false, id, tag } = Astro.props;
+
+const macros = {
+	"\\vect": "\\boldsymbol{#1}",
+	"\\dd": "\\mathrm{d}",
+	"\\Oh": "\\mathcal{O}\\!\\left(#1\\right)",
+};
+
+let html: string;
+try {
+	html = katex.renderToString(t, {
+		displayMode: d,
+		throwOnError: true,
+		strict: "warn",
+		macros,
+	});
+} catch (err) {
+	throw new Error(`KaTeX failed to render "${t}": ${(err as Error).message}`);
+}
+---
+
+{
+	d ? (
+		<div class="nb-eq" id={id}>
+			<div class="nb-eq__body" set:html={html} />
+			{tag && (
+				<a class="nb-eq__tag" href={id ? `#${id}` : undefined}>
+					({tag})
+				</a>
+			)}
+		</div>
+	) : (
+		<span class="nb-eq-inline" set:html={html} />
+	)
+}

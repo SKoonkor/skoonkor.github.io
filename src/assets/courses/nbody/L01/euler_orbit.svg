@@ -1,0 +1,1620 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+  "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg fill="currentColor" xmlns:xlink="http://www.w3.org/1999/xlink" width="100%" height="100%" viewBox="0 0 499.337467 237.6" xmlns="http://www.w3.org/2000/svg" version="1.1">
+ <metadata>
+  <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+   <cc:Work>
+    <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
+    <dc:date>2026-09-29T23:09:42.711739</dc:date>
+    <dc:format>image/svg+xml</dc:format>
+    <dc:creator>
+     <cc:Agent>
+      <dc:title>Matplotlib v3.11.2, https://matplotlib.org/</dc:title>
+     </cc:Agent>
+    </dc:creator>
+   </cc:Work>
+  </rdf:RDF>
+ </metadata>
+ <defs>
+  <style type="text/css">*{stroke-linejoin: round; stroke-linecap: butt}</style>
+ </defs>
+ <g id="euler_orbit-figure_1">
+  <g id="euler_orbit-patch_1">
+   <path d="M 0 237.6 
+L 499.337467 237.6 
+L 499.337467 0 
+L 0 0 
+L 0 237.6 
+z
+" style="fill: none"/>
+  </g>
+  <g id="euler_orbit-axes_1">
+   <g id="euler_orbit-patch_2">
+    <path d="M 58.845313 199.4 
+L 219.384201 199.4 
+L 219.384201 20.798437 
+L 58.845313 20.798437 
+L 58.845313 199.4 
+z
+" style="fill: none"/>
+   </g>
+   <g id="euler_orbit-matplotlib.axis_1">
+    <g id="euler_orbit-xtick_1">
+     <g id="euler_orbit-line2d_1">
+      <defs>
+       <path id="euler_orbit-m999ba409cc" d="M 0 0 
+L 0 3.5 
+" style="stroke: currentColor; stroke-width: 0.8"/>
+      </defs>
+      <g>
+       <use xlink:href="#euler_orbit-m999ba409cc" x="92.033122" y="199.4" style="stroke: currentColor; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="euler_orbit-text_1">
+      <!-- −0.5 -->
+      <g transform="translate(79.891716 213.997656) scale(0.1 -0.1)">
+       <defs>
+        <path id="euler_orbit-DejaVuSans-c9c" d="M 678 2272 
+L 4684 2272 
+L 4684 1741 
+L 678 1741 
+L 678 2272 
+z
+" transform="scale(0.015625)"/>
+        <path id="euler_orbit-DejaVuSans-13" d="M 2034 4250 
+Q 1547 4250 1301 3770 
+Q 1056 3291 1056 2328 
+Q 1056 1369 1301 889 
+Q 1547 409 2034 409 
+Q 2525 409 2770 889 
+Q 3016 1369 3016 2328 
+Q 3016 3291 2770 3770 
+Q 2525 4250 2034 4250 
+z
+M 2034 4750 
+Q 2819 4750 3233 4129 
+Q 3647 3509 3647 2328 
+Q 3647 1150 3233 529 
+Q 2819 -91 2034 -91 
+Q 1250 -91 836 529 
+Q 422 1150 422 2328 
+Q 422 3509 836 4129 
+Q 1250 4750 2034 4750 
+z
+" transform="scale(0.015625)"/>
+        <path id="euler_orbit-DejaVuSans-11" d="M 684 794 
+L 1344 794 
+L 1344 0 
+L 684 0 
+L 684 794 
+z
+" transform="scale(0.015625)"/>
+        <path id="euler_orbit-DejaVuSans-18" d="M 691 4666 
+L 3169 4666 
+L 3169 4134 
+L 1269 4134 
+L 1269 2991 
+Q 1406 3038 1543 3061 
+Q 1681 3084 1819 3084 
+Q 2600 3084 3056 2656 
+Q 3513 2228 3513 1497 
+Q 3513 744 3044 326 
+Q 2575 -91 1722 -91 
+Q 1428 -91 1123 -41 
+Q 819 9 494 109 
+L 494 744 
+Q 775 591 1075 516 
+Q 1375 441 1709 441 
+Q 2250 441 2565 725 
+Q 2881 1009 2881 1497 
+Q 2881 1984 2565 2268 
+Q 2250 2553 1709 2553 
+Q 1456 2553 1204 2497 
+Q 953 2441 691 2322 
+L 691 4666 
+z
+" transform="scale(0.015625)"/>
+       </defs>
+       <use xlink:href="#euler_orbit-DejaVuSans-c9c"/>
+       <use xlink:href="#euler_orbit-DejaVuSans-13" transform="translate(83.796875 0)"/>
+       <use xlink:href="#euler_orbit-DejaVuSans-11" transform="translate(147.421875 0)"/>
+       <use xlink:href="#euler_orbit-DejaVuSans-18" transform="translate(179.203125 0)"/>
+      </g>
+     </g>
+    </g>
+    <g id="euler_orbit-xtick_2">
+     <g id="euler_orbit-line2d_2">
+      <g>
+       <use xlink:href="#euler_orbit-m999ba409cc" x="139.114757" y="199.4" style="stroke: currentColor; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="euler_orbit-text_2">
+      <!-- 0.0 -->
+      <g transform="translate(131.163194 213.997656) scale(0.1 -0.1)">
+       <use xlink:href="#euler_orbit-DejaVuSans-13"/>
+       <use xlink:href="#euler_orbit-DejaVuSans-11" transform="translate(63.625 0)"/>
+       <use xlink:href="#euler_orbit-DejaVuSans-13" transform="translate(95.40625 0)"/>
+      </g>
+     </g>
+    </g>
+    <g id="euler_orbit-xtick_3">
+     <g id="euler_orbit-line2d_3">
+      <g>
+       <use xlink:href="#euler_orbit-m999ba409cc" x="186.196391" y="199.4" style="stroke: currentColor; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="euler_orbit-text_3">
+      <!-- 0.5 -->
+      <g transform="translate(178.244829 213.997656) scale(0.1 -0.1)">
+       <use xlink:href="#euler_orbit-DejaVuSans-13"/>
+       <use xlink:href="#euler_orbit-DejaVuSans-11" transform="translate(63.625 0)"/>
+       <use xlink:href="#euler_orbit-DejaVuSans-18" transform="translate(95.40625 0)"/>
+      </g>
+     </g>
+    </g>
+    <g id="euler_orbit-text_4">
+     <!-- x -->
+     <g transform="translate(136.155382 227.997656) scale(0.1 -0.1)">
+      <defs>
+       <path id="euler_orbit-DejaVuSans-5b" d="M 3513 3500 
+L 2247 1797 
+L 3578 0 
+L 2900 0 
+L 1881 1375 
+L 863 0 
+L 184 0 
+L 1544 1831 
+L 300 3500 
+L 978 3500 
+L 1906 2253 
+L 2834 3500 
+L 3513 3500 
+z
+" transform="scale(0.015625)"/>
+      </defs>
+      <use xlink:href="#euler_orbit-DejaVuSans-5b"/>
+     </g>
+    </g>
+   </g>
+   <g id="euler_orbit-matplotlib.axis_2">
+    <g id="euler_orbit-ytick_1">
+     <g id="euler_orbit-line2d_4">
+      <defs>
+       <path id="euler_orbit-m1e2b8ce97c" d="M 0 0 
+L -3.5 0 
+" style="stroke: currentColor; stroke-width: 0.8"/>
+      </defs>
+      <g>
+       <use xlink:href="#euler_orbit-m1e2b8ce97c" x="58.845313" y="180.721671" style="stroke: currentColor; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="euler_orbit-text_5">
+      <!-- −0.75 -->
+      <g transform="translate(21.2 184.520499) scale(0.1 -0.1)">
+       <defs>
+        <path id="euler_orbit-DejaVuSans-1a" d="M 525 4666 
+L 3525 4666 
+L 3525 4397 
+L 1831 0 
+L 1172 0 
+L 2766 4134 
+L 525 4134 
+L 525 4666 
+z
+" transform="scale(0.015625)"/>
+       </defs>
+       <use xlink:href="#euler_orbit-DejaVuSans-c9c"/>
+       <use xlink:href="#euler_orbit-DejaVuSans-13" transform="translate(83.796875 0)"/>
+       <use xlink:href="#euler_orbit-DejaVuSans-11" transform="translate(147.421875 0)"/>
+       <use xlink:href="#euler_orbit-DejaVuSans-1a" transform="translate(179.203125 0)"/>
+       <use xlink:href="#euler_orbit-DejaVuSans-18" transform="translate(242.828125 0)"/>
+      </g>
+     </g>
+    </g>
+    <g id="euler_orbit-ytick_2">
+     <g id="euler_orbit-line2d_5">
+      <g>
+       <use xlink:href="#euler_orbit-m1e2b8ce97c" x="58.845313" y="157.180853" style="stroke: currentColor; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="euler_orbit-text_6">
+      <!-- −0.50 -->
+      <g transform="translate(21.2 160.979681) scale(0.1 -0.1)">
+       <use xlink:href="#euler_orbit-DejaVuSans-c9c"/>
+       <use xlink:href="#euler_orbit-DejaVuSans-13" transform="translate(83.796875 0)"/>
+       <use xlink:href="#euler_orbit-DejaVuSans-11" transform="translate(147.421875 0)"/>
+       <use xlink:href="#euler_orbit-DejaVuSans-18" transform="translate(179.203125 0)"/>
+       <use xlink:href="#euler_orbit-DejaVuSans-13" transform="translate(242.828125 0)"/>
+      </g>
+     </g>
+    </g>
+    <g id="euler_orbit-ytick_3">
+     <g id="euler_orbit-line2d_6">
+      <g>
+       <use xlink:href="#euler_orbit-m1e2b8ce97c" x="58.845313" y="133.640036" style="stroke: currentColor; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="euler_orbit-text_7">
+      <!-- −0.25 -->
+      <g transform="translate(21.2 137.438864) scale(0.1 -0.1)">
+       <defs>
+        <path id="euler_orbit-DejaVuSans-15" d="M 1228 531 
+L 3431 531 
+L 3431 0 
+L 469 0 
+L 469 531 
+Q 828 903 1448 1529 
+Q 2069 2156 2228 2338 
+Q 2531 2678 2651 2914 
+Q 2772 3150 2772 3378 
+Q 2772 3750 2511 3984 
+Q 2250 4219 1831 4219 
+Q 1534 4219 1204 4116 
+Q 875 4013 500 3803 
+L 500 4441 
+Q 881 4594 1212 4672 
+Q 1544 4750 1819 4750 
+Q 2544 4750 2975 4387 
+Q 3406 4025 3406 3419 
+Q 3406 3131 3298 2873 
+Q 3191 2616 2906 2266 
+Q 2828 2175 2409 1742 
+Q 1991 1309 1228 531 
+z
+" transform="scale(0.015625)"/>
+       </defs>
+       <use xlink:href="#euler_orbit-DejaVuSans-c9c"/>
+       <use xlink:href="#euler_orbit-DejaVuSans-13" transform="translate(83.796875 0)"/>
+       <use xlink:href="#euler_orbit-DejaVuSans-11" transform="translate(147.421875 0)"/>
+       <use xlink:href="#euler_orbit-DejaVuSans-15" transform="translate(179.203125 0)"/>
+       <use xlink:href="#euler_orbit-DejaVuSans-18" transform="translate(242.828125 0)"/>
+      </g>
+     </g>
+    </g>
+    <g id="euler_orbit-ytick_4">
+     <g id="euler_orbit-line2d_7">
+      <g>
+       <use xlink:href="#euler_orbit-m1e2b8ce97c" x="58.845313" y="110.099219" style="stroke: currentColor; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="euler_orbit-text_8">
+      <!-- 0.00 -->
+      <g transform="translate(29.579688 113.898047) scale(0.1 -0.1)">
+       <use xlink:href="#euler_orbit-DejaVuSans-13"/>
+       <use xlink:href="#euler_orbit-DejaVuSans-11" transform="translate(63.625 0)"/>
+       <use xlink:href="#euler_orbit-DejaVuSans-13" transform="translate(95.40625 0)"/>
+       <use xlink:href="#euler_orbit-DejaVuSans-13" transform="translate(159.03125 0)"/>
+      </g>
+     </g>
+    </g>
+    <g id="euler_orbit-ytick_5">
+     <g id="euler_orbit-line2d_8">
+      <g>
+       <use xlink:href="#euler_orbit-m1e2b8ce97c" x="58.845313" y="86.558401" style="stroke: currentColor; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="euler_orbit-text_9">
+      <!-- 0.25 -->
+      <g transform="translate(29.579688 90.35723) scale(0.1 -0.1)">
+       <use xlink:href="#euler_orbit-DejaVuSans-13"/>
+       <use xlink:href="#euler_orbit-DejaVuSans-11" transform="translate(63.625 0)"/>
+       <use xlink:href="#euler_orbit-DejaVuSans-15" transform="translate(95.40625 0)"/>
+       <use xlink:href="#euler_orbit-DejaVuSans-18" transform="translate(159.03125 0)"/>
+      </g>
+     </g>
+    </g>
+    <g id="euler_orbit-ytick_6">
+     <g id="euler_orbit-line2d_9">
+      <g>
+       <use xlink:href="#euler_orbit-m1e2b8ce97c" x="58.845313" y="63.017584" style="stroke: currentColor; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="euler_orbit-text_10">
+      <!-- 0.50 -->
+      <g transform="translate(29.579688 66.816412) scale(0.1 -0.1)">
+       <use xlink:href="#euler_orbit-DejaVuSans-13"/>
+       <use xlink:href="#euler_orbit-DejaVuSans-11" transform="translate(63.625 0)"/>
+       <use xlink:href="#euler_orbit-DejaVuSans-18" transform="translate(95.40625 0)"/>
+       <use xlink:href="#euler_orbit-DejaVuSans-13" transform="translate(159.03125 0)"/>
+      </g>
+     </g>
+    </g>
+    <g id="euler_orbit-ytick_7">
+     <g id="euler_orbit-line2d_10">
+      <g>
+       <use xlink:href="#euler_orbit-m1e2b8ce97c" x="58.845313" y="39.476767" style="stroke: currentColor; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="euler_orbit-text_11">
+      <!-- 0.75 -->
+      <g transform="translate(29.579688 43.275595) scale(0.1 -0.1)">
+       <use xlink:href="#euler_orbit-DejaVuSans-13"/>
+       <use xlink:href="#euler_orbit-DejaVuSans-11" transform="translate(63.625 0)"/>
+       <use xlink:href="#euler_orbit-DejaVuSans-1a" transform="translate(95.40625 0)"/>
+       <use xlink:href="#euler_orbit-DejaVuSans-18" transform="translate(159.03125 0)"/>
+      </g>
+     </g>
+    </g>
+    <g id="euler_orbit-text_12">
+     <!-- y -->
+     <g transform="translate(14.797656 113.058594) rotate(-90) scale(0.1 -0.1)">
+      <defs>
+       <path id="euler_orbit-DejaVuSans-5c" d="M 2059 -325 
+Q 1816 -950 1584 -1140 
+Q 1353 -1331 966 -1331 
+L 506 -1331 
+L 506 -850 
+L 844 -850 
+Q 1081 -850 1212 -737 
+Q 1344 -625 1503 -206 
+L 1606 56 
+L 191 3500 
+L 800 3500 
+L 1894 763 
+L 2988 3500 
+L 3597 3500 
+L 2059 -325 
+z
+" transform="scale(0.015625)"/>
+      </defs>
+      <use xlink:href="#euler_orbit-DejaVuSans-5c"/>
+     </g>
+    </g>
+   </g>
+   <g id="euler_orbit-line2d_11">
+    <path d="M 92.033122 110.099219 
+L 92.07959 113.057445 
+L 92.311608 116.009845 
+L 92.72808 118.944818 
+L 93.327182 121.850878 
+L 94.106371 124.716701 
+L 95.062392 127.531175 
+L 96.191294 130.283443 
+L 97.488444 132.962952 
+L 98.948551 135.559501 
+L 100.565688 138.063282 
+L 102.333322 140.46493 
+L 104.244345 142.755559 
+L 106.291113 144.926803 
+L 108.46548 146.970856 
+L 110.758846 148.880502 
+L 113.1622 150.649143 
+L 115.666167 152.270831 
+L 118.26106 153.740285 
+L 120.936931 155.052911 
+L 123.683623 156.204812 
+L 126.490828 157.192798 
+L 129.348133 158.014391 
+L 132.245083 158.667819 
+L 135.171227 159.152013 
+L 138.116171 159.466597 
+L 141.069631 159.61187 
+L 144.021478 159.588789 
+L 146.961781 159.398946 
+L 149.880854 159.044541 
+L 152.769292 158.528354 
+L 155.618007 157.853712 
+L 158.418259 157.024455 
+L 161.161687 156.0449 
+L 163.840332 154.919805 
+L 166.446655 153.65433 
+L 168.973559 152.253998 
+L 171.4144 150.724657 
+L 173.762996 149.072441 
+L 176.013634 147.303733 
+L 178.161076 145.425127 
+L 181.178446 142.416001 
+L 183.938902 139.198265 
+L 186.430679 135.795778 
+L 188.644288 132.232636 
+L 190.572429 128.532953 
+L 192.209897 124.720681 
+L 193.553463 120.819443 
+L 194.601761 116.852387 
+L 195.355155 112.842063 
+L 195.815617 108.810323 
+L 195.986595 104.778233 
+L 195.872889 100.766004 
+L 195.480523 96.792941 
+L 194.816633 92.877403 
+L 193.889348 89.036772 
+L 192.707684 85.287437 
+L 191.281447 81.644789 
+L 189.621131 78.123211 
+L 187.737838 74.736092 
+L 185.643193 71.49583 
+L 183.349268 68.413849 
+L 180.86852 65.500616 
+L 178.213723 62.765659 
+L 175.39791 60.21759 
+L 172.434327 57.864125 
+L 169.336381 55.712109 
+L 166.117598 53.767536 
+L 162.791586 52.035576 
+L 159.371996 50.520594 
+L 155.872491 49.226173 
+L 152.306719 48.155135 
+L 148.688282 47.30956 
+L 145.03071 46.690807 
+L 141.34744 46.299531 
+L 137.651793 46.135699 
+L 133.956952 46.198608 
+L 130.275942 46.486897 
+L 126.62161 46.998565 
+L 123.006605 47.730978 
+L 119.44336 48.680888 
+L 115.944072 49.844441 
+L 112.520682 51.217184 
+L 109.184858 52.794086 
+L 105.947969 54.569538 
+L 102.821069 56.537369 
+L 99.814876 58.690855 
+L 96.939744 61.022727 
+L 94.205645 63.525189 
+L 91.622143 66.18992 
+L 89.198368 69.008097 
+L 86.942993 71.9704 
+L 84.864205 75.067034 
+L 82.969677 78.287741 
+L 81.266543 81.621821 
+L 79.761365 85.058154 
+L 78.460111 88.58522 
+L 77.368118 92.191125 
+L 76.49007 95.863631 
+L 75.829964 99.590187 
+L 75.391087 103.357961 
+L 75.175987 107.153876 
+L 75.186448 110.964657 
+L 75.423468 114.776867 
+L 75.887236 118.576958 
+L 76.577116 122.351318 
+L 77.491629 126.086328 
+L 78.628444 129.768413 
+L 79.984373 133.384103 
+L 81.555362 136.920094 
+L 83.336497 140.363306 
+L 85.322014 143.700951 
+L 87.505307 146.920596 
+L 89.878951 150.010222 
+L 92.434724 152.958296 
+L 95.163642 155.753828 
+L 98.055993 158.386431 
+L 101.101384 160.846382 
+L 104.288785 163.124671 
+L 107.606589 165.213058 
+L 111.042667 167.10411 
+L 114.584438 168.791248 
+L 118.218929 170.268775 
+L 121.932854 171.531904 
+L 125.712682 172.57678 
+L 129.544716 173.400492 
+L 133.415165 174.001077 
+L 137.310222 174.37752 
+L 141.21614 174.529744 
+L 145.1193 174.458594 
+L 149.006287 174.165815 
+L 152.863952 173.654023 
+L 156.679477 172.926668 
+L 160.440434 171.987998 
+L 164.134836 170.843012 
+L 167.751186 169.497413 
+L 171.278522 167.957556 
+L 174.706449 166.230395 
+L 178.02517 164.323427 
+L 181.225517 162.244638 
+L 184.298962 160.002442 
+L 187.237636 157.605631 
+L 190.034337 155.063313 
+L 192.68253 152.384861 
+L 195.17635 149.579862 
+L 197.510598 146.658063 
+L 199.680725 143.629327 
+L 201.682828 140.503585 
+L 203.513629 137.290795 
+L 205.170461 134.0009 
+L 206.651246 130.643796 
+L 207.954474 127.229295 
+L 209.079181 123.767097 
+L 210.024923 120.266759 
+L 210.791753 116.737675 
+L 211.380195 113.189053 
+L 211.791221 109.629893 
+L 212.02622 106.068974 
+L 212.086979 102.514838 
+L 211.975656 98.975781 
+L 211.694756 95.459837 
+L 211.247104 91.974778 
+L 210.396292 87.388993 
+L 209.2628 82.888416 
+L 207.855594 78.489161 
+L 206.184349 74.206451 
+L 204.25937 70.054612 
+L 202.091523 66.04708 
+L 199.692166 62.196407 
+L 197.073085 58.514276 
+L 194.246444 55.011511 
+L 191.224726 51.698095 
+L 188.02069 48.583184 
+L 184.647326 45.67513 
+L 181.117817 42.981494 
+L 177.4455 40.509069 
+L 173.643838 38.263894 
+L 169.726388 36.251273 
+L 165.706775 34.475793 
+L 161.598665 32.941341 
+L 157.415747 31.651116 
+L 153.171707 30.607647 
+L 148.880212 29.812804 
+L 144.554892 29.267811 
+L 140.209322 28.973256 
+L 135.857004 28.929102 
+L 131.511354 29.134695 
+L 127.185686 29.588774 
+L 122.893194 30.289472 
+L 118.646938 31.234328 
+L 114.45983 32.420288 
+L 110.344615 33.843709 
+L 106.313855 35.500365 
+L 102.37991 37.385448 
+L 98.554922 39.493568 
+L 94.850793 41.818759 
+L 91.279164 44.354481 
+L 87.851396 47.093618 
+L 84.578541 50.028485 
+L 81.47132 53.150825 
+L 78.540096 56.451822 
+L 77.835968 57.303899 
+L 77.835968 57.303899 
+" clip-path="url(#euler_orbit-p4c87026245)" style="fill: none; stroke: #2b7fd6; stroke-width: 1.1; stroke-linecap: square"/>
+   </g>
+   <g id="euler_orbit-line2d_12">
+    <defs>
+     <path id="euler_orbit-m8e6370ffe6" d="M 0 2.5 
+C 0.663008 2.5 1.29895 2.236584 1.767767 1.767767 
+C 2.236584 1.29895 2.5 0.663008 2.5 0 
+C 2.5 -0.663008 2.236584 -1.29895 1.767767 -1.767767 
+C 1.29895 -2.236584 0.663008 -2.5 0 -2.5 
+C -0.663008 -2.5 -1.29895 -2.236584 -1.767767 -1.767767 
+C -2.236584 -1.29895 -2.5 -0.663008 -2.5 0 
+C -2.5 0.663008 -2.236584 1.29895 -1.767767 1.767767 
+C -1.29895 2.236584 -0.663008 2.5 0 2.5 
+z
+" style="stroke: #2b7fd6"/>
+    </defs>
+    <g clip-path="url(#euler_orbit-p4c87026245)">
+     <use xlink:href="#euler_orbit-m8e6370ffe6" x="92.033122" y="110.099219" style="fill: #2b7fd6; stroke: #2b7fd6"/>
+    </g>
+   </g>
+   <g id="euler_orbit-line2d_13">
+    <path d="M 186.196391 110.099219 
+L 186.149924 107.140992 
+L 185.917906 104.188592 
+L 185.501434 101.25362 
+L 184.902332 98.34756 
+L 184.123143 95.481736 
+L 183.167122 92.667262 
+L 182.03822 89.914994 
+L 180.741069 87.235485 
+L 179.280962 84.638937 
+L 177.663826 82.135155 
+L 175.896192 79.733507 
+L 173.985169 77.442879 
+L 171.938401 75.271634 
+L 169.764034 73.227581 
+L 167.470668 71.317936 
+L 165.067314 69.549295 
+L 162.563347 67.927607 
+L 159.968454 66.458152 
+L 157.292583 65.145527 
+L 154.54589 63.993626 
+L 151.738686 63.005639 
+L 148.88138 62.184046 
+L 145.984431 61.530619 
+L 143.058287 61.046424 
+L 140.113343 60.73184 
+L 137.159882 60.586568 
+L 134.208036 60.609649 
+L 131.267733 60.799492 
+L 128.34866 61.153896 
+L 125.460222 61.670083 
+L 122.611507 62.344725 
+L 119.811255 63.173982 
+L 117.067826 64.153537 
+L 114.389182 65.278632 
+L 111.782859 66.544108 
+L 109.255955 67.94444 
+L 106.815114 69.473781 
+L 104.466518 71.125996 
+L 102.215879 72.894704 
+L 100.068438 74.773311 
+L 97.051068 77.782436 
+L 94.290612 81.000173 
+L 91.798834 84.402659 
+L 89.585226 87.965802 
+L 87.657085 91.665485 
+L 86.019617 95.477756 
+L 84.67605 99.378994 
+L 83.627753 103.346051 
+L 82.874359 107.356374 
+L 82.413897 111.388114 
+L 82.242918 115.420205 
+L 82.356625 119.432434 
+L 82.748991 123.405496 
+L 83.412881 127.321035 
+L 84.340166 131.161666 
+L 85.521829 134.911 
+L 86.948067 138.553649 
+L 88.608382 142.075226 
+L 90.491675 145.462345 
+L 92.586321 148.702608 
+L 94.880245 151.784589 
+L 97.360993 154.697822 
+L 100.015791 157.432778 
+L 102.831604 159.980848 
+L 105.795187 162.334312 
+L 108.893133 164.486329 
+L 112.111915 166.430901 
+L 115.437928 168.162861 
+L 118.857518 169.677843 
+L 122.357022 170.972264 
+L 125.922794 172.043303 
+L 129.541232 172.888878 
+L 133.198804 173.507631 
+L 136.882074 173.898907 
+L 140.577721 174.062739 
+L 144.272561 173.99983 
+L 147.953571 173.711541 
+L 151.607904 173.199873 
+L 155.222909 172.467459 
+L 158.786154 171.517549 
+L 162.285442 170.353997 
+L 165.708831 168.981253 
+L 169.044656 167.404351 
+L 172.281545 165.628899 
+L 175.408444 163.661068 
+L 178.414638 161.507583 
+L 181.28977 159.17571 
+L 184.023869 156.673249 
+L 186.607371 154.008517 
+L 189.031146 151.190341 
+L 191.28652 148.228038 
+L 193.365309 145.131404 
+L 195.259837 141.910697 
+L 196.962971 138.576616 
+L 198.468148 135.140283 
+L 199.769403 131.613218 
+L 200.861395 128.007313 
+L 201.739444 124.334806 
+L 202.39955 120.60825 
+L 202.838427 116.840477 
+L 203.053527 113.044561 
+L 203.043065 109.23378 
+L 202.806045 105.42157 
+L 202.342277 101.621479 
+L 201.652398 97.847119 
+L 200.737885 94.11211 
+L 199.601069 90.430025 
+L 198.245141 86.814334 
+L 196.674152 83.278344 
+L 194.893016 79.835131 
+L 192.9075 76.497486 
+L 190.724207 73.277842 
+L 188.350563 70.188215 
+L 185.79479 67.240141 
+L 183.065872 64.444609 
+L 180.17352 61.812006 
+L 177.12813 59.352056 
+L 173.940729 57.073766 
+L 170.622925 54.98538 
+L 167.186846 53.094327 
+L 163.645076 51.407189 
+L 160.010585 49.929663 
+L 156.29666 48.666534 
+L 152.516831 47.621657 
+L 148.684798 46.797945 
+L 144.814349 46.19736 
+L 140.919291 45.820917 
+L 137.013374 45.668693 
+L 133.110213 45.739843 
+L 129.223226 46.032622 
+L 125.365561 46.544415 
+L 121.550036 47.27177 
+L 117.78908 48.21044 
+L 114.094678 49.355426 
+L 110.478327 50.701025 
+L 106.950991 52.240882 
+L 103.523065 53.968043 
+L 100.204343 55.875011 
+L 97.003997 57.9538 
+L 93.930552 60.195995 
+L 90.991877 62.592806 
+L 88.195177 65.135125 
+L 85.546984 67.813577 
+L 83.053163 70.618576 
+L 80.718916 73.540374 
+L 78.548789 76.56911 
+L 76.546686 79.694852 
+L 74.715885 82.907643 
+L 73.059053 86.197538 
+L 71.578268 89.554642 
+L 70.275039 92.969142 
+L 69.150332 96.431341 
+L 68.204591 99.931679 
+L 67.437761 103.460762 
+L 66.849318 107.009385 
+L 66.438293 110.568545 
+L 66.203294 114.129464 
+L 66.142535 117.683599 
+L 66.253857 121.222657 
+L 66.534758 124.7386 
+L 66.982409 128.223659 
+L 67.833221 132.809444 
+L 68.966713 137.310022 
+L 70.373919 141.709277 
+L 72.045165 145.991987 
+L 73.970143 150.143826 
+L 76.13799 154.151358 
+L 78.537348 158.00203 
+L 81.156429 161.684161 
+L 83.98307 165.186926 
+L 87.004788 168.500343 
+L 90.208824 171.615254 
+L 93.582187 174.523308 
+L 97.111697 177.216943 
+L 100.784014 179.689368 
+L 104.585676 181.934544 
+L 108.503126 183.947165 
+L 112.522739 185.722645 
+L 116.630848 187.257097 
+L 120.813767 188.547322 
+L 125.057807 189.590791 
+L 129.349302 190.385634 
+L 133.674622 190.930627 
+L 138.020192 191.225182 
+L 142.37251 191.269336 
+L 146.718159 191.063742 
+L 151.043828 190.609664 
+L 155.33632 189.908965 
+L 159.582576 188.964109 
+L 163.769683 187.77815 
+L 167.884898 186.354728 
+L 171.915659 184.698072 
+L 175.849604 182.81299 
+L 179.674592 180.70487 
+L 183.378721 178.379678 
+L 186.950349 175.843956 
+L 190.378118 173.104819 
+L 193.650973 170.169953 
+L 196.758194 167.047612 
+L 199.689417 163.746615 
+L 200.393546 162.894538 
+L 200.393546 162.894538 
+" clip-path="url(#euler_orbit-p4c87026245)" style="fill: none; stroke: #c0392b; stroke-width: 1.1; stroke-linecap: square"/>
+   </g>
+   <g id="euler_orbit-line2d_14">
+    <defs>
+     <path id="euler_orbit-mf09ce23d3d" d="M 0 2.5 
+C 0.663008 2.5 1.29895 2.236584 1.767767 1.767767 
+C 2.236584 1.29895 2.5 0.663008 2.5 0 
+C 2.5 -0.663008 2.236584 -1.29895 1.767767 -1.767767 
+C 1.29895 -2.236584 0.663008 -2.5 0 -2.5 
+C -0.663008 -2.5 -1.29895 -2.236584 -1.767767 -1.767767 
+C -2.236584 -1.29895 -2.5 -0.663008 -2.5 0 
+C -2.5 0.663008 -2.236584 1.29895 -1.767767 1.767767 
+C -1.29895 2.236584 -0.663008 2.5 0 2.5 
+z
+" style="stroke: #c0392b"/>
+    </defs>
+    <g clip-path="url(#euler_orbit-p4c87026245)">
+     <use xlink:href="#euler_orbit-mf09ce23d3d" x="186.196391" y="110.099219" style="fill: #c0392b; stroke: #c0392b"/>
+    </g>
+   </g>
+   <g id="euler_orbit-patch_3">
+    <path d="M 58.845313 199.4 
+L 58.845313 20.798437 
+" style="fill: none; stroke: currentColor; stroke-width: 0.8; stroke-linejoin: miter; stroke-linecap: square"/>
+   </g>
+   <g id="euler_orbit-patch_4">
+    <path d="M 219.384201 199.4 
+L 219.384201 20.798437 
+" style="fill: none; stroke: currentColor; stroke-width: 0.8; stroke-linejoin: miter; stroke-linecap: square"/>
+   </g>
+   <g id="euler_orbit-patch_5">
+    <path d="M 58.845312 199.4 
+L 219.384201 199.4 
+" style="fill: none; stroke: currentColor; stroke-width: 0.8; stroke-linejoin: miter; stroke-linecap: square"/>
+   </g>
+   <g id="euler_orbit-patch_6">
+    <path d="M 58.845312 20.798437 
+L 219.384201 20.798437 
+" style="fill: none; stroke: currentColor; stroke-width: 0.8; stroke-linejoin: miter; stroke-linecap: square"/>
+   </g>
+   <g id="euler_orbit-text_13">
+    <!-- 3 orbits, 200 steps per orbit -->
+    <g transform="translate(69.247569 14.798438) scale(0.1 -0.1)">
+     <defs>
+      <path id="euler_orbit-DejaVuSans-16" d="M 2597 2516 
+Q 3050 2419 3304 2112 
+Q 3559 1806 3559 1356 
+Q 3559 666 3084 287 
+Q 2609 -91 1734 -91 
+Q 1441 -91 1130 -33 
+Q 819 25 488 141 
+L 488 750 
+Q 750 597 1062 519 
+Q 1375 441 1716 441 
+Q 2309 441 2620 675 
+Q 2931 909 2931 1356 
+Q 2931 1769 2642 2001 
+Q 2353 2234 1838 2234 
+L 1294 2234 
+L 1294 2753 
+L 1863 2753 
+Q 2328 2753 2575 2939 
+Q 2822 3125 2822 3475 
+Q 2822 3834 2567 4026 
+Q 2313 4219 1838 4219 
+Q 1578 4219 1281 4162 
+Q 984 4106 628 3988 
+L 628 4550 
+Q 988 4650 1302 4700 
+Q 1616 4750 1894 4750 
+Q 2613 4750 3031 4423 
+Q 3450 4097 3450 3541 
+Q 3450 3153 3228 2886 
+Q 3006 2619 2597 2516 
+z
+" transform="scale(0.015625)"/>
+      <path id="euler_orbit-DejaVuSans-3" transform="scale(0.015625)"/>
+      <path id="euler_orbit-DejaVuSans-52" d="M 1959 3097 
+Q 1497 3097 1228 2736 
+Q 959 2375 959 1747 
+Q 959 1119 1226 758 
+Q 1494 397 1959 397 
+Q 2419 397 2687 759 
+Q 2956 1122 2956 1747 
+Q 2956 2369 2687 2733 
+Q 2419 3097 1959 3097 
+z
+M 1959 3584 
+Q 2709 3584 3137 3096 
+Q 3566 2609 3566 1747 
+Q 3566 888 3137 398 
+Q 2709 -91 1959 -91 
+Q 1206 -91 779 398 
+Q 353 888 353 1747 
+Q 353 2609 779 3096 
+Q 1206 3584 1959 3584 
+z
+" transform="scale(0.015625)"/>
+      <path id="euler_orbit-DejaVuSans-55" d="M 2631 2963 
+Q 2534 3019 2420 3045 
+Q 2306 3072 2169 3072 
+Q 1681 3072 1420 2755 
+Q 1159 2438 1159 1844 
+L 1159 0 
+L 581 0 
+L 581 3500 
+L 1159 3500 
+L 1159 2956 
+Q 1341 3275 1631 3429 
+Q 1922 3584 2338 3584 
+Q 2397 3584 2469 3576 
+Q 2541 3569 2628 3553 
+L 2631 2963 
+z
+" transform="scale(0.015625)"/>
+      <path id="euler_orbit-DejaVuSans-45" d="M 3116 1747 
+Q 3116 2381 2855 2742 
+Q 2594 3103 2138 3103 
+Q 1681 3103 1420 2742 
+Q 1159 2381 1159 1747 
+Q 1159 1113 1420 752 
+Q 1681 391 2138 391 
+Q 2594 391 2855 752 
+Q 3116 1113 3116 1747 
+z
+M 1159 2969 
+Q 1341 3281 1617 3432 
+Q 1894 3584 2278 3584 
+Q 2916 3584 3314 3078 
+Q 3713 2572 3713 1747 
+Q 3713 922 3314 415 
+Q 2916 -91 2278 -91 
+Q 1894 -91 1617 61 
+Q 1341 213 1159 525 
+L 1159 0 
+L 581 0 
+L 581 4863 
+L 1159 4863 
+L 1159 2969 
+z
+" transform="scale(0.015625)"/>
+      <path id="euler_orbit-DejaVuSans-4c" d="M 603 3500 
+L 1178 3500 
+L 1178 0 
+L 603 0 
+L 603 3500 
+z
+M 603 4863 
+L 1178 4863 
+L 1178 4134 
+L 603 4134 
+L 603 4863 
+z
+" transform="scale(0.015625)"/>
+      <path id="euler_orbit-DejaVuSans-57" d="M 1172 4494 
+L 1172 3500 
+L 2356 3500 
+L 2356 3053 
+L 1172 3053 
+L 1172 1153 
+Q 1172 725 1289 603 
+Q 1406 481 1766 481 
+L 2356 481 
+L 2356 0 
+L 1766 0 
+Q 1100 0 847 248 
+Q 594 497 594 1153 
+L 594 3053 
+L 172 3053 
+L 172 3500 
+L 594 3500 
+L 594 4494 
+L 1172 4494 
+z
+" transform="scale(0.015625)"/>
+      <path id="euler_orbit-DejaVuSans-56" d="M 2834 3397 
+L 2834 2853 
+Q 2591 2978 2328 3040 
+Q 2066 3103 1784 3103 
+Q 1356 3103 1142 2972 
+Q 928 2841 928 2578 
+Q 928 2378 1081 2264 
+Q 1234 2150 1697 2047 
+L 1894 2003 
+Q 2506 1872 2764 1633 
+Q 3022 1394 3022 966 
+Q 3022 478 2636 193 
+Q 2250 -91 1575 -91 
+Q 1294 -91 989 -36 
+Q 684 19 347 128 
+L 347 722 
+Q 666 556 975 473 
+Q 1284 391 1588 391 
+Q 1994 391 2212 530 
+Q 2431 669 2431 922 
+Q 2431 1156 2273 1281 
+Q 2116 1406 1581 1522 
+L 1381 1569 
+Q 847 1681 609 1914 
+Q 372 2147 372 2553 
+Q 372 3047 722 3315 
+Q 1072 3584 1716 3584 
+Q 2034 3584 2315 3537 
+Q 2597 3491 2834 3397 
+z
+" transform="scale(0.015625)"/>
+      <path id="euler_orbit-DejaVuSans-f" d="M 750 794 
+L 1409 794 
+L 1409 256 
+L 897 -744 
+L 494 -744 
+L 750 256 
+L 750 794 
+z
+" transform="scale(0.015625)"/>
+      <path id="euler_orbit-DejaVuSans-48" d="M 3597 1894 
+L 3597 1613 
+L 953 1613 
+Q 991 1019 1311 708 
+Q 1631 397 2203 397 
+Q 2534 397 2845 478 
+Q 3156 559 3463 722 
+L 3463 178 
+Q 3153 47 2828 -22 
+Q 2503 -91 2169 -91 
+Q 1331 -91 842 396 
+Q 353 884 353 1716 
+Q 353 2575 817 3079 
+Q 1281 3584 2069 3584 
+Q 2775 3584 3186 3129 
+Q 3597 2675 3597 1894 
+z
+M 3022 2063 
+Q 3016 2534 2758 2815 
+Q 2500 3097 2075 3097 
+Q 1594 3097 1305 2825 
+Q 1016 2553 972 2059 
+L 3022 2063 
+z
+" transform="scale(0.015625)"/>
+      <path id="euler_orbit-DejaVuSans-53" d="M 1159 525 
+L 1159 -1331 
+L 581 -1331 
+L 581 3500 
+L 1159 3500 
+L 1159 2969 
+Q 1341 3281 1617 3432 
+Q 1894 3584 2278 3584 
+Q 2916 3584 3314 3078 
+Q 3713 2572 3713 1747 
+Q 3713 922 3314 415 
+Q 2916 -91 2278 -91 
+Q 1894 -91 1617 61 
+Q 1341 213 1159 525 
+z
+M 3116 1747 
+Q 3116 2381 2855 2742 
+Q 2594 3103 2138 3103 
+Q 1681 3103 1420 2742 
+Q 1159 2381 1159 1747 
+Q 1159 1113 1420 752 
+Q 1681 391 2138 391 
+Q 2594 391 2855 752 
+Q 3116 1113 3116 1747 
+z
+" transform="scale(0.015625)"/>
+     </defs>
+     <use xlink:href="#euler_orbit-DejaVuSans-16"/>
+     <use xlink:href="#euler_orbit-DejaVuSans-3" transform="translate(63.625 0)"/>
+     <use xlink:href="#euler_orbit-DejaVuSans-52" transform="translate(95.40625 0)"/>
+     <use xlink:href="#euler_orbit-DejaVuSans-55" transform="translate(156.59375 0)"/>
+     <use xlink:href="#euler_orbit-DejaVuSans-45" transform="translate(197.703125 0)"/>
+     <use xlink:href="#euler_orbit-DejaVuSans-4c" transform="translate(261.1875 0)"/>
+     <use xlink:href="#euler_orbit-DejaVuSans-57" transform="translate(288.96875 0)"/>
+     <use xlink:href="#euler_orbit-DejaVuSans-56" transform="translate(328.171875 0)"/>
+     <use xlink:href="#euler_orbit-DejaVuSans-f" transform="translate(380.265625 0)"/>
+     <use xlink:href="#euler_orbit-DejaVuSans-3" transform="translate(412.046875 0)"/>
+     <use xlink:href="#euler_orbit-DejaVuSans-15" transform="translate(443.828125 0)"/>
+     <use xlink:href="#euler_orbit-DejaVuSans-13" transform="translate(507.453125 0)"/>
+     <use xlink:href="#euler_orbit-DejaVuSans-13" transform="translate(571.078125 0)"/>
+     <use xlink:href="#euler_orbit-DejaVuSans-3" transform="translate(634.703125 0)"/>
+     <use xlink:href="#euler_orbit-DejaVuSans-56" transform="translate(666.484375 0)"/>
+     <use xlink:href="#euler_orbit-DejaVuSans-57" transform="translate(718.578125 0)"/>
+     <use xlink:href="#euler_orbit-DejaVuSans-48" transform="translate(757.78125 0)"/>
+     <use xlink:href="#euler_orbit-DejaVuSans-53" transform="translate(819.3125 0)"/>
+     <use xlink:href="#euler_orbit-DejaVuSans-56" transform="translate(882.796875 0)"/>
+     <use xlink:href="#euler_orbit-DejaVuSans-3" transform="translate(934.890625 0)"/>
+     <use xlink:href="#euler_orbit-DejaVuSans-53" transform="translate(966.671875 0)"/>
+     <use xlink:href="#euler_orbit-DejaVuSans-48" transform="translate(1030.15625 0)"/>
+     <use xlink:href="#euler_orbit-DejaVuSans-55" transform="translate(1091.6875 0)"/>
+     <use xlink:href="#euler_orbit-DejaVuSans-3" transform="translate(1132.796875 0)"/>
+     <use xlink:href="#euler_orbit-DejaVuSans-52" transform="translate(1164.578125 0)"/>
+     <use xlink:href="#euler_orbit-DejaVuSans-55" transform="translate(1225.765625 0)"/>
+     <use xlink:href="#euler_orbit-DejaVuSans-45" transform="translate(1266.875 0)"/>
+     <use xlink:href="#euler_orbit-DejaVuSans-4c" transform="translate(1330.359375 0)"/>
+     <use xlink:href="#euler_orbit-DejaVuSans-57" transform="translate(1358.140625 0)"/>
+    </g>
+   </g>
+  </g>
+  <g id="euler_orbit-axes_2">
+   <g id="euler_orbit-patch_7">
+    <path d="M 314.249488 199.4 
+L 490.802897 199.4 
+L 490.802897 20.798437 
+L 314.249488 20.798437 
+L 314.249488 199.4 
+z
+" style="fill: none"/>
+   </g>
+   <g id="euler_orbit-matplotlib.axis_3">
+    <g id="euler_orbit-xtick_4">
+     <g id="euler_orbit-line2d_15">
+      <g>
+       <use xlink:href="#euler_orbit-m999ba409cc" x="324.047731" y="199.4" style="stroke: currentColor; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="euler_orbit-text_14">
+      <!-- −0.50 -->
+      <g transform="translate(308.725074 213.997656) scale(0.1 -0.1)">
+       <use xlink:href="#euler_orbit-DejaVuSans-c9c"/>
+       <use xlink:href="#euler_orbit-DejaVuSans-13" transform="translate(83.796875 0)"/>
+       <use xlink:href="#euler_orbit-DejaVuSans-11" transform="translate(147.421875 0)"/>
+       <use xlink:href="#euler_orbit-DejaVuSans-18" transform="translate(179.203125 0)"/>
+       <use xlink:href="#euler_orbit-DejaVuSans-13" transform="translate(242.828125 0)"/>
+      </g>
+     </g>
+    </g>
+    <g id="euler_orbit-xtick_5">
+     <g id="euler_orbit-line2d_16">
+      <g>
+       <use xlink:href="#euler_orbit-m999ba409cc" x="363.286962" y="199.4" style="stroke: currentColor; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="euler_orbit-text_15">
+      <!-- −0.25 -->
+      <g transform="translate(347.964305 213.997656) scale(0.1 -0.1)">
+       <use xlink:href="#euler_orbit-DejaVuSans-c9c"/>
+       <use xlink:href="#euler_orbit-DejaVuSans-13" transform="translate(83.796875 0)"/>
+       <use xlink:href="#euler_orbit-DejaVuSans-11" transform="translate(147.421875 0)"/>
+       <use xlink:href="#euler_orbit-DejaVuSans-15" transform="translate(179.203125 0)"/>
+       <use xlink:href="#euler_orbit-DejaVuSans-18" transform="translate(242.828125 0)"/>
+      </g>
+     </g>
+    </g>
+    <g id="euler_orbit-xtick_6">
+     <g id="euler_orbit-line2d_17">
+      <g>
+       <use xlink:href="#euler_orbit-m999ba409cc" x="402.526193" y="199.4" style="stroke: currentColor; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="euler_orbit-text_16">
+      <!-- 0.00 -->
+      <g transform="translate(391.39338 213.997656) scale(0.1 -0.1)">
+       <use xlink:href="#euler_orbit-DejaVuSans-13"/>
+       <use xlink:href="#euler_orbit-DejaVuSans-11" transform="translate(63.625 0)"/>
+       <use xlink:href="#euler_orbit-DejaVuSans-13" transform="translate(95.40625 0)"/>
+       <use xlink:href="#euler_orbit-DejaVuSans-13" transform="translate(159.03125 0)"/>
+      </g>
+     </g>
+    </g>
+    <g id="euler_orbit-xtick_7">
+     <g id="euler_orbit-line2d_18">
+      <g>
+       <use xlink:href="#euler_orbit-m999ba409cc" x="441.765424" y="199.4" style="stroke: currentColor; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="euler_orbit-text_17">
+      <!-- 0.25 -->
+      <g transform="translate(430.632611 213.997656) scale(0.1 -0.1)">
+       <use xlink:href="#euler_orbit-DejaVuSans-13"/>
+       <use xlink:href="#euler_orbit-DejaVuSans-11" transform="translate(63.625 0)"/>
+       <use xlink:href="#euler_orbit-DejaVuSans-15" transform="translate(95.40625 0)"/>
+       <use xlink:href="#euler_orbit-DejaVuSans-18" transform="translate(159.03125 0)"/>
+      </g>
+     </g>
+    </g>
+    <g id="euler_orbit-xtick_8">
+     <g id="euler_orbit-line2d_19">
+      <g>
+       <use xlink:href="#euler_orbit-m999ba409cc" x="481.004655" y="199.4" style="stroke: currentColor; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="euler_orbit-text_18">
+      <!-- 0.50 -->
+      <g transform="translate(469.871842 213.997656) scale(0.1 -0.1)">
+       <use xlink:href="#euler_orbit-DejaVuSans-13"/>
+       <use xlink:href="#euler_orbit-DejaVuSans-11" transform="translate(63.625 0)"/>
+       <use xlink:href="#euler_orbit-DejaVuSans-18" transform="translate(95.40625 0)"/>
+       <use xlink:href="#euler_orbit-DejaVuSans-13" transform="translate(159.03125 0)"/>
+      </g>
+     </g>
+    </g>
+    <g id="euler_orbit-text_19">
+     <!-- x -->
+     <g transform="translate(399.566818 227.997656) scale(0.1 -0.1)">
+      <use xlink:href="#euler_orbit-DejaVuSans-5b"/>
+     </g>
+    </g>
+   </g>
+   <g id="euler_orbit-matplotlib.axis_4">
+    <g id="euler_orbit-ytick_8">
+     <g id="euler_orbit-line2d_20">
+      <g>
+       <use xlink:href="#euler_orbit-m1e2b8ce97c" x="314.249488" y="172.881989" style="stroke: currentColor; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="euler_orbit-text_20">
+      <!-- −0.4 -->
+      <g transform="translate(282.966676 176.680817) scale(0.1 -0.1)">
+       <defs>
+        <path id="euler_orbit-DejaVuSans-17" d="M 2419 4116 
+L 825 1625 
+L 2419 1625 
+L 2419 4116 
+z
+M 2253 4666 
+L 3047 4666 
+L 3047 1625 
+L 3713 1625 
+L 3713 1100 
+L 3047 1100 
+L 3047 0 
+L 2419 0 
+L 2419 1100 
+L 313 1100 
+L 313 1709 
+L 2253 4666 
+z
+" transform="scale(0.015625)"/>
+       </defs>
+       <use xlink:href="#euler_orbit-DejaVuSans-c9c"/>
+       <use xlink:href="#euler_orbit-DejaVuSans-13" transform="translate(83.796875 0)"/>
+       <use xlink:href="#euler_orbit-DejaVuSans-11" transform="translate(147.421875 0)"/>
+       <use xlink:href="#euler_orbit-DejaVuSans-17" transform="translate(179.203125 0)"/>
+      </g>
+     </g>
+    </g>
+    <g id="euler_orbit-ytick_9">
+     <g id="euler_orbit-line2d_21">
+      <g>
+       <use xlink:href="#euler_orbit-m1e2b8ce97c" x="314.249488" y="141.490604" style="stroke: currentColor; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="euler_orbit-text_21">
+      <!-- −0.2 -->
+      <g transform="translate(282.966676 145.289432) scale(0.1 -0.1)">
+       <use xlink:href="#euler_orbit-DejaVuSans-c9c"/>
+       <use xlink:href="#euler_orbit-DejaVuSans-13" transform="translate(83.796875 0)"/>
+       <use xlink:href="#euler_orbit-DejaVuSans-11" transform="translate(147.421875 0)"/>
+       <use xlink:href="#euler_orbit-DejaVuSans-15" transform="translate(179.203125 0)"/>
+      </g>
+     </g>
+    </g>
+    <g id="euler_orbit-ytick_10">
+     <g id="euler_orbit-line2d_22">
+      <g>
+       <use xlink:href="#euler_orbit-m1e2b8ce97c" x="314.249488" y="110.099219" style="stroke: currentColor; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="euler_orbit-text_22">
+      <!-- 0.0 -->
+      <g transform="translate(291.346363 113.898047) scale(0.1 -0.1)">
+       <use xlink:href="#euler_orbit-DejaVuSans-13"/>
+       <use xlink:href="#euler_orbit-DejaVuSans-11" transform="translate(63.625 0)"/>
+       <use xlink:href="#euler_orbit-DejaVuSans-13" transform="translate(95.40625 0)"/>
+      </g>
+     </g>
+    </g>
+    <g id="euler_orbit-ytick_11">
+     <g id="euler_orbit-line2d_23">
+      <g>
+       <use xlink:href="#euler_orbit-m1e2b8ce97c" x="314.249488" y="78.707834" style="stroke: currentColor; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="euler_orbit-text_23">
+      <!-- 0.2 -->
+      <g transform="translate(291.346363 82.506662) scale(0.1 -0.1)">
+       <use xlink:href="#euler_orbit-DejaVuSans-13"/>
+       <use xlink:href="#euler_orbit-DejaVuSans-11" transform="translate(63.625 0)"/>
+       <use xlink:href="#euler_orbit-DejaVuSans-15" transform="translate(95.40625 0)"/>
+      </g>
+     </g>
+    </g>
+    <g id="euler_orbit-ytick_12">
+     <g id="euler_orbit-line2d_24">
+      <g>
+       <use xlink:href="#euler_orbit-m1e2b8ce97c" x="314.249488" y="47.316449" style="stroke: currentColor; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="euler_orbit-text_24">
+      <!-- 0.4 -->
+      <g transform="translate(291.346363 51.115277) scale(0.1 -0.1)">
+       <use xlink:href="#euler_orbit-DejaVuSans-13"/>
+       <use xlink:href="#euler_orbit-DejaVuSans-11" transform="translate(63.625 0)"/>
+       <use xlink:href="#euler_orbit-DejaVuSans-17" transform="translate(95.40625 0)"/>
+      </g>
+     </g>
+    </g>
+    <g id="euler_orbit-text_25">
+     <!-- y -->
+     <g transform="translate(276.564332 113.058594) rotate(-90) scale(0.1 -0.1)">
+      <use xlink:href="#euler_orbit-DejaVuSans-5c"/>
+     </g>
+    </g>
+   </g>
+   <g id="euler_orbit-line2d_25">
+    <path d="M 324.047731 110.099219 
+L 324.153044 114.28887 
+L 324.481831 118.467278 
+L 325.033136 122.622535 
+L 325.805368 126.742802 
+L 326.796306 130.816342 
+L 328.003103 134.831559 
+L 329.4223 138.777026 
+L 331.049828 142.641522 
+L 332.881028 146.414061 
+L 334.910658 150.083925 
+L 337.13291 153.640696 
+L 339.54143 157.074287 
+L 342.129333 160.374966 
+L 344.889223 163.533391 
+L 347.813221 166.540633 
+L 350.892977 169.388201 
+L 354.119708 172.06807 
+L 357.484212 174.572703 
+L 360.976904 176.895069 
+L 364.587839 179.028669 
+L 368.306744 180.967549 
+L 372.12305 182.70632 
+L 376.025921 184.240172 
+L 380.004284 185.564889 
+L 384.046867 186.676855 
+L 388.142232 187.57307 
+L 392.278804 188.251154 
+L 396.444908 188.709352 
+L 400.628808 188.946541 
+L 404.818732 188.962229 
+L 409.002915 188.756554 
+L 413.169629 188.330284 
+L 417.307219 187.684815 
+L 421.404136 186.822157 
+L 425.448969 185.744936 
+L 429.430482 184.456377 
+L 433.337639 182.960296 
+L 437.159644 181.261084 
+L 440.885964 179.363698 
+L 444.50636 177.273636 
+L 448.010918 174.996925 
+L 451.390075 172.5401 
+L 454.634643 169.910183 
+L 457.735834 167.11466 
+L 460.685286 164.161457 
+L 463.475082 161.058917 
+L 466.09777 157.815775 
+L 468.546384 154.441129 
+L 470.814459 150.944412 
+L 472.89605 147.335368 
+L 474.785739 143.62402 
+L 476.478656 139.820639 
+L 477.970483 135.935719 
+L 479.257466 131.979941 
+L 480.336421 127.964149 
+L 481.20474 123.899313 
+L 481.860396 119.796502 
+L 482.301944 115.666852 
+L 482.528522 111.521536 
+L 482.539849 107.371733 
+L 482.336225 103.228598 
+L 481.918525 99.103233 
+L 481.288194 95.006655 
+L 480.447238 90.949772 
+L 479.398219 86.943348 
+L 478.144245 82.997982 
+L 476.688953 79.124076 
+L 475.036506 75.331812 
+L 473.191569 71.631125 
+L 471.159303 68.031677 
+L 468.945344 64.54284 
+L 466.555787 61.173662 
+L 463.997169 57.932857 
+L 461.276447 54.828778 
+L 458.400984 51.869395 
+L 455.378521 49.062285 
+L 452.217161 46.414608 
+L 448.925344 43.93309 
+L 445.511827 41.624013 
+L 441.985655 39.493199 
+L 438.356144 37.545994 
+L 434.632851 35.787263 
+L 430.825554 34.221372 
+L 426.94422 32.852187 
+L 422.998987 31.683061 
+L 418.763458 30.66636 
+L 414.480158 29.879844 
+L 410.161539 29.325574 
+L 405.820129 29.004946 
+L 401.468498 28.918687 
+L 397.119221 29.066857 
+L 392.784845 29.448846 
+L 388.477854 30.063384 
+L 384.210634 30.908542 
+L 379.995441 31.981738 
+L 375.844365 33.279749 
+L 371.769298 34.798719 
+L 367.781903 36.53417 
+L 363.893581 38.481017 
+L 360.115439 40.633581 
+L 356.458264 42.98561 
+L 352.932487 45.530289 
+L 349.548159 48.260266 
+L 346.314925 51.167673 
+L 343.241993 54.244141 
+L 340.338112 57.480832 
+L 337.611547 60.868459 
+L 335.070056 64.397312 
+L 332.720871 68.057287 
+L 330.570673 71.837913 
+L 328.625579 75.728382 
+L 326.891121 79.717578 
+L 325.37223 83.794108 
+L 324.073228 87.946337 
+L 322.997809 92.162416 
+L 322.274643 95.715917 
+L 322.274643 95.715917 
+" clip-path="url(#euler_orbit-p892c00a5a9)" style="fill: none; stroke: #2b7fd6; stroke-width: 1.1; stroke-linecap: square"/>
+   </g>
+   <g id="euler_orbit-line2d_26">
+    <g clip-path="url(#euler_orbit-p892c00a5a9)">
+     <use xlink:href="#euler_orbit-m8e6370ffe6" x="324.047731" y="110.099219" style="fill: #2b7fd6; stroke: #2b7fd6"/>
+    </g>
+   </g>
+   <g id="euler_orbit-line2d_27">
+    <path d="M 481.004655 110.099219 
+L 480.899342 105.909568 
+L 480.570555 101.731159 
+L 480.019249 97.575902 
+L 479.247017 93.455636 
+L 478.25608 89.382096 
+L 477.049282 85.366879 
+L 475.630086 81.421411 
+L 474.002557 77.556916 
+L 472.171357 73.784377 
+L 470.141728 70.114513 
+L 467.919475 66.557741 
+L 465.510955 63.124151 
+L 462.923053 59.823471 
+L 460.163162 56.665046 
+L 457.239165 53.657805 
+L 454.159408 50.810237 
+L 450.932678 48.130367 
+L 447.568174 45.625735 
+L 444.075482 43.303368 
+L 440.464547 41.169769 
+L 436.745641 39.230889 
+L 432.929335 37.492118 
+L 429.026465 35.958265 
+L 425.048102 34.633549 
+L 421.005518 33.521582 
+L 416.910153 32.625367 
+L 412.773582 31.947284 
+L 408.607477 31.489085 
+L 404.423578 31.251896 
+L 400.233654 31.236209 
+L 396.049471 31.441884 
+L 391.882757 31.868153 
+L 387.745167 32.513623 
+L 383.64825 33.37628 
+L 379.603416 34.453501 
+L 375.621904 35.742061 
+L 371.714746 37.238142 
+L 367.892741 38.937353 
+L 364.166422 40.83474 
+L 360.546026 42.924802 
+L 357.041467 45.201513 
+L 353.66231 47.658337 
+L 350.417743 50.288254 
+L 347.316552 53.083778 
+L 344.3671 56.036981 
+L 341.577304 59.13952 
+L 338.954616 62.382662 
+L 336.506002 65.757309 
+L 334.237926 69.254025 
+L 332.156336 72.863069 
+L 330.266646 76.574418 
+L 328.573729 80.377799 
+L 327.081902 84.262719 
+L 325.79492 88.218496 
+L 324.715965 92.234288 
+L 323.847646 96.299125 
+L 323.19199 100.401936 
+L 322.750441 104.531586 
+L 322.523864 108.676902 
+L 322.512536 112.826705 
+L 322.71616 116.96984 
+L 323.13386 121.095205 
+L 323.764192 125.191782 
+L 324.605148 129.248666 
+L 325.654166 133.255089 
+L 326.908141 137.200456 
+L 328.363432 141.074361 
+L 330.01588 144.866626 
+L 331.860816 148.567313 
+L 333.893082 152.16676 
+L 336.107041 155.655598 
+L 338.496598 159.024775 
+L 341.055217 162.26558 
+L 343.775938 165.36966 
+L 346.651402 168.329042 
+L 349.673865 171.136152 
+L 352.835225 173.78383 
+L 356.127041 176.265348 
+L 359.540559 178.574424 
+L 363.066731 180.705239 
+L 366.696242 182.652443 
+L 370.419534 184.411175 
+L 374.226832 185.977065 
+L 378.108166 187.34625 
+L 382.053399 188.515377 
+L 386.288927 189.532077 
+L 390.572227 190.318594 
+L 394.890847 190.872863 
+L 399.232256 191.193491 
+L 403.583888 191.27975 
+L 407.933165 191.131581 
+L 412.26754 190.749591 
+L 416.574531 190.135053 
+L 420.841751 189.289896 
+L 425.056944 188.216699 
+L 429.208021 186.918688 
+L 433.283088 185.399718 
+L 437.270483 183.664268 
+L 441.158805 181.717421 
+L 444.936946 179.564856 
+L 448.594122 177.212828 
+L 452.119899 174.668149 
+L 455.504226 171.938171 
+L 458.73746 169.030765 
+L 461.810393 165.954297 
+L 464.714274 162.717605 
+L 467.440839 159.329979 
+L 469.982329 155.801126 
+L 472.331514 152.141151 
+L 474.481712 148.360524 
+L 476.426806 144.470055 
+L 478.161265 140.48086 
+L 479.680155 136.404329 
+L 480.979157 132.2521 
+L 482.054577 128.036022 
+L 482.777742 124.482521 
+L 482.777742 124.482521 
+" clip-path="url(#euler_orbit-p892c00a5a9)" style="fill: none; stroke: #c0392b; stroke-width: 1.1; stroke-linecap: square"/>
+   </g>
+   <g id="euler_orbit-line2d_28">
+    <g clip-path="url(#euler_orbit-p892c00a5a9)">
+     <use xlink:href="#euler_orbit-mf09ce23d3d" x="481.004655" y="110.099219" style="fill: #c0392b; stroke: #c0392b"/>
+    </g>
+   </g>
+   <g id="euler_orbit-patch_8">
+    <path d="M 314.249488 199.4 
+L 314.249488 20.798437 
+" style="fill: none; stroke: currentColor; stroke-width: 0.8; stroke-linejoin: miter; stroke-linecap: square"/>
+   </g>
+   <g id="euler_orbit-patch_9">
+    <path d="M 490.802897 199.4 
+L 490.802897 20.798437 
+" style="fill: none; stroke: currentColor; stroke-width: 0.8; stroke-linejoin: miter; stroke-linecap: square"/>
+   </g>
+   <g id="euler_orbit-patch_10">
+    <path d="M 314.249488 199.4 
+L 490.802897 199.4 
+" style="fill: none; stroke: currentColor; stroke-width: 0.8; stroke-linejoin: miter; stroke-linecap: square"/>
+   </g>
+   <g id="euler_orbit-patch_11">
+    <path d="M 314.249488 20.798437 
+L 490.802897 20.798437 
+" style="fill: none; stroke: currentColor; stroke-width: 0.8; stroke-linejoin: miter; stroke-linecap: square"/>
+   </g>
+   <g id="euler_orbit-text_26">
+    <!-- 1 orbit, 2000 steps -->
+    <g transform="translate(355.205099 14.798438) scale(0.1 -0.1)">
+     <defs>
+      <path id="euler_orbit-DejaVuSans-14" d="M 794 531 
+L 1825 531 
+L 1825 4091 
+L 703 3866 
+L 703 4441 
+L 1819 4666 
+L 2450 4666 
+L 2450 531 
+L 3481 531 
+L 3481 0 
+L 794 0 
+L 794 531 
+z
+" transform="scale(0.015625)"/>
+     </defs>
+     <use xlink:href="#euler_orbit-DejaVuSans-14"/>
+     <use xlink:href="#euler_orbit-DejaVuSans-3" transform="translate(63.625 0)"/>
+     <use xlink:href="#euler_orbit-DejaVuSans-52" transform="translate(95.40625 0)"/>
+     <use xlink:href="#euler_orbit-DejaVuSans-55" transform="translate(156.59375 0)"/>
+     <use xlink:href="#euler_orbit-DejaVuSans-45" transform="translate(197.703125 0)"/>
+     <use xlink:href="#euler_orbit-DejaVuSans-4c" transform="translate(261.1875 0)"/>
+     <use xlink:href="#euler_orbit-DejaVuSans-57" transform="translate(288.96875 0)"/>
+     <use xlink:href="#euler_orbit-DejaVuSans-f" transform="translate(328.171875 0)"/>
+     <use xlink:href="#euler_orbit-DejaVuSans-3" transform="translate(359.953125 0)"/>
+     <use xlink:href="#euler_orbit-DejaVuSans-15" transform="translate(391.734375 0)"/>
+     <use xlink:href="#euler_orbit-DejaVuSans-13" transform="translate(455.359375 0)"/>
+     <use xlink:href="#euler_orbit-DejaVuSans-13" transform="translate(518.984375 0)"/>
+     <use xlink:href="#euler_orbit-DejaVuSans-13" transform="translate(582.609375 0)"/>
+     <use xlink:href="#euler_orbit-DejaVuSans-3" transform="translate(646.234375 0)"/>
+     <use xlink:href="#euler_orbit-DejaVuSans-56" transform="translate(678.015625 0)"/>
+     <use xlink:href="#euler_orbit-DejaVuSans-57" transform="translate(730.109375 0)"/>
+     <use xlink:href="#euler_orbit-DejaVuSans-48" transform="translate(769.3125 0)"/>
+     <use xlink:href="#euler_orbit-DejaVuSans-53" transform="translate(830.84375 0)"/>
+     <use xlink:href="#euler_orbit-DejaVuSans-56" transform="translate(894.328125 0)"/>
+    </g>
+   </g>
+  </g>
+ </g>
+ <defs>
+  <clipPath id="euler_orbit-p4c87026245">
+   <rect x="58.845313" y="20.798438" width="160.538889" height="178.601562"/>
+  </clipPath>
+  <clipPath id="euler_orbit-p892c00a5a9">
+   <rect x="314.249488" y="20.798438" width="176.553409" height="178.601562"/>
+  </clipPath>
+ </defs>
+</svg>
