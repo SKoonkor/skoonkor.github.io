@@ -3,7 +3,6 @@ import { getCollection } from "astro:content";
 import DemoThumb from "@/components/DemoThumb.astro";
 import FormattedDate from "@/components/FormattedDate.astro";
 import PageTitle from "@/components/PageTitle.astro";
-import { course } from "@/data/course";
 import { demos } from "@/data/demos";
 import { software } from "@/data/software";
 import PageLayout from "@/layouts/Base.astro";
@@ -11,8 +10,6 @@ import { collectionDateSort } from "@/utils/date";
 import "@/styles/software.css";
 
 const notes = (await getCollection("post", ({ data }) => !data.draft)).sort(collectionDateSort);
-const lessons = await getCollection("lesson", ({ data }) => !data.draft);
-const lessonsWritten = lessons.filter((l) => l.data.status === "published").length;
 
 const meta = {
 	description:
@@ -86,27 +83,6 @@ const meta = {
 					))
 				}
 			</ul>
-		</section>
-
-		{/*
-			A separate section, not another demo card. The copy above promises that everything
-			in the demo list runs in your browser; a course is something to read.
-		*/}
-		<section class="mt-20">
-			<h2 class="title mb-6 text-xl">A course</h2>
-			<ul class="explore-cards" role="list">
-				<li>
-					<a href={course.href}>
-						<h2>{course.title}</h2>
-						<div class="explore-cards__body">
-							<p>{course.blurb}</p>
-						</div>
-					</a>
-				</li>
-			</ul>
-			<p class="text-muted mt-4 text-sm">
-				{lessonsWritten} of {lessons.length} parts written so far.
-			</p>
 		</section>
 
 		{/* Journal club: a link out to the MOCHA page, which has its own theme. */}

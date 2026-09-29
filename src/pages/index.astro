@@ -2,7 +2,7 @@
 import { getCollection } from "astro:content";
 import PageTitle from "@/components/PageTitle.astro";
 import SocialList from "@/components/SocialList.astro";
-import { course } from "@/data/course";
+import { courses } from "@/data/courses";
 import { liveDemos } from "@/data/demos";
 import { latestPaper } from "@/data/publications";
 import PageLayout from "@/layouts/Base.astro";
@@ -122,9 +122,15 @@ const featured = research.slice(0, 3);
 				</p>
 			))
 		}
-		<p class="mt-3">
-			<a class="cactus-link text-base" href={course.href}>{course.title}</a>
-			<span class="text-muted text-sm">&nbsp;&mdash; {course.tagline}</span>
-		</p>
+		{
+			courses.map(({ href, title, tagline }) => (
+				<p class="mt-3">
+					<a class="cactus-link text-base" href={href}>
+						{title}
+					</a>
+					<span class="text-muted text-sm">&nbsp;&mdash; {tagline}</span>
+				</p>
+			))
+		}
 	</section>
 </PageLayout>
