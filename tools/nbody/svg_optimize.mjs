@@ -15,7 +15,10 @@ const out = optimize(before, {
 	plugins: [
 		{
 			name: "preset-default",
-			params: { overrides: { cleanupIds: { minify: false, remove: true } } },
+			// FORCE_MERGE=1: merge same-coloured shapes even where they overlap. Only correct for OPAQUE fills with
+			// no stroke (a dense scatter of same-colour dots): overlapping translucent or stroked shapes would
+			// composite differently once merged, so leave it off for those.
+			params: { overrides: { cleanupIds: { minify: false, remove: true }, ...(process.env.FORCE_MERGE ? { mergePaths: { force: true } } : {}) } },
 		},
 	],
 });

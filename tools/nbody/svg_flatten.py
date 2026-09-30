@@ -96,6 +96,28 @@ def main():
         p = parent[use]
         p[list(p).index(use)] = g
         n += 1
+    # Move simple inline style declarations onto attributes, so svgo can bake a shape's translation into its
+    # path data and merge neighbours (it will not touch a path that has a style attribute). Only properties
+    # that matplotlib's page-wide `<style>*{stroke-linejoin:round;stroke-linecap:butt}</style>` rule cannot
+    # override; stroke-linejoin/linecap stay in `style`, where an inline value beats that rule.
+    safe = {"fill", "fill-opacity", "opacity", "stroke", "stroke-width", "stroke-opacity", "stroke-dasharray", "stroke-miterlimit"}
+    for e in root.iter():
+        st = e.get("style")
+        if not st:
+            continue
+        keep = []
+        for decl in st.split(";"):
+            if ":" not in decl:
+                continue
+            name, val = (x.strip() for x in decl.split(":", 1))
+            if name in safe:
+                e.set(name, val)
+            else:
+                keep.append(f"{name}:{val}")
+        if keep:
+            e.set("style", ";".join(keep))
+        else:
+            del e.attrib["style"]
     # Stroke-only paths (cell outlines, axes) must not be merged by svgo: neighbouring cells share an
     # edge that is stroked twice, and merging would stroke it once and lighten it. A unique marker
     # attribute keeps them apart; svg_optimize.mjs strips it again.

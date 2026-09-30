@@ -13,7 +13,7 @@ Usage: python3 svg_recolor.py <in.svg> <out.svg> <id-prefix> [--plot]
 import re
 import sys
 
-BLUE, RED, GREEN = "#2b7fd6", "#c0392b", "#2e8b57"
+BLUE, RED, GREEN, ORANGE = "#2b7fd6", "#c0392b", "#2e8b57", "#e08a3c"
 
 
 def pct(s):
@@ -31,7 +31,12 @@ def classify(rgb):
         return "currentColor", max(0.15, 1.0 - r)         # gray ink: darker gray -> more opaque
     # tinted colours: classify by dominant channel
     if r > g and r > b:
-        base, hue = RED, (0.75, 0.22, 0.17)
+        # red and orange are both red-dominant: tell them apart by how far green sits above blue
+        q = (g - b) / max(1e-9, r - b)
+        if q > 0.25:
+            base, hue = ORANGE, (0.88, 0.54, 0.24)
+        else:
+            base, hue = RED, (0.75, 0.22, 0.17)
     elif g >= r and g > b:
         base, hue = GREEN, (0.18, 0.55, 0.34)
     else:

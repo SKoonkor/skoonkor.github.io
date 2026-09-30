@@ -1,0 +1,365 @@
+---
+title: "The particle–mesh method"
+description: "Solving Poisson's equation on a grid with the FFT."
+lecture: 6
+goal: "Describe the particle–mesh pipeline (assign mass to a grid, solve for the potential with an FFT, differentiate, interpolate back), implement NGP, CIC and TSC in a periodic box, and see why the gradient rule and matching weights decide accuracy and momentum conservation."
+publishDate: "2026-09-30"
+tags: ["n-body", "gravity", "particle-mesh", "fft", "poisson"]
+draft: false
+downloads:
+  hints: "/downloads/nbody/L06-hints.zip"
+  solutions: "/downloads/nbody/L06-solution.zip"
+---
+
+import M from "@/components/course/M.astro";
+import Callout from "@/components/course/Callout.astro";
+import Figure from "@/components/course/Figure.astro";
+
+<Callout kind="goals">
+- Describe the particle&ndash;mesh (PM) pipeline: assign mass to a grid, solve for the potential with an FFT, differentiate, and interpolate the force back.
+- Implement nearest-grid-point (NGP), cloud-in-cell (CIC) and triangular-shaped-cloud (TSC) mass assignment in a periodic box.
+- Solve Poisson's equation in Fourier space and take gradients with a spectral or finite-difference rule.
+- Explain why using the same weights for assignment and interpolation conserves momentum and removes self-force.
+- Measure the accuracy and resolution of the PM force (smoothed on the scale of a few grid cells), understand why a badly chosen gradient gives wrong forces, and know the cost.
+</Callout>
+
+## The idea: let a grid do the work
+
+The tree of Lectures 4&ndash;5 approximates the sum <M t="\sum_jm_j/r_{ij}^2" />. The **particle&ndash;mesh** method attacks the other form of the gravitational problem, the differential equation
+
+<M d tag="1" id="eq-l06-poisson" t="\nabla^2\Phi=4\pi G\rho ." />
+
+Spread the particles' mass on a regular grid to get the density <M t="\rho" />, solve Eq. (1) on the grid with a Fast Fourier Transform (FFT), differentiate the potential to get the force on the grid, and interpolate that force back to the particles. None of these steps looks at pairs of particles: the cost is <M t="\Oh{N}" /> for the particle steps plus <M t="\Oh{N_g\log N_g}" /> for the FFT on the <M t="N_g=n^3" /> grid cells (<M t="n" /> cells per side), independent of how the particles are clustered.
+
+<Figure
+	svg="L06/pipeline"
+	n={1}
+	id="fig-l06-pipeline"
+	widthPct={0.737}
+	alt="A snaking flow diagram. Top row, left to right: particles (masses and positions), density on the grid, density in Fourier space. The arrows are labelled assign and FFT. Then down to the potential in Fourier space, labelled solve, and back along the middle row to the potential on the grid (inverse FFT), then the force on the grid (gradient), and finally down to the force on the particles (interpolate). Particle boxes are blue and grid boxes are orange."
+	caption="The particle–mesh pipeline. Orange boxes live on the grid, blue boxes on the particles. Only the first and last steps touch the particles."
+/>
+
+<Callout kind="history" title="History">
+Grid-based Poisson solvers for particle simulations were developed in plasma physics in the 1960s and systematised in R. Hockney & J. Eastwood, *Computer Simulation Using Particles* (1981). Particle&ndash;mesh gravity was applied to cosmological structure formation in the early 1980s (for example by Klypin & Shandarin 1983). It remains the long-range part of nearly every large simulation code (Lecture 8).
+</Callout>
+
+## Poisson's equation in Fourier space
+
+Work in a periodic cube of side <M t="L" /> (the cosmological set-up; PM handles periodicity for free) with <M t="n^3" /> grid nodes at <M t="\vect x_g=(i,j,k)\,h" />, <M t="h=L/n" />. Particles are labelled by <M t="j" /> and grid nodes by <M t="g" />.
+
+### Fourier conventions you need
+
+A Fourier transform writes a field as a sum of plane waves <M t="e^{i\vect k\cdot\vect x}" />. On a periodic grid the allowed wave vectors are <M t="\vect k=\frac{2\pi}{L}(m_x,m_y,m_z)" /> with integer <M t="m" />. The discrete transform that the FFT computes is
+
+<M d tag="2" id="eq-l06-dft" t="\hat\rho_{\vect m}=\sum_{i,j,k}\rho_{ijk}\,e^{-2\pi i(m_xi+m_yj+m_zk)/n}," />
+
+which is what `np.fft.fftn` does, *without* a normalisation factor; `np.fft.ifftn` includes the factor <M t="1/n^3" />, so the inverse undoes the forward transform. (Relating <M t="\hat\rho_{\vect m}" /> to a continuous Fourier transform brings in a factor <M t="h^3" />: <M t="\hat\rho(\vect k)\approx h^3\hat\rho_{\vect m}" />; Lecture 7 needs this for power spectra.) Three facts matter:
+
+- **Derivatives become products.** Since <M t="\partial_xe^{ikx}=ik\,e^{ikx}" />, differentiating multiplies each mode by <M t="ik_x" />, and <M t="\nabla^2" /> multiplies by <M t="-k^2" />. That is why Poisson's equation is easy in Fourier space.
+- **The grid has a shortest wave.** At least two points per wavelength are needed: the **Nyquist wavenumber** is <M t="k_N=\pi/h" />. A wave with <M t="k>k_N" /> looks on the grid exactly like a lower-<M t="k" /> wave (**aliasing**).
+- **Layout and symmetry.** `np.fft.fftfreq(n, d=h)` returns (for even <M t="n" />) the frequencies in the order <M t="0,1,\dots,n/2-1,-n/2,\dots,-1" /> (in units of <M t="1/nh" />); multiply by <M t="2\pi" /> to get <M t="k" />. For a *real* field <M t="\hat\rho(-\vect k)=\hat\rho(\vect k)^*" />, which `np.fft.rfftn` exploits by storing half of the modes (Lecture 7 uses the same symmetry when it generates real random fields).
+
+### Solving Poisson's equation
+
+Multiplication by <M t="-k^2" /> turns Eq. (1) into an algebraic equation,
+
+<M d tag="3" id="eq-l06-phik" t="-k^2\,\hat\Phi(\vect k)=4\pi G\,\hat\rho(\vect k)\qquad\Longrightarrow\qquad\hat\Phi(\vect k)=-\frac{4\pi G}{k^2}\,\hat\rho(\vect k)." />
+
+The FFT computes <M t="\hat\rho" /> in <M t="\Oh{n^3\log n}" /> operations, and an inverse FFT gives <M t="\Phi" /> back (take the real part). The factor <M t="-4\pi G/k^2" /> is the Fourier transform of the **Green function**, the response of <M t="\Phi" /> to a point mass. The <M t="\vect k=0" /> mode needs care: <M t="\hat\rho(0)" /> is the mean density and Eq. (3) would divide by zero. In a periodic box a nonzero mean density has no consistent potential (the divergence that the neutralising background of the Ewald sum in Lecture 5 removes), so set <M t="\hat\Phi(0)=0" />: the potential is that of the *density contrast*. PM therefore solves the same periodic problem as the Ewald sum, with the same <M t="k=0" /> convention, but by a band-limited sum of the bare <M t="1/k^2" /> over the grid's modes with the kernel-smoothed density, instead of Ewald's real/Fourier split. The result is the periodic force of particles smoothed over roughly one grid cell.
+
+```python title="s2_fft_poisson_1d.py"
+import numpy as np
+
+n, box, G = 64, 1.0, 1.0
+x = np.arange(n) * box / n
+rho = 1.0 + 0.5 * np.cos(2 * np.pi * 3 * x / box)      # a mean density plus one wave
+k = 2 * np.pi * np.fft.fftfreq(n, d=box / n)           # wave numbers of the FFT modes
+rho_k = np.fft.fft(rho)
+k2 = k**2
+k2[0] = 1.0                                            # avoid 0/0 for the k = 0 mode
+phi_k = -4 * np.pi * G * rho_k / k2
+phi_k[0] = 0.0                                         # the mean density is dropped
+phi = np.real(np.fft.ifft(phi_k))
+k3 = 2 * np.pi * 3 / box
+print(np.abs(phi + 4 * np.pi * G * 0.5 * np.cos(k3 * x) / k3**2).max() < 1e-12)   # True
+```
+
+The listing is a one-dimensional Poisson solver with `np.fft`. The 3D version is Homework 6.2.
+
+In 3D use `np.fft.fftn` and `ifftn` and build the <M t="k" /> arrays with `np.meshgrid(k, k, k, indexing='ij')` (or by broadcasting), so that the index order stays `[ix, iy, iz]`.
+
+**Which <M t="k^2" />?** The grid only samples fields at the nodes, so there is a choice of what "<M t="k^2" />" means. In the code it is the argument `kernel` (the *Laplacian rule*; not to be confused with the assignment kernels of the next section). Two are common:
+
+- the **spectral** value <M t="k^2=k_x^2+k_y^2+k_z^2" />;
+- the **finite-difference** value of the three-point discrete Laplacian <M t="(\Phi_{i+1}+\Phi_{i-1}-2\Phi_i)/h^2" />, whose eigenvalue on a wave <M t="e^{ikx}" /> is <M t="-(4/h^2)\sin^2(kh/2)" />. Apply it per axis and add: <M t="k_{\rm eff}^2=\sum_{a=x,y,z}\big(\tfrac2h\sin\tfrac{k_ah}2\big)^2" />.
+
+They agree for <M t="kh\ll1" /> and differ near the Nyquist wavenumber. The section on the force below shows that this choice matters much less than the choice of *gradient*.
+
+<Callout kind="pitfall">
+Getting the FFT conventions right is the main hurdle: the index order is `[ix, iy, iz]`; the inverse transform returns a complex array whose imaginary part is rounding noise (take `.real`); and the <M t="k=0" /> mode must be zeroed *after* you guard the division. Test your solver on a single cosine wave, whose exact answer you know.
+</Callout>
+
+## Mass assignment
+
+To get <M t="\rho" /> on the grid, each particle shares its mass among nearby nodes with weights that sum to one. In one dimension, with a particle at <M t="x" /> and a node at <M t="x_g" />, the three standard **assignment kernels** <M t="W" />, in terms of <M t="s=|x_g-x|/h" />, are:
+
+<M d tag="4" id="eq-l06-ngp" t="\text{NGP:}\quad W=1\ \text{ for }s<\tfrac12\qquad\text{(nearest node only)}" />
+
+<M d tag="5" id="eq-l06-cic" t="\text{CIC:}\quad W=1-s\ \text{ for }s<1\qquad\text{(2 nodes; linear)}" />
+
+<M d tag="6" id="eq-l06-tsc" t="\text{TSC:}\quad W=\tfrac34-s^2\ (s<\tfrac12),\ \ \tfrac12(\tfrac32-s)^2\ (\tfrac12\le s<\tfrac32)\qquad\text{(3 nodes; quadratic)}" />
+
+In three dimensions the weight is the product <M t="W(x)W(y)W(z)" />, and the density at node <M t="g" /> is
+
+<M d tag="7" id="eq-l06-assign" t="\rho_g=\frac{1}{h^3}\sum_jm_j\,W(x_g-x_j)\,W(y_g-y_j)\,W(z_g-z_j)." />
+
+Nodes near the box edge wrap around periodically, and so do particles that have drifted out of the box.
+
+```python title="s1_cic_1d.py"
+import numpy as np
+
+n, box = 8, 1.0
+h = box / n                                   # grid nodes sit at 0, h, 2h, ...
+x = 0.30                                      # one particle of mass 1 in a 1D box
+u = x / h                                     # position in grid units: 2.4
+i0 = int(np.floor(u))                         # node to the left: 2
+d = u - i0                                    # fractional distance from it: 0.4
+rho = np.zeros(n)
+rho[i0 % n] += (1 - d) / h                    # left node gets weight 1 - d
+rho[(i0 + 1) % n] += d / h                    # right node gets weight d
+print(rho * h)                                # [0. 0. 0.6 0.4 0. 0. 0. 0.]
+print(rho.sum() * h)                          # 1.0: mass is conserved
+```
+
+The listing computes the cloud-in-cell weights of one particle in one dimension.
+
+**A recipe for the 3D version.** Per axis, compute the base node and weights: NGP uses the nearest node (`np.rint`); CIC the node to the left (`np.floor`) and its right neighbour; TSC the nearest node (`np.rint`, *not* floor) and its two neighbours. Then loop over the <M t="1" />, <M t="2^3" /> or <M t="3^3" /> combinations of per-axis offsets (*not* over particles), and for each combination add <M t="m_j\,w_xw_yw_z" /> into node <M t="(i_x,i_y,i_z)\bmod n" />. Scatter-adding many contributions into the same node needs `np.add.at` or, much faster, `np.bincount` on a flattened node index with `weights=...`. Interpolation is the mirror image: gather the grid values at the same indices and weight them with the same <M t="w" />.
+
+<Figure
+	svg="L06/cic2d"
+	n={2}
+	id="fig-l06-cic2d"
+	widthPct={0.504}
+	alt="A square cell with a particle at an interior point, dividing the cell into four coloured rectangles: blue at lower left with area d_x times d_y, orange at lower right, green at upper left and red at upper right. Each corner node has a dot in the colour of the rectangle diagonally opposite, with labels (i,j), (i+1,j), (i,j+1) and (i+1,j+1). Arrows below and to the left mark d_x = 0.6 and d_y = 0.5."
+	caption="Cloud-in-cell assignment in 2D for a particle at fractional position (d_x, d_y) = (0.6, 0.5) in its cell, measured from node (i, j). The particle divides the cell into four rectangles, and each node's weight is the area of the rectangle diagonally opposite it. Each node dot has the colour of the rectangle that gives its weight, which is the one across the particle from it: node (i, j) (red dot, lower left) gets (1−d_x)(1−d_y), the area of the red rectangle at top right; node (i+1, j+1) (blue dot) gets d_x d_y, the blue rectangle at lower left; and so on. Nearer nodes get more. (In 3D: eight nodes, eight boxes.)"
+/>
+
+<Figure
+	svg="L06/kernels"
+	n={3}
+	id="fig-l06-kernels"
+	widthPct={0.95}
+	alt="Left: the three one-dimensional assignment kernels against distance from the node in units of h: NGP is a box of height 1 between minus 0.5 and 0.5, CIC a triangle of height 1 reaching zero at plus and minus 1, and TSC a smooth bell of height 0.75 reaching zero at plus and minus 1.5. Right: their Fourier transforms, sinc to the power 1, 2 and 3, against k h over pi from 0 to 2, with a dashed vertical line at the Nyquist wavenumber; at that line the curves sit near 0.64, 0.41 and 0.26."
+	caption="Left: the three assignment kernels in one dimension. Right: their Fourier transforms sinc^p(kh/2), p = 1, 2, 3 (sinc x = sin x / x; np.sinc includes a factor π). At the Nyquist wavenumber CIC keeps 41% of the amplitude of a wave and TSC 26%: higher-order kernels blur more but suppress aliasing better."
+/>
+
+<Figure
+	svg="L06/density_slices"
+	n={4}
+	id="fig-l06-slices"
+	widthPct={0.95}
+	alt="Three square colour maps of the logarithm of the column density of a Plummer sphere, viewed along z, with a shared colour bar from minus 4 to 0. Left: NGP on a 32 cubed grid, blocky and noisy from cell to cell. Middle: CIC on the same grid, smoother. Right: CIC on a 64 cubed grid, showing more structure but visibly more particle noise."
+	caption="Column density of a Plummer sphere (2×10⁴ particles, box of 8). NGP (left) is blocky and noisy from cell to cell; CIC (middle) is smoother on the same grid; a finer grid (right) shows more structure but more particle noise (fewer particles per cell)."
+/>
+
+Two properties matter. **Mass is conserved** (<M t="\sum_g\rho_gh^3=\sum_jm_j" /> because the weights sum to one). CIC and TSC also preserve the **centre of mass**: the mass-weighted mean node position equals the mean particle position, because they interpolate linearly; NGP does not. The grid cannot resolve structure below <M t="2h" />, and finer grids have fewer particles per cell and noisier <M t="\rho" /> (Figure 4).
+
+## From potential to force on the particles
+
+**The gradient on the grid.** With <M t="\vect a=-\nabla\Phi" /> we can differentiate spectrally (multiply <M t="\hat\Phi" /> by <M t="-i\vect k" />, dropping the Nyquist mode, whose derivative is not defined) or with a finite-difference stencil. The common four-point rule is
+
+<M d tag="8" id="eq-l06-fd4" t="\frac{\partial f}{\partial x}\Big|_i\approx\frac{8\,(f_{i+1}-f_{i-1})-(f_{i+2}-f_{i-2})}{12\,h}," />
+
+accurate to <M t="\Oh{h^4}" />, using periodic neighbours (`np.roll`).
+
+```python title="s3_fd_gradient.py"
+import numpy as np
+
+n, box = 32, 1.0
+h = box / n
+x = np.arange(n) * h
+k = 2 * np.pi * 3 / box
+f = np.cos(k * x)
+# 4-point central difference: (8 f[i+1] - 8 f[i-1] - f[i+2] + f[i-2]) / (12 h)
+df = (8 * (np.roll(f, -1) - np.roll(f, 1)) - (np.roll(f, -2) - np.roll(f, 2))) / (12 * h)
+print(np.abs(df + k * np.sin(k * x)).max() / k)        # 0.0039: 0.4% of the amplitude
+```
+
+The listing applies the four-point gradient to a cosine wave.
+
+**Interpolation back to the particles.** The force on particle <M t="j" /> is the grid force averaged with the *same* weights that were used for assignment:
+
+<M d tag="9" id="eq-l06-interp" t="\vect a_j=\sum_g W(\vect x_g-\vect x_j)\,\vect a_g ." />
+
+Interpolation is then the *transpose* ("adjoint") of assignment: for any grid field <M t="f" />, <M t="h^3\sum_g\rho_gf_g=\sum_jm_j\,f(\vect x_j)" />, with <M t="f(\vect x_j)" /> the interpolated value (see the adjoint listing below). This is not a matter of taste; it gives exact momentum conservation. Write <M t="\Phi=S\rho" /> and <M t="\vect a=-D\Phi" />, where <M t="S" /> (the Green function) is a symmetric matrix and <M t="D" /> (the gradient stencil, per axis) an antisymmetric one; both are translation-invariant, hence commute. The total force is
+
+<M d tag="10" id="eq-l06-momentum" t="\sum_jm_j\vect a_j=h^3\sum_g\rho_g\vect a_g=-h^3\,\rho^{\rm T}DS\rho=0 ," />
+
+where the first step uses the adjoint property, and the last holds because <M t="(DS)^{\rm T}=S^{\rm T}D^{\rm T}=-SD=-DS" /> is antisymmetric and <M t="\rho^{\rm T}M\rho=0" /> for antisymmetric <M t="M" />. **Total momentum is conserved** to rounding error. The same argument applied to a single particle shows that it exerts **no force on itself**.
+
+```python title="s4_adjoint_toy.py"
+import numpy as np
+
+rng = np.random.default_rng(0)
+n, box = 8, 1.0
+h = box / n
+x = rng.random(5) * box                                # five particles
+m = rng.random(5) + 0.5
+f = rng.normal(size=n)                                 # any field on the grid
+
+def weights(x):                                        # 1D CIC: (left node, weight left, weight right)
+    u = x / h
+    i0 = np.floor(u).astype(int)
+    return i0, 1 - (u - i0), u - i0
+
+i0, wl, wr = weights(x)
+rho = np.zeros(n)
+np.add.at(rho, i0 % n, m * wl / h)                     # assign ...
+np.add.at(rho, (i0 + 1) % n, m * wr / h)
+f_at_particles = f[i0 % n] * wl + f[(i0 + 1) % n] * wr # ... and interpolate with the SAME weights
+print(np.isclose((rho * f).sum() * h, (m * f_at_particles).sum()))   # True
+```
+
+Assignment and interpolation are adjoint (the listing is a 1D CIC example).
+
+<Callout kind="idea">
+Use the same weights for assignment and interpolation. Mixing them (say CIC assignment with NGP interpolation) breaks the adjoint property, gives a spurious self-force and violates momentum conservation. Your checker tests both.
+</Callout>
+
+```python title="s5_wrap.py"
+import numpy as np
+
+box, n = 1.0, 8
+pos = np.array([1.23, -0.10, 0.999])                   # particles may drift outside the box
+print(pos % box)                                       # [0.23 0.9  0.999]: wrapped back in
+idx = np.array([-1, 0, 7, 8])
+print(idx % n)                                         # [7 0 7 0]: grid indices wrap too
+```
+
+The listing shows how to wrap positions and grid indices.
+
+## How accurate is the PM force?
+
+The PM force is the force between particles smeared over roughly one grid cell, so it is smoothed at small separations <M t="r\lesssim3h" />. At <M t="r\gtrsim3h" /> it should be close to Newton's <M t="Gm/r^2" /> (plus periodic corrections that are small for <M t="r\ll L" />). We measure it with a pair: a heavy source and a light probe (mass <M t="10^{-6}" />) at separation <M t="r" />, at random positions and directions, compared with the exact periodic force (Ewald, Lecture 5).
+
+<Figure
+	svg="L06/offset_dependence"
+	n={5}
+	id="fig-l06-offset"
+	widthPct={0.75}
+	alt="A line plot of the scaled force a_x r squared over G m against the offset of a pair from the grid nodes, from 0 to 1 cell. The red curve, CIC with the spectral gradient, is a wide U shape: about plus 2.2 at offsets 0 and 1, crossing zero and reaching about minus 1 at 0.5. The blue and green curves, CIC and TSC with the four-point gradient, stay close to the dashed Newton line at minus 1 throughout."
+	caption="Force between a pair at separation r=4h along a grid axis, in units of the Newtonian value (64³ grid). The abscissa is the offset f of the pair from the grid nodes, the same in x, y and z (the first particle at ((20+f)h, (25+f)h, (25+f)h)): f=0 puts both particles exactly on nodes, f=0.5 midway. With the four-point gradient the force stays near the Newtonian value −1 (−1.09 for CIC and −0.99 for TSC at f=0). With the spectral gradient and CIC it is +2.2 at f=0 (the wrong sign, more than twice Newton) but −1.03 at f=0.5."
+/>
+
+Figure 5 is the most important lesson of this lecture. For particles exactly on nodes, the spectral gradient gives a force of the wrong sign. This is not a bug; it is a property of the derivative operator on a grid.
+
+<Figure
+	svg="L06/delta_derivative"
+	n={6}
+	id="fig-l06-deltader"
+	widthPct={0.95}
+	alt="Left: a bar chart of the derivative of a single spike on the grid at distances 1 to 10 cells. Red bars, the spectral derivative, alternate in sign and decay slowly as 1 over j: minus 1, plus 0.5, minus 0.33 and so on. Blue bars, the four-point rule, are nonzero only at distances 1 and 2 (minus 0.67 and plus 0.08). Right: the same values multiplied by j squared. The red spectral curve oscillates with growing amplitude, reaching about plus or minus 10 at distance 10; the blue four-point curve stays at zero after distance 2."
+	caption="Why a spectral gradient misbehaves. Left: the derivative along a grid axis of a single spike on the grid. The spectral derivative (red) is ≈ (−1)^j/(jh) at distance j cells (exact for an infinite grid); it decays only as 1/j and alternates in sign. The four-point rule (blue) vanishes beyond two cells. Right: multiplied by j² to compare with a 1/j² force, the spectral tail grows linearly while alternating, and swamps the physical force after a few cells. The four-point rule stays at zero."
+/>
+
+A particle exactly on a node deposits all its mass on one node: the density is a spike. The spectral derivative of a grid spike is the slowly decaying, alternating tail of Figure 6. The Poisson step turns the spike into a smooth potential, but differentiating that potential spectrally leaves the alternating tail in the force (a finite-difference Laplacian does not cure it). A particle midway between nodes is two half-weight spikes whose tails largely cancel. The four-point rule has no such tail, and with it either Laplacian rule gives a force close to <M t="-1" /> in the same test. So the *gradient* rule, not the Laplacian rule, is what matters; and the effect depends on direction and offset, so do not expect it to look the same for every pair.
+
+Because particles in a simulation sit at all offsets, a spectral gradient gives a good *median* error but occasionally a terrible one:
+
+<Figure
+	svg="L06/pair_force_error"
+	n={7}
+	id="fig-l06-pairerr"
+	widthPct={0.95}
+	alt="Two log-log panels of relative force error against pair separation r over h, from 1.5 to 10. Left: the median error, falling with separation for all four schemes; NGP with the four-point gradient (red) is highest, near 0.1 at r equal to 10h, while CIC with either gradient (orange, blue) and TSC (green) fall to a few times 0.001 or lower. Right: the maximum error; NGP stays above about 0.25 everywhere, CIC with the spectral gradient (orange) stays near or above 1, while CIC and TSC with the four-point gradient (blue, green) drop to a few percent or below, TSC lowest."
+	caption="Relative error of the PM force between 300 random pairs (32³ grid, spectral Laplacian) against the Ewald reference, versus separation in units of the cell size. Left: median. Right: maximum. NGP (red) is poor everywhere. CIC with the spectral gradient (orange) has a low median but large worst cases; CIC and TSC with the four-point gradient (blue, green) have controlled worst cases, TSC the best."
+/>
+
+| scheme, gradient | median, r = 3h | maximum, r = 3h | median, r = 6h | maximum, r = 6h |
+|:---|---:|---:|---:|---:|
+| NGP, four-point | 0.27&ndash;0.29 | 1.1&ndash;2.0 | 0.15 | 0.43&ndash;0.52 |
+| CIC, spectral | 0.04 | 0.6&ndash;1.1 | 0.008 | 0.7&ndash;1.9 |
+| CIC, four-point | 0.045&ndash;0.049 | 0.11&ndash;0.18 | 0.007&ndash;0.008 | 0.035&ndash;0.046 |
+| TSC, spectral | 0.017&ndash;0.020 | 0.15&ndash;0.21 | 0.001 | 0.2&ndash;0.4 |
+| TSC, four-point | 0.029 | 0.05 | 0.002 | 0.007 |
+
+Ranges are over several runs of 300 random pairs each on a <M t="32^3" /> grid with the spectral Laplacian. The recommendation is CIC or TSC with the **four-point gradient**; the Laplacian rule matters little (the finite-difference one leaves an <M t="\Oh{h^2}" /> floor of about <M t="1.5\%" /> in the median at <M t="6h" />). Distrust forces below <M t="\sim3h" />: the grid acts as a softening of order <M t="h/2" /> to <M t="h" />. As with the tree, *the tail of the error distribution matters, not just the median*: a rare huge force error is a rare wrong kick.
+
+<Figure
+	svg="L06/plummer_scatter"
+	n={8}
+	id="fig-l06-plummer"
+	widthPct={0.85}
+	alt="Two log-log scatter panels of the PM force magnitude against the direct-sum force magnitude with softening h over 2, for 2000 particles of a Plummer sphere, with a dashed one-to-one line. Points are coloured by distance from the centre, from dark purple in the core to yellow at large radius. Left: 32 cubed grid. Right: 64 cubed grid. The points follow the diagonal over most of the range; the yellow outer particles, with weak forces, scatter widely."
+	caption="PM force magnitude against the direct sum with Plummer softening ε=h/2 for the particles of a Plummer sphere (N=2000, a=1, box of 8; CIC, four-point gradient). Left: 32³ grid, h=0.25. Right: 64³, h=0.125. The forces agree over most of the range; in the core the PM force is smoothed."
+/>
+
+For this Plummer sphere the PM force agrees with the direct sum softened at <M t="\epsilon=h/2" /> to about <M t="4" />&ndash;<M t="5\%" /> (median relative difference of the force vectors) between <M t="r=0.7" /> and <M t="2.5" />, and to <M t="10" />&ndash;<M t="14\%" /> in the core (<M t="r<0.4" />, within about two cells).
+
+## Cost
+
+Assignment and interpolation cost <M t="\Oh{N}" /> each; the FFT costs <M t="\Oh{n^3\log n}" />. For <M t="N=10^5" /> particles on a <M t="32^3" /> grid one force evaluation takes about <M t="26" /> ms in NumPy; with few particles the FFT dominates (a <M t="64^3" /> grid takes <M t="\sim13" /> ms even for <M t="10^3" /> particles).
+
+<Figure
+	svg="L06/timing_pm"
+	n={9}
+	id="fig-l06-timing"
+	widthPct={0.62}
+	alt="Log-log plot of seconds per force evaluation against N from 300 to 100000. The two PM curves, for 32 cubed (blue) and 64 cubed (green) grids, are nearly flat at about 2 ms and 12 ms until N of about 10000, then rise. The red direct-sum curve, measured up to N of 3000, rises steeply, from about 3 ms at N=300 to about 0.3 s at N=3000."
+	caption="Time for one force evaluation against N: PM on 32³ and 64³ grids and NumPy direct summation. PM is nearly flat until the particle steps dominate, then grows linearly in N."
+/>
+
+The price is **resolution**: the force below <M t="\sim3h" /> is smoothed; each grid array has <M t="n^3" /> floats (<M t="64^3" />: <M t="2" /> MB; <M t="512^3" />: <M t="1" /> GB; <M t="4096^3" />: <M t="550" /> GB per array, and a run needs several); and a fixed grid cannot follow a density that spans many orders of magnitude, as in a galaxy halo. Adaptive meshes and multigrid solvers are one answer (Lecture 10 mentions them). Lecture 8 instead combines PM for large scales with a tree or direct sum for short scales, splitting the force with a Gaussian filter: the mesh keeps <M t="\hat\Phi_{\rm long}=-\frac{4\pi G}{k^2}e^{-k^2r_s^2}\hat\rho" />.
+
+## PM in a simulation
+
+The PM force has the interface of your Lecture 3 force, `force(pos, mass, G, eps)`, so it plugs into `evolve_kdk`. Two remarks. First, `eps` is ignored: the grid itself softens the force. Second, particles may leave the box; the force wraps them back, so periodic boundaries cost nothing. In a test of <M t="300" /> Plummer particles for <M t="100" /> steps the total momentum changes by <M t="\sim10^{-17}" />, as with direct summation and unlike the tree, and the Lagrangian radii agree with the direct sum softened at <M t="\epsilon=h/2" /> to <M t="1" />&ndash;<M t="2\%" /> for all the radii from <M t="10" /> to <M t="90\%" /> of the mass. Do not expect PM to match a Newtonian force below <M t="\sim3h" />: the smoothing is a property of the method, not a bug.
+
+## Homework 6
+
+<Callout kind="homework" title="Homework 6: A particle–mesh solver">
+Create `myOwnCode/L06/pm.py` by copying `hw6_pm_skeleton.py` from the hints zip, and copy `hw6_run_experiments.py` next to it. The checker uses your Lecture 3 `plummer_sphere`, `evolve_kdk` and `lagrangian_radii`. **Rule:** loops over the <M t="8" /> or <M t="27" /> stencil offsets or over the <M t="3" /> axes are fine, but no Python loops over particles or grid cells (the speed check would catch them). Grid nodes sit at <M t="i\,h" /> and arrays are indexed `[ix, iy, iz]`.
+
+**6.1 Assignment.** `assign_density(pos, mass, ngrid, box, scheme)` for `"ngp"`, `"cic"`, `"tsc"` (periodic; divide by <M t="h^3" />). Hand checks on an <M t="8^3" /> grid, unit box, unit mass: NGP at <M t="(2.3,3.4,5.1)h" /> puts everything on node <M t="(2,3,5)" />, at <M t="(2.7,3.6,5.4)h" /> on node <M t="(3,4,5)" />; CIC at <M t="(2.5,3.5,5.5)h" /> puts <M t="1/8" /> on each of eight nodes; TSC at a node gives per-axis weights <M t="(1/8,3/4,1/8)" />, and at <M t="(2.6,3,5)h" /> the <M t="x" />-weights are <M t="0.405,\,0.59,\,0.005" /> on nodes <M t="2,3,4" /> (times <M t="0.75^2" /> from the other axes). Check mass conservation and that CIC/TSC preserve the centre of mass.
+
+**6.2 Potential.** `solve_potential(rho, box, G, kernel)` with `"spectral"` and `"fd"` Laplacian rules (Eq. (3); <M t="k=0" /> mode zeroed). Test with <M t="\rho=1+0.5\cos(2\pi\cdot3x/L)" /> (try <M t="L\ne1" />): the spectral result is <M t="-4\pi G\cdot0.5\cos(kx)/k^2" /> to rounding error.
+
+**6.3 Grid force.** `grid_force(phi, box, method)` <M t="\to(3,n,n,n)" />, `"spectral"` and `"fd4"` (Eq. (8)). For <M t="\Phi=\cos(kx)" /> the spectral gradient is exact to rounding error (try <M t="L\neq1" />), and the four-point rule has an error of about <M t="0.4\%" /> of the amplitude for three waves on <M t="32" /> cells (the four-point gradient listing above).
+
+**6.4 Interpolation.** `interpolate(field, pos, box, scheme)` for a scalar <M t="(n,n,n)" /> or vector <M t="(3,n,n,n)" /> field, with the same weights as 6.1. CIC and TSC must reproduce a constant and a linear ramp exactly (test away from the box seam; a ramp is not periodic); assignment and interpolation must be adjoint.
+
+**6.5 The force.** `pm_acceleration(pos, mass, G, eps, box, ngrid, scheme, deriv, kernel)` chains 6.1&ndash;6.4. The gradient rule `deriv` (`"fd4"` or `"spectral"`) and the Laplacian rule `kernel` (`"spectral"` or `"fd"`) are independent choices; use CIC or TSC with `"fd4"`. Checks: total momentum change zero, no self-force, shifting all positions by a box length changes nothing. Experiments (allow extra time; they are the longest part) on a <M t="64^3" /> grid in a unit box, against Newton's <M t="Gm/r^2" /> (fine for <M t="r\le0.1L=6.4h" />): reproduce Figure 5 (reference values in its caption), and the error of random pairs (CIC, four-point gradient, spectral Laplacian): median <M t="0.046" />, maximum <M t="0.16" />&ndash;<M t="0.23" /> at <M t="r=3h" />; median <M t="0.017" />, maximum <M t="\sim0.06" /> at <M t="4h" />; median <M t="0.008" />, maximum <M t="\sim0.035" /> at <M t="6h" /> (three runs of <M t="300" /> pairs; your maxima will differ; the table in the text is <M t="32^3" /> against Ewald, which is what the checker uses, together with a finite-difference-Laplacian pair test, a test that `pm_acceleration` chains your own functions with every option, and <M t="G" />/<M t="\epsilon" /> scaling).
+
+**6.6 Dynamics.** <M t="300" /> Plummer particles (<M t="a=1" />) centred in a box of <M t="8" />, <M t="32^3" /> grid, CIC with the four-point gradient, <M t="\Delta t=0.02" />, <M t="100" /> steps with `evolve_kdk`. Total momentum must stay constant to <M t="10^{-10}" />; compare the Lagrangian radii with a direct sum of softening <M t="h/2" /> (about <M t="1" />&ndash;<M t="2\%" /> for the <M t="10" />&ndash;<M t="90\%" /> radii; the checker allows <M t="8\%" />). Also compare the initial forces with the direct sum as in Figure 8 (median about <M t="5\%" /> for <M t="0.7<r<2.5" />).
+
+**6.7 Cost.** Time `pm_acceleration` for <M t="N=10^3,\dots,10^5" /> and grids <M t="32^3" />, <M t="64^3" /> (Figure 9; about <M t="26" /> ms at <M t="N=10^5" /> on <M t="32^3" />). Where is the time spent (assignment, FFT, interpolation)?
+
+*Optional:* (a) the TSC and NGP curves of Figure 7; (b) *interlacing*: average two grids shifted by half a cell, so that their aliased contributions cancel, and see the effect on the worst-case error; (c) compare PM and tree accuracy at equal run time on the Plummer sphere.
+
+Plan for about 7&ndash;9 hours (6.5 with its experiments takes the longest). **Check yourself:** unzip the hints, `cd` into `gravity-from-scratch/`, then run `python course/codeHints/L06/check_hw6.py` (it uses `myOwnCode/L03` and `myOwnCode/L06`; a few seconds). The checker does not judge your plots. Only after your own attempt passes, open the reference solution and compare. Later lectures reuse your `pm.py`, so finish it before Lecture 7.
+</Callout>
+
+## Summary
+
+- PM assigns mass to a grid (NGP, CIC, TSC), solves <M t="\nabla^2\Phi=4\pi G\rho" /> with an FFT (dropping the mean), differentiates, and interpolates the force back with the same weights.
+- The same weights in both directions give exact momentum conservation and no self-force; periodicity is automatic.
+- The force is smoothed below <M t="\sim3h" />; the grid acts like a softening of order <M t="h/2" /> to <M t="h" />.
+- Use CIC or TSC with the four-point gradient. A spectral gradient turns a grid spike into an alternating <M t="1/j" /> tail and gives wrong-sign, oversized forces for particles near nodes: a fine median but a terrible worst case.
+- Cost is <M t="\Oh{N}+\Oh{n^3\log n}" /> per force: a <M t="10^5" />-particle force in tens of milliseconds, at the price of fixed resolution (Lecture 8 adds short-range forces).
+
+## Further reading
+
+- R. W. Hockney & J. W. Eastwood, *Computer Simulation Using Particles* (McGraw-Hill, 1981; IOP, 1988): assignment schemes, Green functions and force errors.
+- A. A. Klypin & S. F. Shandarin, MNRAS 204, 891 (1983): an early cosmological particle&ndash;mesh simulation.
+- V. Springel, MNRAS 364, 1105 (2005): the PM part of GADGET-2.
+- The NumPy documentation for `numpy.fft`, and Lecture 5 for the Ewald sum.
+
+## Downloads
+
+<div class="nb-downloads">
+<a href="/downloads/nbody/L06-hints.zip">&#8681; Hints &amp; checker (L06-hints.zip)</a>
+<a href="/downloads/nbody/L06-solution.zip">&#8681; Reference solution (L06-solution.zip)</a>
+</div>
+
+Only open the solution after your own `pm.py` passes every check &mdash; that's the point of the exercise.
