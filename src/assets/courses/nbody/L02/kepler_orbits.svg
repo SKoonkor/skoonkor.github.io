@@ -1,0 +1,1680 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+  "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg fill="currentColor" xmlns:xlink="http://www.w3.org/1999/xlink" width="100%" height="100%" viewBox="0 0 549.540625 243.889967" xmlns="http://www.w3.org/2000/svg" version="1.1">
+ <metadata>
+  <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+   <cc:Work>
+    <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
+    <dc:date>2026-09-30T10:57:36.887758</dc:date>
+    <dc:format>image/svg+xml</dc:format>
+    <dc:creator>
+     <cc:Agent>
+      <dc:title>Matplotlib v3.11.2, https://matplotlib.org/</dc:title>
+     </cc:Agent>
+    </dc:creator>
+   </cc:Work>
+  </rdf:RDF>
+ </metadata>
+ <defs>
+  <style type="text/css">*{stroke-linejoin: round; stroke-linecap: butt}</style>
+ </defs>
+ <g id="kepler_orbits-figure_1">
+  <g id="kepler_orbits-patch_1">
+   <path d="M 0 243.889967 
+L 549.540625 243.889967 
+L 549.540625 0 
+L 0 0 
+L 0 243.889967 
+z
+" style="fill: none"/>
+  </g>
+  <g id="kepler_orbits-axes_1">
+   <g id="kepler_orbits-patch_2">
+    <path d="M 52.482813 187.078098 
+L 266.189062 187.078098 
+L 266.189062 38.650463 
+L 52.482813 38.650463 
+L 52.482813 187.078098 
+z
+" style="fill: none"/>
+   </g>
+   <g id="kepler_orbits-matplotlib.axis_1">
+    <g id="kepler_orbits-xtick_1">
+     <g id="kepler_orbits-line2d_1">
+      <defs>
+       <path id="kepler_orbits-mb2addc32c7" d="M 0 0 
+L 0 3.5 
+" style="stroke: currentColor; stroke-width: 0.8"/>
+      </defs>
+      <g>
+       <use xlink:href="#kepler_orbits-mb2addc32c7" x="90.205612" y="187.078098" style="stroke: currentColor; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="kepler_orbits-text_1">
+      <!-- 0 -->
+      <g transform="translate(87.024362 201.675754) scale(0.1 -0.1)">
+       <defs>
+        <path id="kepler_orbits-DejaVuSans-13" d="M 2034 4250 
+Q 1547 4250 1301 3770 
+Q 1056 3291 1056 2328 
+Q 1056 1369 1301 889 
+Q 1547 409 2034 409 
+Q 2525 409 2770 889 
+Q 3016 1369 3016 2328 
+Q 3016 3291 2770 3770 
+Q 2525 4250 2034 4250 
+z
+M 2034 4750 
+Q 2819 4750 3233 4129 
+Q 3647 3509 3647 2328 
+Q 3647 1150 3233 529 
+Q 2819 -91 2034 -91 
+Q 1250 -91 836 529 
+Q 422 1150 422 2328 
+Q 422 3509 836 4129 
+Q 1250 4750 2034 4750 
+z
+" transform="scale(0.015625)"/>
+       </defs>
+       <use xlink:href="#kepler_orbits-DejaVuSans-13"/>
+      </g>
+     </g>
+    </g>
+    <g id="kepler_orbits-xtick_2">
+     <g id="kepler_orbits-line2d_2">
+      <g>
+       <use xlink:href="#kepler_orbits-mb2addc32c7" x="135.765633" y="187.078098" style="stroke: currentColor; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="kepler_orbits-text_2">
+      <!-- 1 -->
+      <g transform="translate(132.584383 201.675754) scale(0.1 -0.1)">
+       <defs>
+        <path id="kepler_orbits-DejaVuSans-14" d="M 794 531 
+L 1825 531 
+L 1825 4091 
+L 703 3866 
+L 703 4441 
+L 1819 4666 
+L 2450 4666 
+L 2450 531 
+L 3481 531 
+L 3481 0 
+L 794 0 
+L 794 531 
+z
+" transform="scale(0.015625)"/>
+       </defs>
+       <use xlink:href="#kepler_orbits-DejaVuSans-14"/>
+      </g>
+     </g>
+    </g>
+    <g id="kepler_orbits-xtick_3">
+     <g id="kepler_orbits-line2d_3">
+      <g>
+       <use xlink:href="#kepler_orbits-mb2addc32c7" x="181.325654" y="187.078098" style="stroke: currentColor; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="kepler_orbits-text_3">
+      <!-- 2 -->
+      <g transform="translate(178.144404 201.675754) scale(0.1 -0.1)">
+       <defs>
+        <path id="kepler_orbits-DejaVuSans-15" d="M 1228 531 
+L 3431 531 
+L 3431 0 
+L 469 0 
+L 469 531 
+Q 828 903 1448 1529 
+Q 2069 2156 2228 2338 
+Q 2531 2678 2651 2914 
+Q 2772 3150 2772 3378 
+Q 2772 3750 2511 3984 
+Q 2250 4219 1831 4219 
+Q 1534 4219 1204 4116 
+Q 875 4013 500 3803 
+L 500 4441 
+Q 881 4594 1212 4672 
+Q 1544 4750 1819 4750 
+Q 2544 4750 2975 4387 
+Q 3406 4025 3406 3419 
+Q 3406 3131 3298 2873 
+Q 3191 2616 2906 2266 
+Q 2828 2175 2409 1742 
+Q 1991 1309 1228 531 
+z
+" transform="scale(0.015625)"/>
+       </defs>
+       <use xlink:href="#kepler_orbits-DejaVuSans-15"/>
+      </g>
+     </g>
+    </g>
+    <g id="kepler_orbits-xtick_4">
+     <g id="kepler_orbits-line2d_4">
+      <g>
+       <use xlink:href="#kepler_orbits-mb2addc32c7" x="226.885675" y="187.078098" style="stroke: currentColor; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="kepler_orbits-text_4">
+      <!-- 3 -->
+      <g transform="translate(223.704425 201.675754) scale(0.1 -0.1)">
+       <defs>
+        <path id="kepler_orbits-DejaVuSans-16" d="M 2597 2516 
+Q 3050 2419 3304 2112 
+Q 3559 1806 3559 1356 
+Q 3559 666 3084 287 
+Q 2609 -91 1734 -91 
+Q 1441 -91 1130 -33 
+Q 819 25 488 141 
+L 488 750 
+Q 750 597 1062 519 
+Q 1375 441 1716 441 
+Q 2309 441 2620 675 
+Q 2931 909 2931 1356 
+Q 2931 1769 2642 2001 
+Q 2353 2234 1838 2234 
+L 1294 2234 
+L 1294 2753 
+L 1863 2753 
+Q 2328 2753 2575 2939 
+Q 2822 3125 2822 3475 
+Q 2822 3834 2567 4026 
+Q 2313 4219 1838 4219 
+Q 1578 4219 1281 4162 
+Q 984 4106 628 3988 
+L 628 4550 
+Q 988 4650 1302 4700 
+Q 1616 4750 1894 4750 
+Q 2613 4750 3031 4423 
+Q 3450 4097 3450 3541 
+Q 3450 3153 3228 2886 
+Q 3006 2619 2597 2516 
+z
+" transform="scale(0.015625)"/>
+       </defs>
+       <use xlink:href="#kepler_orbits-DejaVuSans-16"/>
+      </g>
+     </g>
+    </g>
+    <g id="kepler_orbits-text_5">
+     <!-- x1 - x2 -->
+     <g transform="translate(142.072656 215.675754) scale(0.1 -0.1)">
+      <defs>
+       <path id="kepler_orbits-DejaVuSans-5b" d="M 3513 3500 
+L 2247 1797 
+L 3578 0 
+L 2900 0 
+L 1881 1375 
+L 863 0 
+L 184 0 
+L 1544 1831 
+L 300 3500 
+L 978 3500 
+L 1906 2253 
+L 2834 3500 
+L 3513 3500 
+z
+" transform="scale(0.015625)"/>
+       <path id="kepler_orbits-DejaVuSans-3" transform="scale(0.015625)"/>
+       <path id="kepler_orbits-DejaVuSans-10" d="M 313 2009 
+L 1997 2009 
+L 1997 1497 
+L 313 1497 
+L 313 2009 
+z
+" transform="scale(0.015625)"/>
+      </defs>
+      <use xlink:href="#kepler_orbits-DejaVuSans-5b"/>
+      <use xlink:href="#kepler_orbits-DejaVuSans-14" transform="translate(59.1875 0)"/>
+      <use xlink:href="#kepler_orbits-DejaVuSans-3" transform="translate(122.8125 0)"/>
+      <use xlink:href="#kepler_orbits-DejaVuSans-10" transform="translate(154.59375 0)"/>
+      <use xlink:href="#kepler_orbits-DejaVuSans-3" transform="translate(190.671875 0)"/>
+      <use xlink:href="#kepler_orbits-DejaVuSans-5b" transform="translate(222.453125 0)"/>
+      <use xlink:href="#kepler_orbits-DejaVuSans-15" transform="translate(281.640625 0)"/>
+     </g>
+    </g>
+   </g>
+   <g id="kepler_orbits-matplotlib.axis_2">
+    <g id="kepler_orbits-ytick_1">
+     <g id="kepler_orbits-line2d_5">
+      <defs>
+       <path id="kepler_orbits-m1dc42b5746" d="M 0 0 
+L -3.5 0 
+" style="stroke: currentColor; stroke-width: 0.8"/>
+      </defs>
+      <g>
+       <use xlink:href="#kepler_orbits-m1dc42b5746" x="52.482813" y="172.601241" style="stroke: currentColor; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="kepler_orbits-text_6">
+      <!-- −1.5 -->
+      <g transform="translate(21.2 176.400069) scale(0.1 -0.1)">
+       <defs>
+        <path id="kepler_orbits-DejaVuSans-c9c" d="M 678 2272 
+L 4684 2272 
+L 4684 1741 
+L 678 1741 
+L 678 2272 
+z
+" transform="scale(0.015625)"/>
+        <path id="kepler_orbits-DejaVuSans-11" d="M 684 794 
+L 1344 794 
+L 1344 0 
+L 684 0 
+L 684 794 
+z
+" transform="scale(0.015625)"/>
+        <path id="kepler_orbits-DejaVuSans-18" d="M 691 4666 
+L 3169 4666 
+L 3169 4134 
+L 1269 4134 
+L 1269 2991 
+Q 1406 3038 1543 3061 
+Q 1681 3084 1819 3084 
+Q 2600 3084 3056 2656 
+Q 3513 2228 3513 1497 
+Q 3513 744 3044 326 
+Q 2575 -91 1722 -91 
+Q 1428 -91 1123 -41 
+Q 819 9 494 109 
+L 494 744 
+Q 775 591 1075 516 
+Q 1375 441 1709 441 
+Q 2250 441 2565 725 
+Q 2881 1009 2881 1497 
+Q 2881 1984 2565 2268 
+Q 2250 2553 1709 2553 
+Q 1456 2553 1204 2497 
+Q 953 2441 691 2322 
+L 691 4666 
+z
+" transform="scale(0.015625)"/>
+       </defs>
+       <use xlink:href="#kepler_orbits-DejaVuSans-c9c"/>
+       <use xlink:href="#kepler_orbits-DejaVuSans-14" transform="translate(83.796875 0)"/>
+       <use xlink:href="#kepler_orbits-DejaVuSans-11" transform="translate(147.421875 0)"/>
+       <use xlink:href="#kepler_orbits-DejaVuSans-18" transform="translate(179.203125 0)"/>
+      </g>
+     </g>
+    </g>
+    <g id="kepler_orbits-ytick_2">
+     <g id="kepler_orbits-line2d_6">
+      <g>
+       <use xlink:href="#kepler_orbits-m1dc42b5746" x="52.482813" y="149.821231" style="stroke: currentColor; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="kepler_orbits-text_7">
+      <!-- −1.0 -->
+      <g transform="translate(21.2 153.620059) scale(0.1 -0.1)">
+       <use xlink:href="#kepler_orbits-DejaVuSans-c9c"/>
+       <use xlink:href="#kepler_orbits-DejaVuSans-14" transform="translate(83.796875 0)"/>
+       <use xlink:href="#kepler_orbits-DejaVuSans-11" transform="translate(147.421875 0)"/>
+       <use xlink:href="#kepler_orbits-DejaVuSans-13" transform="translate(179.203125 0)"/>
+      </g>
+     </g>
+    </g>
+    <g id="kepler_orbits-ytick_3">
+     <g id="kepler_orbits-line2d_7">
+      <g>
+       <use xlink:href="#kepler_orbits-m1dc42b5746" x="52.482813" y="127.04122" style="stroke: currentColor; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="kepler_orbits-text_8">
+      <!-- −0.5 -->
+      <g transform="translate(21.2 130.840048) scale(0.1 -0.1)">
+       <use xlink:href="#kepler_orbits-DejaVuSans-c9c"/>
+       <use xlink:href="#kepler_orbits-DejaVuSans-13" transform="translate(83.796875 0)"/>
+       <use xlink:href="#kepler_orbits-DejaVuSans-11" transform="translate(147.421875 0)"/>
+       <use xlink:href="#kepler_orbits-DejaVuSans-18" transform="translate(179.203125 0)"/>
+      </g>
+     </g>
+    </g>
+    <g id="kepler_orbits-ytick_4">
+     <g id="kepler_orbits-line2d_8">
+      <g>
+       <use xlink:href="#kepler_orbits-m1dc42b5746" x="52.482813" y="104.26121" style="stroke: currentColor; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="kepler_orbits-text_9">
+      <!-- 0.0 -->
+      <g transform="translate(29.579688 108.060038) scale(0.1 -0.1)">
+       <use xlink:href="#kepler_orbits-DejaVuSans-13"/>
+       <use xlink:href="#kepler_orbits-DejaVuSans-11" transform="translate(63.625 0)"/>
+       <use xlink:href="#kepler_orbits-DejaVuSans-13" transform="translate(95.40625 0)"/>
+      </g>
+     </g>
+    </g>
+    <g id="kepler_orbits-ytick_5">
+     <g id="kepler_orbits-line2d_9">
+      <g>
+       <use xlink:href="#kepler_orbits-m1dc42b5746" x="52.482813" y="81.481199" style="stroke: currentColor; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="kepler_orbits-text_10">
+      <!-- 0.5 -->
+      <g transform="translate(29.579688 85.280027) scale(0.1 -0.1)">
+       <use xlink:href="#kepler_orbits-DejaVuSans-13"/>
+       <use xlink:href="#kepler_orbits-DejaVuSans-11" transform="translate(63.625 0)"/>
+       <use xlink:href="#kepler_orbits-DejaVuSans-18" transform="translate(95.40625 0)"/>
+      </g>
+     </g>
+    </g>
+    <g id="kepler_orbits-ytick_6">
+     <g id="kepler_orbits-line2d_10">
+      <g>
+       <use xlink:href="#kepler_orbits-m1dc42b5746" x="52.482813" y="58.701189" style="stroke: currentColor; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="kepler_orbits-text_11">
+      <!-- 1.0 -->
+      <g transform="translate(29.579688 62.500017) scale(0.1 -0.1)">
+       <use xlink:href="#kepler_orbits-DejaVuSans-14"/>
+       <use xlink:href="#kepler_orbits-DejaVuSans-11" transform="translate(63.625 0)"/>
+       <use xlink:href="#kepler_orbits-DejaVuSans-13" transform="translate(95.40625 0)"/>
+      </g>
+     </g>
+    </g>
+    <g id="kepler_orbits-text_12">
+     <!-- y1 - y2 -->
+     <g transform="translate(14.797656 130.127562) rotate(-90) scale(0.1 -0.1)">
+      <defs>
+       <path id="kepler_orbits-DejaVuSans-5c" d="M 2059 -325 
+Q 1816 -950 1584 -1140 
+Q 1353 -1331 966 -1331 
+L 506 -1331 
+L 506 -850 
+L 844 -850 
+Q 1081 -850 1212 -737 
+Q 1344 -625 1503 -206 
+L 1606 56 
+L 191 3500 
+L 800 3500 
+L 1894 763 
+L 2988 3500 
+L 3597 3500 
+L 2059 -325 
+z
+" transform="scale(0.015625)"/>
+      </defs>
+      <use xlink:href="#kepler_orbits-DejaVuSans-5c"/>
+      <use xlink:href="#kepler_orbits-DejaVuSans-14" transform="translate(59.1875 0)"/>
+      <use xlink:href="#kepler_orbits-DejaVuSans-3" transform="translate(122.8125 0)"/>
+      <use xlink:href="#kepler_orbits-DejaVuSans-10" transform="translate(154.59375 0)"/>
+      <use xlink:href="#kepler_orbits-DejaVuSans-3" transform="translate(190.671875 0)"/>
+      <use xlink:href="#kepler_orbits-DejaVuSans-5c" transform="translate(222.453125 0)"/>
+      <use xlink:href="#kepler_orbits-DejaVuSans-15" transform="translate(281.640625 0)"/>
+     </g>
+    </g>
+   </g>
+   <g id="kepler_orbits-line2d_11">
+    <path d="M 158.545643 104.26121 
+L 158.485693 101.782349 
+L 158.245914 99.307841 
+L 157.82619 96.844243 
+L 157.226171 94.398203 
+L 156.445279 91.976521 
+L 155.482707 89.586214 
+L 154.337425 87.234584 
+L 153.008186 84.929297 
+L 151.493527 82.678468 
+L 149.791787 80.490753 
+L 147.901108 78.375459 
+L 145.819467 76.342671 
+L 143.544696 74.403392 
+L 141.074522 72.569717 
+L 138.40663 70.855033 
+L 135.538742 69.274258 
+L 132.468731 67.844127 
+L 129.194794 66.583532 
+L 125.715689 65.513937 
+L 122.031071 64.659867 
+L 118.141985 64.049499 
+L 114.051567 63.715352 
+L 111.215683 63.664403 
+L 108.295896 63.765437 
+L 105.29625 64.032367 
+L 102.222267 64.48052 
+L 99.081361 65.126731 
+L 95.883365 65.989381 
+L 92.641187 67.088351 
+L 89.371615 68.444839 
+L 86.096265 70.080942 
+L 82.842662 72.018891 
+L 79.645352 74.279789 
+L 76.546878 76.881684 
+L 73.598278 79.836838 
+L 70.858619 83.148207 
+L 69.587333 84.934863 
+L 68.39294 86.805433 
+L 67.283817 88.755929 
+L 66.268062 90.781145 
+L 65.353259 92.874647 
+L 64.546214 95.028833 
+L 63.852718 97.235043 
+L 63.277323 99.483746 
+L 62.823171 101.764775 
+L 62.491889 104.067603 
+L 62.283554 106.38164 
+L 62.196733 108.696526 
+L 62.228601 111.002398 
+L 62.631181 115.551435 
+L 63.448038 119.966945 
+L 64.626863 124.203603 
+L 66.112724 128.232133 
+L 67.852777 132.036913 
+L 69.799076 135.612838 
+L 71.909817 138.962252 
+L 74.149531 142.092382 
+L 76.488671 145.01338 
+L 78.902922 147.736916 
+L 81.372425 150.275233 
+L 85.145834 153.762017 
+L 88.965825 156.898647 
+L 92.801733 159.720961 
+L 96.631278 162.260964 
+L 100.438287 164.546904 
+L 104.211045 166.603573 
+L 109.173876 169.026285 
+L 114.047429 171.123891 
+L 118.823212 172.933574 
+L 123.496221 174.486767 
+L 129.189092 176.107918 
+L 134.715606 177.413715 
+L 140.076465 178.440655 
+L 145.273877 179.219341 
+L 150.310943 179.775673 
+L 156.148861 180.180651 
+L 161.767755 180.329499 
+L 167.174429 180.249527 
+L 172.375586 179.96397 
+L 177.377697 179.492768 
+L 182.970129 178.73128 
+L 188.309219 177.764119 
+L 193.403518 176.611587 
+L 198.260933 175.291272 
+L 202.888752 173.818535 
+L 207.293681 172.206882 
+L 212.062841 170.210173 
+L 216.557302 168.063385 
+L 220.784665 165.780455 
+L 224.751805 163.373778 
+L 228.464933 160.854452 
+L 231.929654 158.232477 
+L 235.15101 155.516928 
+L 238.133528 152.716082 
+L 240.881254 149.837542 
+L 243.397792 146.888328 
+L 245.686325 143.874963 
+L 247.749649 140.803545 
+L 249.590186 137.679804 
+L 251.21001 134.509161 
+L 252.610858 131.296774 
+L 253.794144 128.047582 
+L 254.760968 124.76634 
+L 255.512129 121.457661 
+L 256.048125 118.126044 
+L 256.369159 114.775905 
+L 256.475142 111.411613 
+L 256.365692 108.037512 
+L 256.04013 104.657954 
+L 255.497477 101.27733 
+L 254.736448 97.900097 
+L 253.755443 94.530808 
+L 252.552533 91.174153 
+L 251.125449 87.834988 
+L 249.471566 84.518379 
+L 247.587882 81.229642 
+L 245.470994 77.974397 
+L 243.117074 74.758622 
+L 240.521835 71.588718 
+L 237.680498 68.47158 
+L 234.58775 65.414691 
+L 231.237696 62.426219 
+L 227.623808 59.515142 
+L 223.738858 56.691395 
+L 219.574855 53.966049 
+L 215.122959 51.351527 
+L 210.983725 49.165726 
+L 206.609404 47.086124 
+L 202.666933 45.397174 
+L 202.666933 45.397174 
+" clip-path="url(#kepler_orbits-p28da08c22f)" style="fill: none; stroke: #c0392b; stroke-width: 1.1; stroke-linecap: square"/>
+   </g>
+   <g id="kepler_orbits-line2d_12">
+    <defs>
+     <path id="kepler_orbits-mdacc2c8d60" d="M 0 3 
+C 0.795609 3 1.55874 2.683901 2.12132 2.12132 
+C 2.683901 1.55874 3 0.795609 3 0 
+C 3 -0.795609 2.683901 -1.55874 2.12132 -2.12132 
+C 1.55874 -2.683901 0.795609 -3 0 -3 
+C -0.795609 -3 -1.55874 -2.683901 -2.12132 -2.12132 
+C -2.683901 -1.55874 -3 -0.795609 -3 0 
+C -3 0.795609 -2.683901 1.55874 -2.12132 2.12132 
+C -1.55874 2.683901 -0.795609 3 0 3 
+z
+" style="stroke: #c0392b"/>
+    </defs>
+    <g clip-path="url(#kepler_orbits-p28da08c22f)">
+     <use xlink:href="#kepler_orbits-mdacc2c8d60" x="158.545643" y="104.26121" style="fill: #c0392b; stroke: #c0392b"/>
+    </g>
+   </g>
+   <g id="kepler_orbits-line2d_13">
+    <defs>
+     <path id="kepler_orbits-m0420b87234" d="M -5 0 
+L 5 0 
+M 0 5 
+L 0 -5 
+" style="stroke: currentColor; stroke-width: 1.5"/>
+    </defs>
+    <g clip-path="url(#kepler_orbits-p28da08c22f)">
+     <use xlink:href="#kepler_orbits-m0420b87234" x="90.205612" y="104.26121" style="stroke: currentColor; stroke-width: 1.5"/>
+    </g>
+   </g>
+   <g id="kepler_orbits-patch_3">
+    <path d="M 52.482813 187.078098 
+L 52.482813 38.650463 
+" style="fill: none; stroke: currentColor; stroke-width: 0.8; stroke-linejoin: miter; stroke-linecap: square"/>
+   </g>
+   <g id="kepler_orbits-patch_4">
+    <path d="M 266.189062 187.078098 
+L 266.189062 38.650463 
+" style="fill: none; stroke: currentColor; stroke-width: 0.8; stroke-linejoin: miter; stroke-linecap: square"/>
+   </g>
+   <g id="kepler_orbits-patch_5">
+    <path d="M 52.482813 187.078098 
+L 266.189062 187.078098 
+" style="fill: none; stroke: currentColor; stroke-width: 0.8; stroke-linejoin: miter; stroke-linecap: square"/>
+   </g>
+   <g id="kepler_orbits-patch_6">
+    <path d="M 52.482813 38.650463 
+L 266.189062 38.650463 
+" style="fill: none; stroke: currentColor; stroke-width: 0.8; stroke-linejoin: miter; stroke-linecap: square"/>
+   </g>
+   <g id="kepler_orbits-text_13">
+    <!-- Euler, 200 steps/orbit, 3 orbits -->
+    <g transform="translate(90.850859 32.650463) scale(0.09 -0.09)">
+     <defs>
+      <path id="kepler_orbits-DejaVuSans-28" d="M 628 4666 
+L 3578 4666 
+L 3578 4134 
+L 1259 4134 
+L 1259 2753 
+L 3481 2753 
+L 3481 2222 
+L 1259 2222 
+L 1259 531 
+L 3634 531 
+L 3634 0 
+L 628 0 
+L 628 4666 
+z
+" transform="scale(0.015625)"/>
+      <path id="kepler_orbits-DejaVuSans-58" d="M 544 1381 
+L 544 3500 
+L 1119 3500 
+L 1119 1403 
+Q 1119 906 1312 657 
+Q 1506 409 1894 409 
+Q 2359 409 2629 706 
+Q 2900 1003 2900 1516 
+L 2900 3500 
+L 3475 3500 
+L 3475 0 
+L 2900 0 
+L 2900 538 
+Q 2691 219 2414 64 
+Q 2138 -91 1772 -91 
+Q 1169 -91 856 284 
+Q 544 659 544 1381 
+z
+M 1991 3584 
+L 1991 3584 
+z
+" transform="scale(0.015625)"/>
+      <path id="kepler_orbits-DejaVuSans-4f" d="M 603 4863 
+L 1178 4863 
+L 1178 0 
+L 603 0 
+L 603 4863 
+z
+" transform="scale(0.015625)"/>
+      <path id="kepler_orbits-DejaVuSans-48" d="M 3597 1894 
+L 3597 1613 
+L 953 1613 
+Q 991 1019 1311 708 
+Q 1631 397 2203 397 
+Q 2534 397 2845 478 
+Q 3156 559 3463 722 
+L 3463 178 
+Q 3153 47 2828 -22 
+Q 2503 -91 2169 -91 
+Q 1331 -91 842 396 
+Q 353 884 353 1716 
+Q 353 2575 817 3079 
+Q 1281 3584 2069 3584 
+Q 2775 3584 3186 3129 
+Q 3597 2675 3597 1894 
+z
+M 3022 2063 
+Q 3016 2534 2758 2815 
+Q 2500 3097 2075 3097 
+Q 1594 3097 1305 2825 
+Q 1016 2553 972 2059 
+L 3022 2063 
+z
+" transform="scale(0.015625)"/>
+      <path id="kepler_orbits-DejaVuSans-55" d="M 2631 2963 
+Q 2534 3019 2420 3045 
+Q 2306 3072 2169 3072 
+Q 1681 3072 1420 2755 
+Q 1159 2438 1159 1844 
+L 1159 0 
+L 581 0 
+L 581 3500 
+L 1159 3500 
+L 1159 2956 
+Q 1341 3275 1631 3429 
+Q 1922 3584 2338 3584 
+Q 2397 3584 2469 3576 
+Q 2541 3569 2628 3553 
+L 2631 2963 
+z
+" transform="scale(0.015625)"/>
+      <path id="kepler_orbits-DejaVuSans-f" d="M 750 794 
+L 1409 794 
+L 1409 256 
+L 897 -744 
+L 494 -744 
+L 750 256 
+L 750 794 
+z
+" transform="scale(0.015625)"/>
+      <path id="kepler_orbits-DejaVuSans-56" d="M 2834 3397 
+L 2834 2853 
+Q 2591 2978 2328 3040 
+Q 2066 3103 1784 3103 
+Q 1356 3103 1142 2972 
+Q 928 2841 928 2578 
+Q 928 2378 1081 2264 
+Q 1234 2150 1697 2047 
+L 1894 2003 
+Q 2506 1872 2764 1633 
+Q 3022 1394 3022 966 
+Q 3022 478 2636 193 
+Q 2250 -91 1575 -91 
+Q 1294 -91 989 -36 
+Q 684 19 347 128 
+L 347 722 
+Q 666 556 975 473 
+Q 1284 391 1588 391 
+Q 1994 391 2212 530 
+Q 2431 669 2431 922 
+Q 2431 1156 2273 1281 
+Q 2116 1406 1581 1522 
+L 1381 1569 
+Q 847 1681 609 1914 
+Q 372 2147 372 2553 
+Q 372 3047 722 3315 
+Q 1072 3584 1716 3584 
+Q 2034 3584 2315 3537 
+Q 2597 3491 2834 3397 
+z
+" transform="scale(0.015625)"/>
+      <path id="kepler_orbits-DejaVuSans-57" d="M 1172 4494 
+L 1172 3500 
+L 2356 3500 
+L 2356 3053 
+L 1172 3053 
+L 1172 1153 
+Q 1172 725 1289 603 
+Q 1406 481 1766 481 
+L 2356 481 
+L 2356 0 
+L 1766 0 
+Q 1100 0 847 248 
+Q 594 497 594 1153 
+L 594 3053 
+L 172 3053 
+L 172 3500 
+L 594 3500 
+L 594 4494 
+L 1172 4494 
+z
+" transform="scale(0.015625)"/>
+      <path id="kepler_orbits-DejaVuSans-53" d="M 1159 525 
+L 1159 -1331 
+L 581 -1331 
+L 581 3500 
+L 1159 3500 
+L 1159 2969 
+Q 1341 3281 1617 3432 
+Q 1894 3584 2278 3584 
+Q 2916 3584 3314 3078 
+Q 3713 2572 3713 1747 
+Q 3713 922 3314 415 
+Q 2916 -91 2278 -91 
+Q 1894 -91 1617 61 
+Q 1341 213 1159 525 
+z
+M 3116 1747 
+Q 3116 2381 2855 2742 
+Q 2594 3103 2138 3103 
+Q 1681 3103 1420 2742 
+Q 1159 2381 1159 1747 
+Q 1159 1113 1420 752 
+Q 1681 391 2138 391 
+Q 2594 391 2855 752 
+Q 3116 1113 3116 1747 
+z
+" transform="scale(0.015625)"/>
+      <path id="kepler_orbits-DejaVuSans-12" d="M 1625 4666 
+L 2156 4666 
+L 531 -594 
+L 0 -594 
+L 1625 4666 
+z
+" transform="scale(0.015625)"/>
+      <path id="kepler_orbits-DejaVuSans-52" d="M 1959 3097 
+Q 1497 3097 1228 2736 
+Q 959 2375 959 1747 
+Q 959 1119 1226 758 
+Q 1494 397 1959 397 
+Q 2419 397 2687 759 
+Q 2956 1122 2956 1747 
+Q 2956 2369 2687 2733 
+Q 2419 3097 1959 3097 
+z
+M 1959 3584 
+Q 2709 3584 3137 3096 
+Q 3566 2609 3566 1747 
+Q 3566 888 3137 398 
+Q 2709 -91 1959 -91 
+Q 1206 -91 779 398 
+Q 353 888 353 1747 
+Q 353 2609 779 3096 
+Q 1206 3584 1959 3584 
+z
+" transform="scale(0.015625)"/>
+      <path id="kepler_orbits-DejaVuSans-45" d="M 3116 1747 
+Q 3116 2381 2855 2742 
+Q 2594 3103 2138 3103 
+Q 1681 3103 1420 2742 
+Q 1159 2381 1159 1747 
+Q 1159 1113 1420 752 
+Q 1681 391 2138 391 
+Q 2594 391 2855 752 
+Q 3116 1113 3116 1747 
+z
+M 1159 2969 
+Q 1341 3281 1617 3432 
+Q 1894 3584 2278 3584 
+Q 2916 3584 3314 3078 
+Q 3713 2572 3713 1747 
+Q 3713 922 3314 415 
+Q 2916 -91 2278 -91 
+Q 1894 -91 1617 61 
+Q 1341 213 1159 525 
+L 1159 0 
+L 581 0 
+L 581 4863 
+L 1159 4863 
+L 1159 2969 
+z
+" transform="scale(0.015625)"/>
+      <path id="kepler_orbits-DejaVuSans-4c" d="M 603 3500 
+L 1178 3500 
+L 1178 0 
+L 603 0 
+L 603 3500 
+z
+M 603 4863 
+L 1178 4863 
+L 1178 4134 
+L 603 4134 
+L 603 4863 
+z
+" transform="scale(0.015625)"/>
+     </defs>
+     <use xlink:href="#kepler_orbits-DejaVuSans-28"/>
+     <use xlink:href="#kepler_orbits-DejaVuSans-58" transform="translate(63.1875 0)"/>
+     <use xlink:href="#kepler_orbits-DejaVuSans-4f" transform="translate(126.5625 0)"/>
+     <use xlink:href="#kepler_orbits-DejaVuSans-48" transform="translate(154.34375 0)"/>
+     <use xlink:href="#kepler_orbits-DejaVuSans-55" transform="translate(215.875 0)"/>
+     <use xlink:href="#kepler_orbits-DejaVuSans-f" transform="translate(256.984375 0)"/>
+     <use xlink:href="#kepler_orbits-DejaVuSans-3" transform="translate(288.765625 0)"/>
+     <use xlink:href="#kepler_orbits-DejaVuSans-15" transform="translate(320.546875 0)"/>
+     <use xlink:href="#kepler_orbits-DejaVuSans-13" transform="translate(384.171875 0)"/>
+     <use xlink:href="#kepler_orbits-DejaVuSans-13" transform="translate(447.796875 0)"/>
+     <use xlink:href="#kepler_orbits-DejaVuSans-3" transform="translate(511.421875 0)"/>
+     <use xlink:href="#kepler_orbits-DejaVuSans-56" transform="translate(543.203125 0)"/>
+     <use xlink:href="#kepler_orbits-DejaVuSans-57" transform="translate(595.296875 0)"/>
+     <use xlink:href="#kepler_orbits-DejaVuSans-48" transform="translate(634.5 0)"/>
+     <use xlink:href="#kepler_orbits-DejaVuSans-53" transform="translate(696.03125 0)"/>
+     <use xlink:href="#kepler_orbits-DejaVuSans-56" transform="translate(759.515625 0)"/>
+     <use xlink:href="#kepler_orbits-DejaVuSans-12" transform="translate(811.609375 0)"/>
+     <use xlink:href="#kepler_orbits-DejaVuSans-52" transform="translate(845.296875 0)"/>
+     <use xlink:href="#kepler_orbits-DejaVuSans-55" transform="translate(906.484375 0)"/>
+     <use xlink:href="#kepler_orbits-DejaVuSans-45" transform="translate(947.59375 0)"/>
+     <use xlink:href="#kepler_orbits-DejaVuSans-4c" transform="translate(1011.078125 0)"/>
+     <use xlink:href="#kepler_orbits-DejaVuSans-57" transform="translate(1038.859375 0)"/>
+     <use xlink:href="#kepler_orbits-DejaVuSans-f" transform="translate(1078.0625 0)"/>
+     <use xlink:href="#kepler_orbits-DejaVuSans-3" transform="translate(1109.84375 0)"/>
+     <use xlink:href="#kepler_orbits-DejaVuSans-16" transform="translate(1141.625 0)"/>
+     <use xlink:href="#kepler_orbits-DejaVuSans-3" transform="translate(1205.25 0)"/>
+     <use xlink:href="#kepler_orbits-DejaVuSans-52" transform="translate(1237.03125 0)"/>
+     <use xlink:href="#kepler_orbits-DejaVuSans-55" transform="translate(1298.21875 0)"/>
+     <use xlink:href="#kepler_orbits-DejaVuSans-45" transform="translate(1339.328125 0)"/>
+     <use xlink:href="#kepler_orbits-DejaVuSans-4c" transform="translate(1402.8125 0)"/>
+     <use xlink:href="#kepler_orbits-DejaVuSans-57" transform="translate(1430.59375 0)"/>
+     <use xlink:href="#kepler_orbits-DejaVuSans-56" transform="translate(1469.796875 0)"/>
+    </g>
+   </g>
+  </g>
+  <g id="kepler_orbits-axes_2">
+   <g id="kepler_orbits-patch_7">
+    <path d="M 328.634375 205.689967 
+L 542.340625 205.689967 
+L 542.340625 20.038594 
+L 328.634375 20.038594 
+L 328.634375 205.689967 
+z
+" style="fill: none"/>
+   </g>
+   <g id="kepler_orbits-matplotlib.axis_3">
+    <g id="kepler_orbits-xtick_5">
+     <g id="kepler_orbits-line2d_14">
+      <g>
+       <use xlink:href="#kepler_orbits-mb2addc32c7" x="338.412048" y="205.689967" style="stroke: currentColor; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="kepler_orbits-text_14">
+      <!-- −0.5 -->
+      <g transform="translate(326.270642 220.287624) scale(0.1 -0.1)">
+       <use xlink:href="#kepler_orbits-DejaVuSans-c9c"/>
+       <use xlink:href="#kepler_orbits-DejaVuSans-13" transform="translate(83.796875 0)"/>
+       <use xlink:href="#kepler_orbits-DejaVuSans-11" transform="translate(147.421875 0)"/>
+       <use xlink:href="#kepler_orbits-DejaVuSans-18" transform="translate(179.203125 0)"/>
+      </g>
+     </g>
+    </g>
+    <g id="kepler_orbits-xtick_6">
+     <g id="kepler_orbits-line2d_15">
+      <g>
+       <use xlink:href="#kepler_orbits-mb2addc32c7" x="386.965712" y="205.689967" style="stroke: currentColor; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="kepler_orbits-text_15">
+      <!-- 0.0 -->
+      <g transform="translate(379.01415 220.287624) scale(0.1 -0.1)">
+       <use xlink:href="#kepler_orbits-DejaVuSans-13"/>
+       <use xlink:href="#kepler_orbits-DejaVuSans-11" transform="translate(63.625 0)"/>
+       <use xlink:href="#kepler_orbits-DejaVuSans-13" transform="translate(95.40625 0)"/>
+      </g>
+     </g>
+    </g>
+    <g id="kepler_orbits-xtick_7">
+     <g id="kepler_orbits-line2d_16">
+      <g>
+       <use xlink:href="#kepler_orbits-mb2addc32c7" x="435.519376" y="205.689967" style="stroke: currentColor; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="kepler_orbits-text_16">
+      <!-- 0.5 -->
+      <g transform="translate(427.567814 220.287624) scale(0.1 -0.1)">
+       <use xlink:href="#kepler_orbits-DejaVuSans-13"/>
+       <use xlink:href="#kepler_orbits-DejaVuSans-11" transform="translate(63.625 0)"/>
+       <use xlink:href="#kepler_orbits-DejaVuSans-18" transform="translate(95.40625 0)"/>
+      </g>
+     </g>
+    </g>
+    <g id="kepler_orbits-xtick_8">
+     <g id="kepler_orbits-line2d_17">
+      <g>
+       <use xlink:href="#kepler_orbits-mb2addc32c7" x="484.07304" y="205.689967" style="stroke: currentColor; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="kepler_orbits-text_17">
+      <!-- 1.0 -->
+      <g transform="translate(476.121478 220.287624) scale(0.1 -0.1)">
+       <use xlink:href="#kepler_orbits-DejaVuSans-14"/>
+       <use xlink:href="#kepler_orbits-DejaVuSans-11" transform="translate(63.625 0)"/>
+       <use xlink:href="#kepler_orbits-DejaVuSans-13" transform="translate(95.40625 0)"/>
+      </g>
+     </g>
+    </g>
+    <g id="kepler_orbits-xtick_9">
+     <g id="kepler_orbits-line2d_18">
+      <g>
+       <use xlink:href="#kepler_orbits-mb2addc32c7" x="532.626705" y="205.689967" style="stroke: currentColor; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="kepler_orbits-text_18">
+      <!-- 1.5 -->
+      <g transform="translate(524.675142 220.287624) scale(0.1 -0.1)">
+       <use xlink:href="#kepler_orbits-DejaVuSans-14"/>
+       <use xlink:href="#kepler_orbits-DejaVuSans-11" transform="translate(63.625 0)"/>
+       <use xlink:href="#kepler_orbits-DejaVuSans-18" transform="translate(95.40625 0)"/>
+      </g>
+     </g>
+    </g>
+    <g id="kepler_orbits-text_19">
+     <!-- x1 - x2 -->
+     <g transform="translate(418.224219 234.287624) scale(0.1 -0.1)">
+      <use xlink:href="#kepler_orbits-DejaVuSans-5b"/>
+      <use xlink:href="#kepler_orbits-DejaVuSans-14" transform="translate(59.1875 0)"/>
+      <use xlink:href="#kepler_orbits-DejaVuSans-3" transform="translate(122.8125 0)"/>
+      <use xlink:href="#kepler_orbits-DejaVuSans-10" transform="translate(154.59375 0)"/>
+      <use xlink:href="#kepler_orbits-DejaVuSans-3" transform="translate(190.671875 0)"/>
+      <use xlink:href="#kepler_orbits-DejaVuSans-5b" transform="translate(222.453125 0)"/>
+      <use xlink:href="#kepler_orbits-DejaVuSans-15" transform="translate(281.640625 0)"/>
+     </g>
+    </g>
+   </g>
+   <g id="kepler_orbits-matplotlib.axis_4">
+    <g id="kepler_orbits-ytick_7">
+     <g id="kepler_orbits-line2d_19">
+      <g>
+       <use xlink:href="#kepler_orbits-m1dc42b5746" x="328.634375" y="185.414847" style="stroke: currentColor; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="kepler_orbits-text_20">
+      <!-- −0.75 -->
+      <g transform="translate(290.989062 189.213675) scale(0.1 -0.1)">
+       <defs>
+        <path id="kepler_orbits-DejaVuSans-1a" d="M 525 4666 
+L 3525 4666 
+L 3525 4397 
+L 1831 0 
+L 1172 0 
+L 2766 4134 
+L 525 4134 
+L 525 4666 
+z
+" transform="scale(0.015625)"/>
+       </defs>
+       <use xlink:href="#kepler_orbits-DejaVuSans-c9c"/>
+       <use xlink:href="#kepler_orbits-DejaVuSans-13" transform="translate(83.796875 0)"/>
+       <use xlink:href="#kepler_orbits-DejaVuSans-11" transform="translate(147.421875 0)"/>
+       <use xlink:href="#kepler_orbits-DejaVuSans-1a" transform="translate(179.203125 0)"/>
+       <use xlink:href="#kepler_orbits-DejaVuSans-18" transform="translate(242.828125 0)"/>
+      </g>
+     </g>
+    </g>
+    <g id="kepler_orbits-ytick_8">
+     <g id="kepler_orbits-line2d_20">
+      <g>
+       <use xlink:href="#kepler_orbits-m1dc42b5746" x="328.634375" y="161.138015" style="stroke: currentColor; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="kepler_orbits-text_21">
+      <!-- −0.50 -->
+      <g transform="translate(290.989062 164.936843) scale(0.1 -0.1)">
+       <use xlink:href="#kepler_orbits-DejaVuSans-c9c"/>
+       <use xlink:href="#kepler_orbits-DejaVuSans-13" transform="translate(83.796875 0)"/>
+       <use xlink:href="#kepler_orbits-DejaVuSans-11" transform="translate(147.421875 0)"/>
+       <use xlink:href="#kepler_orbits-DejaVuSans-18" transform="translate(179.203125 0)"/>
+       <use xlink:href="#kepler_orbits-DejaVuSans-13" transform="translate(242.828125 0)"/>
+      </g>
+     </g>
+    </g>
+    <g id="kepler_orbits-ytick_9">
+     <g id="kepler_orbits-line2d_21">
+      <g>
+       <use xlink:href="#kepler_orbits-m1dc42b5746" x="328.634375" y="136.861183" style="stroke: currentColor; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="kepler_orbits-text_22">
+      <!-- −0.25 -->
+      <g transform="translate(290.989062 140.660011) scale(0.1 -0.1)">
+       <use xlink:href="#kepler_orbits-DejaVuSans-c9c"/>
+       <use xlink:href="#kepler_orbits-DejaVuSans-13" transform="translate(83.796875 0)"/>
+       <use xlink:href="#kepler_orbits-DejaVuSans-11" transform="translate(147.421875 0)"/>
+       <use xlink:href="#kepler_orbits-DejaVuSans-15" transform="translate(179.203125 0)"/>
+       <use xlink:href="#kepler_orbits-DejaVuSans-18" transform="translate(242.828125 0)"/>
+      </g>
+     </g>
+    </g>
+    <g id="kepler_orbits-ytick_10">
+     <g id="kepler_orbits-line2d_22">
+      <g>
+       <use xlink:href="#kepler_orbits-m1dc42b5746" x="328.634375" y="112.584351" style="stroke: currentColor; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="kepler_orbits-text_23">
+      <!-- 0.00 -->
+      <g transform="translate(299.36875 116.383179) scale(0.1 -0.1)">
+       <use xlink:href="#kepler_orbits-DejaVuSans-13"/>
+       <use xlink:href="#kepler_orbits-DejaVuSans-11" transform="translate(63.625 0)"/>
+       <use xlink:href="#kepler_orbits-DejaVuSans-13" transform="translate(95.40625 0)"/>
+       <use xlink:href="#kepler_orbits-DejaVuSans-13" transform="translate(159.03125 0)"/>
+      </g>
+     </g>
+    </g>
+    <g id="kepler_orbits-ytick_11">
+     <g id="kepler_orbits-line2d_23">
+      <g>
+       <use xlink:href="#kepler_orbits-m1dc42b5746" x="328.634375" y="88.307519" style="stroke: currentColor; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="kepler_orbits-text_24">
+      <!-- 0.25 -->
+      <g transform="translate(299.36875 92.106347) scale(0.1 -0.1)">
+       <use xlink:href="#kepler_orbits-DejaVuSans-13"/>
+       <use xlink:href="#kepler_orbits-DejaVuSans-11" transform="translate(63.625 0)"/>
+       <use xlink:href="#kepler_orbits-DejaVuSans-15" transform="translate(95.40625 0)"/>
+       <use xlink:href="#kepler_orbits-DejaVuSans-18" transform="translate(159.03125 0)"/>
+      </g>
+     </g>
+    </g>
+    <g id="kepler_orbits-ytick_12">
+     <g id="kepler_orbits-line2d_24">
+      <g>
+       <use xlink:href="#kepler_orbits-m1dc42b5746" x="328.634375" y="64.030686" style="stroke: currentColor; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="kepler_orbits-text_25">
+      <!-- 0.50 -->
+      <g transform="translate(299.36875 67.829515) scale(0.1 -0.1)">
+       <use xlink:href="#kepler_orbits-DejaVuSans-13"/>
+       <use xlink:href="#kepler_orbits-DejaVuSans-11" transform="translate(63.625 0)"/>
+       <use xlink:href="#kepler_orbits-DejaVuSans-18" transform="translate(95.40625 0)"/>
+       <use xlink:href="#kepler_orbits-DejaVuSans-13" transform="translate(159.03125 0)"/>
+      </g>
+     </g>
+    </g>
+    <g id="kepler_orbits-ytick_13">
+     <g id="kepler_orbits-line2d_25">
+      <g>
+       <use xlink:href="#kepler_orbits-m1dc42b5746" x="328.634375" y="39.753854" style="stroke: currentColor; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="kepler_orbits-text_26">
+      <!-- 0.75 -->
+      <g transform="translate(299.36875 43.552683) scale(0.1 -0.1)">
+       <use xlink:href="#kepler_orbits-DejaVuSans-13"/>
+       <use xlink:href="#kepler_orbits-DejaVuSans-11" transform="translate(63.625 0)"/>
+       <use xlink:href="#kepler_orbits-DejaVuSans-1a" transform="translate(95.40625 0)"/>
+       <use xlink:href="#kepler_orbits-DejaVuSans-18" transform="translate(159.03125 0)"/>
+      </g>
+     </g>
+    </g>
+    <g id="kepler_orbits-text_27">
+     <!-- y1 - y2 -->
+     <g transform="translate(284.586719 130.127562) rotate(-90) scale(0.1 -0.1)">
+      <use xlink:href="#kepler_orbits-DejaVuSans-5c"/>
+      <use xlink:href="#kepler_orbits-DejaVuSans-14" transform="translate(59.1875 0)"/>
+      <use xlink:href="#kepler_orbits-DejaVuSans-3" transform="translate(122.8125 0)"/>
+      <use xlink:href="#kepler_orbits-DejaVuSans-10" transform="translate(154.59375 0)"/>
+      <use xlink:href="#kepler_orbits-DejaVuSans-3" transform="translate(190.671875 0)"/>
+      <use xlink:href="#kepler_orbits-DejaVuSans-5c" transform="translate(222.453125 0)"/>
+      <use xlink:href="#kepler_orbits-DejaVuSans-15" transform="translate(281.640625 0)"/>
+     </g>
+    </g>
+   </g>
+   <g id="kepler_orbits-line2d_26">
+    <path d="M 532.626705 112.584351 
+L 532.541509 109.062202 
+L 532.285874 105.544177 
+L 531.859649 102.034419 
+L 531.262585 98.537103 
+L 530.494333 95.056455 
+L 529.554444 91.596773 
+L 528.442369 88.16244 
+L 527.157458 84.75795 
+L 525.698961 81.387922 
+L 524.066029 78.057129 
+L 522.25771 74.770516 
+L 520.272955 71.533228 
+L 518.110617 68.350641 
+L 515.76945 65.228387 
+L 513.248114 62.172392 
+L 510.545178 59.188914 
+L 507.659125 56.284579 
+L 504.588355 53.466436 
+L 501.331198 50.742004 
+L 497.88592 48.119333 
+L 494.250742 45.607069 
+L 490.423858 43.214533 
+L 486.403458 40.951807 
+L 482.187763 38.82983 
+L 477.775065 36.860518 
+L 473.163787 35.056886 
+L 468.352547 33.433206 
+L 463.340259 32.005178 
+L 458.12625 30.79013 
+L 452.710421 29.807249 
+L 447.093451 29.077851 
+L 441.277075 28.625687 
+L 435.264442 28.477293 
+L 429.060587 28.662388 
+L 422.673065 29.214318 
+L 416.112789 30.170531 
+L 409.395145 31.573066 
+L 405.983696 32.456211 
+L 402.541475 33.469009 
+L 399.072404 34.618192 
+L 395.581056 35.910831 
+L 392.072756 37.354336 
+L 388.553691 38.956433 
+L 385.031032 40.725126 
+L 381.51308 42.668651 
+L 378.009417 44.795388 
+L 374.531072 47.113756 
+L 371.090699 49.632055 
+L 367.702755 52.35826 
+L 364.383673 55.299762 
+L 361.15201 58.463023 
+L 358.028558 61.853161 
+L 355.036383 65.473447 
+L 352.200754 69.324714 
+L 349.548937 73.404706 
+L 347.109786 77.707382 
+L 344.913112 82.222246 
+L 342.988805 86.933759 
+L 341.365693 91.820951 
+L 340.070212 96.857326 
+L 339.124968 102.011157 
+L 338.547338 107.246235 
+L 338.348295 112.523051 
+L 338.531611 117.80035 
+L 339.09358 123.03687 
+L 340.023298 128.193095 
+L 341.303453 133.232797 
+L 342.911507 138.124223 
+L 344.821087 142.840843 
+L 347.003424 147.361646 
+L 349.428685 151.671042 
+L 352.067106 155.758479 
+L 354.889873 159.617857 
+L 357.869752 163.246856 
+L 360.981498 166.646247 
+L 364.202061 169.819236 
+L 367.510658 172.770882 
+L 370.888733 175.507588 
+L 374.319852 178.036689 
+L 377.789549 180.366112 
+L 381.285162 182.50411 
+L 384.795646 184.459058 
+L 388.311405 186.239299 
+L 391.824121 187.853032 
+L 395.326605 189.308232 
+L 398.812652 190.612597 
+L 402.276919 191.77351 
+L 405.714812 192.798023 
+L 412.496284 194.464348 
+L 419.131897 195.661188 
+L 425.603363 196.432954 
+L 431.897567 196.819247 
+L 438.00528 196.855342 
+L 443.92019 196.572666 
+L 449.638175 195.999258 
+L 455.156758 195.160189 
+L 460.474688 194.07793 
+L 465.591631 192.772683 
+L 470.507929 191.262664 
+L 475.224417 189.564353 
+L 479.742286 187.692707 
+L 484.062974 185.66135 
+L 488.188083 183.482728 
+L 492.119319 181.168254 
+L 495.85844 178.728426 
+L 499.40722 176.172937 
+L 502.767421 173.510763 
+L 505.940766 170.750246 
+L 508.92893 167.899165 
+L 511.733518 164.964802 
+L 514.356065 161.95399 
+L 516.798019 158.87317 
+L 519.060741 155.728432 
+L 521.145502 152.525555 
+L 523.053476 149.270039 
+L 524.785742 145.967146 
+L 526.343278 142.62192 
+L 527.726966 139.239218 
+L 528.937586 135.823736 
+L 529.975821 132.38003 
+L 530.842252 128.912538 
+L 531.53736 125.425598 
+L 532.061527 121.923471 
+L 532.415035 118.410358 
+L 532.598067 114.890415 
+L 532.610705 111.367774 
+L 532.452934 107.846556 
+L 532.124636 104.330893 
+L 531.625596 100.82494 
+L 530.955497 97.332896 
+L 530.113924 93.859019 
+L 529.100359 90.407645 
+L 527.914185 86.983209 
+L 526.554684 83.590263 
+L 525.021038 80.233498 
+L 523.312326 76.917766 
+L 521.427528 73.648108 
+L 519.365524 70.429777 
+L 517.125095 67.26827 
+L 514.704925 64.169358 
+L 512.103605 61.139124 
+L 509.319634 58.184003 
+L 506.351424 55.310822 
+L 503.197311 52.526855 
+L 499.855562 49.839874 
+L 496.324384 47.258215 
+L 492.601948 44.79085 
+L 488.686403 42.447466 
+L 484.57591 40.238559 
+L 480.268676 38.175539 
+L 475.763003 36.270855 
+L 471.057349 34.538134 
+L 466.15041 32.992341 
+L 461.041229 31.64997 
+L 455.729328 30.529258 
+L 450.214895 29.650434 
+L 444.499017 29.036012 
+L 438.583996 28.711113 
+L 432.473757 28.70385 
+L 426.174398 29.045743 
+L 419.694918 29.772189 
+L 413.048178 30.922951 
+L 409.667471 31.67119 
+L 406.252194 32.542641 
+L 402.805685 33.543709 
+L 399.331848 34.681141 
+L 395.835239 35.962035 
+L 392.321162 37.393823 
+L 388.795786 38.984259 
+L 385.266266 40.74138 
+L 381.740884 42.673454 
+L 378.229206 44.788902 
+L 374.742249 47.096185 
+L 371.292656 49.603647 
+L 367.894877 52.319317 
+L 364.565341 55.25064 
+L 361.322608 58.404135 
+L 358.187479 61.784982 
+L 355.183034 65.396513 
+L 352.334569 69.239628 
+L 349.669378 73.312131 
+L 347.216357 77.608043 
+L 345.005365 82.116923 
+L 343.066346 86.823282 
+L 341.428187 91.706192 
+L 340.117391 96.739192 
+L 339.156628 101.890581 
+L 338.563343 107.124167 
+L 338.348574 112.400452 
+L 338.516161 117.678184 
+L 339.062466 122.916098 
+L 339.97665 128.074668 
+L 341.24147 133.117649 
+L 342.834453 138.013262 
+L 344.72929 142.734943 
+L 346.897272 147.261638 
+L 349.308624 151.57771 
+L 351.933626 155.672549 
+L 354.743506 159.539996 
+L 357.711064 163.177667 
+L 360.811075 166.586271 
+L 364.020508 169.768951 
+L 367.318588 172.730704 
+L 370.686761 175.477877 
+L 374.108591 178.017749 
+L 377.569606 180.358196 
+L 381.057131 182.507425 
+L 384.56011 184.473769 
+L 388.068931 186.265531 
+L 391.575261 187.890877 
+L 395.07189 189.357751 
+L 398.552597 190.67382 
+L 402.012019 191.846445 
+L 405.445546 192.882655 
+L 412.219642 194.572252 
+L 418.849572 195.792097 
+L 425.316912 196.586494 
+L 431.608423 196.994967 
+L 437.714758 197.052728 
+L 443.6295 196.791157 
+L 449.348429 196.238257 
+L 454.86898 195.419071 
+L 460.189821 194.35605 
+L 465.310544 193.069381 
+L 470.231425 191.577269 
+L 474.953236 189.896188 
+L 479.477112 188.041091 
+L 483.80444 186.025598 
+L 487.936774 183.862154 
+L 491.875776 181.562174 
+L 495.623164 179.136157 
+L 499.180673 176.593797 
+L 502.55003 173.944074 
+L 505.732927 171.195331 
+L 508.731006 168.355353 
+L 511.545846 165.431422 
+L 514.178951 162.430377 
+L 516.631747 159.35866 
+L 518.905569 156.222366 
+L 521.001665 153.027275 
+L 522.921188 149.778892 
+L 524.665194 146.482481 
+L 526.234643 143.143087 
+L 527.630396 139.765572 
+L 528.853215 136.354633 
+L 529.903763 132.914826 
+L 530.782604 129.450593 
+L 531.490202 125.966272 
+L 532.026922 122.466126 
+L 532.393028 118.954355 
+L 532.588686 115.435118 
+L 532.613963 111.912544 
+L 532.468826 108.390756 
+L 532.15314 104.873886 
+L 531.666674 101.366087 
+L 531.009094 97.871558 
+L 530.179966 94.394555 
+L 529.178757 90.939413 
+L 528.004832 87.510566 
+L 526.657453 84.112562 
+L 525.135784 80.750091 
+L 523.438884 77.428003 
+L 521.565713 74.151335 
+L 519.515131 70.925338 
+L 517.285895 67.755504 
+L 514.876668 64.647604 
+L 512.286015 61.607716 
+L 509.512409 58.64227 
+L 506.554238 55.75809 
+L 503.409806 52.962448 
+L 500.07735 50.263111 
+L 496.555046 47.668413 
+L 492.841028 45.187322 
+L 488.933409 42.829522 
+L 484.830307 40.605508 
+L 480.529887 38.52669 
+L 476.030401 36.605516 
+L 471.330258 34.855615 
+L 466.428096 33.291957 
+L 461.322896 31.93104 
+L 456.014114 30.791113 
+L 450.501862 29.892419 
+L 444.787148 29.25749 
+L 438.872183 28.911474 
+L 432.760795 28.882519 
+L 426.458977 29.202193 
+L 419.975608 29.905952 
+L 413.323423 31.033639 
+L 409.939368 31.770226 
+L 406.520302 32.629969 
+L 403.069545 33.619288 
+L 399.590983 34.744952 
+L 396.089152 36.01408 
+L 392.569337 37.434129 
+L 389.03769 39.012881 
+L 385.501345 40.758403 
+L 381.96857 42.679 
+L 378.448914 44.78313 
+L 374.953381 47.079296 
+L 371.494603 49.57589 
+L 368.087022 52.280992 
+L 364.747063 55.202099 
+L 361.49329 58.34579 
+L 358.346513 61.717307 
+L 355.329826 65.320044 
+L 352.468549 69.154964 
+L 349.790007 73.219935 
+L 347.323136 77.509038 
+L 345.097844 82.011888 
+L 343.144128 86.713047 
+L 341.490937 91.591628 
+L 340.164835 96.621205 
+L 339.18856 101.770104 
+L 338.579624 107.002149 
+L 338.349132 112.277854 
+L 338.500989 117.555969 
+L 339.031625 122.795229 
+L 339.930268 127.956096 
+L 341.179743 133.002307 
+L 342.757642 137.902059 
+L 344.637721 142.628755 
+L 346.791333 147.161297 
+L 349.188753 151.484 
+L 351.800315 155.586197 
+L 354.597284 159.46167 
+L 357.552493 163.107974 
+L 360.640742 166.525751 
+L 363.839015 169.718084 
+L 367.126546 172.689909 
+L 370.484784 175.447513 
+L 373.897291 177.998123 
+L 377.349588 180.349564 
+L 380.82899 182.509995 
+L 384.324427 184.487707 
+L 387.826273 186.290965 
+L 391.326177 187.9279 
+L 394.816913 189.406424 
+L 398.29224 190.734178 
+L 401.746779 191.918496 
+L 405.175899 192.966386 
+L 411.94254 194.679225 
+L 418.566708 195.922049 
+L 425.029844 196.739059 
+L 431.318584 197.169699 
+L 437.423465 197.249117 
+L 443.337964 197.008647 
+L 449.057764 196.476254 
+L 454.580211 195.676954 
+L 459.903894 194.633178 
+L 465.028331 193.365097 
+L 469.953729 191.890907 
+L 474.680801 190.227072 
+L 479.210624 188.388542 
+L 483.544534 186.388934 
+L 487.684037 184.240693 
+L 491.630752 181.955232 
+L 495.386355 179.543054 
+L 498.952545 177.013853 
+L 502.331013 174.376612 
+L 505.523418 171.639677 
+L 508.531371 168.810835 
+L 511.356423 165.897372 
+L 514.000052 162.90613 
+L 516.463655 159.843555 
+L 518.748546 156.715743 
+L 520.855949 153.528478 
+L 522.786994 150.28727 
+L 524.542716 146.997381 
+L 526.124056 143.663863 
+L 527.531854 140.291577 
+L 528.766855 136.885223 
+L 529.829701 133.449361 
+L 530.720941 129.98843 
+L 531.441019 126.506773 
+L 531.990284 123.008653 
+L 532.368982 119.49827 
+L 532.577265 115.979782 
+L 532.617519 114.21879 
+L 532.617519 114.21879 
+" clip-path="url(#kepler_orbits-pb4460aafad)" style="fill: none; stroke: #2b7fd6; stroke-width: 1.1; stroke-linecap: square"/>
+   </g>
+   <g id="kepler_orbits-line2d_27">
+    <defs>
+     <path id="kepler_orbits-ma572d02985" d="M 0 3 
+C 0.795609 3 1.55874 2.683901 2.12132 2.12132 
+C 2.683901 1.55874 3 0.795609 3 0 
+C 3 -0.795609 2.683901 -1.55874 2.12132 -2.12132 
+C 1.55874 -2.683901 0.795609 -3 0 -3 
+C -0.795609 -3 -1.55874 -2.683901 -2.12132 -2.12132 
+C -2.683901 -1.55874 -3 -0.795609 -3 0 
+C -3 0.795609 -2.683901 1.55874 -2.12132 2.12132 
+C -1.55874 2.683901 -0.795609 3 0 3 
+z
+" style="stroke: #2b7fd6"/>
+    </defs>
+    <g clip-path="url(#kepler_orbits-pb4460aafad)">
+     <use xlink:href="#kepler_orbits-ma572d02985" x="532.626705" y="112.584351" style="fill: #2b7fd6; stroke: #2b7fd6"/>
+    </g>
+   </g>
+   <g id="kepler_orbits-line2d_28">
+    <g clip-path="url(#kepler_orbits-pb4460aafad)">
+     <use xlink:href="#kepler_orbits-m0420b87234" x="386.965712" y="112.584351" style="stroke: currentColor; stroke-width: 1.5"/>
+    </g>
+   </g>
+   <g id="kepler_orbits-patch_8">
+    <path d="M 328.634375 205.689967 
+L 328.634375 20.038594 
+" style="fill: none; stroke: currentColor; stroke-width: 0.8; stroke-linejoin: miter; stroke-linecap: square"/>
+   </g>
+   <g id="kepler_orbits-patch_9">
+    <path d="M 542.340625 205.689967 
+L 542.340625 20.038594 
+" style="fill: none; stroke: currentColor; stroke-width: 0.8; stroke-linejoin: miter; stroke-linecap: square"/>
+   </g>
+   <g id="kepler_orbits-patch_10">
+    <path d="M 328.634375 205.689967 
+L 542.340625 205.689967 
+" style="fill: none; stroke: currentColor; stroke-width: 0.8; stroke-linejoin: miter; stroke-linecap: square"/>
+   </g>
+   <g id="kepler_orbits-patch_11">
+    <path d="M 328.634375 20.038594 
+L 542.340625 20.038594 
+" style="fill: none; stroke: currentColor; stroke-width: 0.8; stroke-linejoin: miter; stroke-linecap: square"/>
+   </g>
+   <g id="kepler_orbits-text_28">
+    <!-- leapfrog, 200 steps/orbit, 3 orbits -->
+    <g transform="translate(359.988047 14.038594) scale(0.09 -0.09)">
+     <defs>
+      <path id="kepler_orbits-DejaVuSans-44" d="M 2194 1759 
+Q 1497 1759 1228 1600 
+Q 959 1441 959 1056 
+Q 959 750 1161 570 
+Q 1363 391 1709 391 
+Q 2188 391 2477 730 
+Q 2766 1069 2766 1631 
+L 2766 1759 
+L 2194 1759 
+z
+M 3341 1997 
+L 3341 0 
+L 2766 0 
+L 2766 531 
+Q 2569 213 2275 61 
+Q 1981 -91 1556 -91 
+Q 1019 -91 701 211 
+Q 384 513 384 1019 
+Q 384 1609 779 1909 
+Q 1175 2209 1959 2209 
+L 2766 2209 
+L 2766 2266 
+Q 2766 2663 2505 2880 
+Q 2244 3097 1772 3097 
+Q 1472 3097 1187 3025 
+Q 903 2953 641 2809 
+L 641 3341 
+Q 956 3463 1253 3523 
+Q 1550 3584 1831 3584 
+Q 2591 3584 2966 3190 
+Q 3341 2797 3341 1997 
+z
+" transform="scale(0.015625)"/>
+      <path id="kepler_orbits-DejaVuSans-49" d="M 2375 4863 
+L 2375 4384 
+L 1825 4384 
+Q 1516 4384 1395 4259 
+Q 1275 4134 1275 3809 
+L 1275 3500 
+L 2222 3500 
+L 2222 3053 
+L 1275 3053 
+L 1275 0 
+L 697 0 
+L 697 3053 
+L 147 3053 
+L 147 3500 
+L 697 3500 
+L 697 3744 
+Q 697 4328 969 4595 
+Q 1241 4863 1831 4863 
+L 2375 4863 
+z
+" transform="scale(0.015625)"/>
+      <path id="kepler_orbits-DejaVuSans-4a" d="M 2906 1791 
+Q 2906 2416 2648 2759 
+Q 2391 3103 1925 3103 
+Q 1463 3103 1205 2759 
+Q 947 2416 947 1791 
+Q 947 1169 1205 825 
+Q 1463 481 1925 481 
+Q 2391 481 2648 825 
+Q 2906 1169 2906 1791 
+z
+M 3481 434 
+Q 3481 -459 3084 -895 
+Q 2688 -1331 1869 -1331 
+Q 1566 -1331 1297 -1286 
+Q 1028 -1241 775 -1147 
+L 775 -588 
+Q 1028 -725 1275 -790 
+Q 1522 -856 1778 -856 
+Q 2344 -856 2625 -561 
+Q 2906 -266 2906 331 
+L 2906 616 
+Q 2728 306 2450 153 
+Q 2172 0 1784 0 
+Q 1141 0 747 490 
+Q 353 981 353 1791 
+Q 353 2603 747 3093 
+Q 1141 3584 1784 3584 
+Q 2172 3584 2450 3431 
+Q 2728 3278 2906 2969 
+L 2906 3500 
+L 3481 3500 
+L 3481 434 
+z
+" transform="scale(0.015625)"/>
+     </defs>
+     <use xlink:href="#kepler_orbits-DejaVuSans-4f"/>
+     <use xlink:href="#kepler_orbits-DejaVuSans-48" transform="translate(27.78125 0)"/>
+     <use xlink:href="#kepler_orbits-DejaVuSans-44" transform="translate(89.3125 0)"/>
+     <use xlink:href="#kepler_orbits-DejaVuSans-53" transform="translate(150.59375 0)"/>
+     <use xlink:href="#kepler_orbits-DejaVuSans-49" transform="translate(214.078125 0)"/>
+     <use xlink:href="#kepler_orbits-DejaVuSans-55" transform="translate(249.28125 0)"/>
+     <use xlink:href="#kepler_orbits-DejaVuSans-52" transform="translate(288.1875 0)"/>
+     <use xlink:href="#kepler_orbits-DejaVuSans-4a" transform="translate(349.375 0)"/>
+     <use xlink:href="#kepler_orbits-DejaVuSans-f" transform="translate(412.859375 0)"/>
+     <use xlink:href="#kepler_orbits-DejaVuSans-3" transform="translate(444.640625 0)"/>
+     <use xlink:href="#kepler_orbits-DejaVuSans-15" transform="translate(476.421875 0)"/>
+     <use xlink:href="#kepler_orbits-DejaVuSans-13" transform="translate(540.046875 0)"/>
+     <use xlink:href="#kepler_orbits-DejaVuSans-13" transform="translate(603.671875 0)"/>
+     <use xlink:href="#kepler_orbits-DejaVuSans-3" transform="translate(667.296875 0)"/>
+     <use xlink:href="#kepler_orbits-DejaVuSans-56" transform="translate(699.078125 0)"/>
+     <use xlink:href="#kepler_orbits-DejaVuSans-57" transform="translate(751.171875 0)"/>
+     <use xlink:href="#kepler_orbits-DejaVuSans-48" transform="translate(790.375 0)"/>
+     <use xlink:href="#kepler_orbits-DejaVuSans-53" transform="translate(851.90625 0)"/>
+     <use xlink:href="#kepler_orbits-DejaVuSans-56" transform="translate(915.390625 0)"/>
+     <use xlink:href="#kepler_orbits-DejaVuSans-12" transform="translate(967.484375 0)"/>
+     <use xlink:href="#kepler_orbits-DejaVuSans-52" transform="translate(1001.171875 0)"/>
+     <use xlink:href="#kepler_orbits-DejaVuSans-55" transform="translate(1062.359375 0)"/>
+     <use xlink:href="#kepler_orbits-DejaVuSans-45" transform="translate(1103.46875 0)"/>
+     <use xlink:href="#kepler_orbits-DejaVuSans-4c" transform="translate(1166.953125 0)"/>
+     <use xlink:href="#kepler_orbits-DejaVuSans-57" transform="translate(1194.734375 0)"/>
+     <use xlink:href="#kepler_orbits-DejaVuSans-f" transform="translate(1233.9375 0)"/>
+     <use xlink:href="#kepler_orbits-DejaVuSans-3" transform="translate(1265.71875 0)"/>
+     <use xlink:href="#kepler_orbits-DejaVuSans-16" transform="translate(1297.5 0)"/>
+     <use xlink:href="#kepler_orbits-DejaVuSans-3" transform="translate(1361.125 0)"/>
+     <use xlink:href="#kepler_orbits-DejaVuSans-52" transform="translate(1392.90625 0)"/>
+     <use xlink:href="#kepler_orbits-DejaVuSans-55" transform="translate(1454.09375 0)"/>
+     <use xlink:href="#kepler_orbits-DejaVuSans-45" transform="translate(1495.203125 0)"/>
+     <use xlink:href="#kepler_orbits-DejaVuSans-4c" transform="translate(1558.6875 0)"/>
+     <use xlink:href="#kepler_orbits-DejaVuSans-57" transform="translate(1586.46875 0)"/>
+     <use xlink:href="#kepler_orbits-DejaVuSans-56" transform="translate(1625.671875 0)"/>
+    </g>
+   </g>
+  </g>
+ </g>
+ <defs>
+  <clipPath id="kepler_orbits-p28da08c22f">
+   <rect x="52.482813" y="38.650463" width="213.70625" height="148.427635"/>
+  </clipPath>
+  <clipPath id="kepler_orbits-pb4460aafad">
+   <rect x="328.634375" y="20.038594" width="213.70625" height="185.651374"/>
+  </clipPath>
+ </defs>
+</svg>

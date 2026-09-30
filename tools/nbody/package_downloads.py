@@ -73,6 +73,14 @@ def build_hints(src: Path, lecture: str, staging: Path) -> Path:
 		encoding="utf-8",
 	)
 
+	checker_name = f"check_hw{hw_n}.py"
+	checker_text = (hints_dst / checker_name).read_text(encoding="utf-8")
+	flags = re.findall(r'add_argument\("(--\S+)"', checker_text)
+	if flags:
+		override_line = f"   (pass folders explicitly with {' '.join(f'{f} DIR' for f in flags)})\n"
+	else:
+		override_line = f"   (or pass a folder explicitly: ... {checker_name} path/to/your/{lecture})\n"
+
 	(root / "README.txt").write_text(
 		f"Gravity from Scratch -- Lecture {hw_n} hints\n"
 		f"{'=' * 40}\n\n"
@@ -82,8 +90,8 @@ def build_hints(src: Path, lecture: str, staging: Path) -> Path:
 		f"2. Follow myOwnCode/{lecture}/README.txt to set up your own copy.\n"
 		f"3. Check your work:\n"
 		f"       cd {ROOT_NAME}\n"
-		f"       python course/codeHints/{lecture}/check_hw{hw_n}.py\n"
-		f"   (or pass a folder explicitly: ... check_hw{hw_n}.py path/to/your/{lecture})\n"
+		f"       python course/codeHints/{lecture}/{checker_name}\n"
+		f"{override_line}"
 		f"   Each line prints PASS or FAIL. Aim for all PASS before moving on.\n"
 		f"4. Only once you're all green, get the reference-solution zip from the lecture\n"
 		f"   page and compare it with your own code.\n",

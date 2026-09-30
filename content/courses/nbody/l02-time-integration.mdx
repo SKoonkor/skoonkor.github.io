@@ -1,0 +1,262 @@
+---
+title: "Time integration: from Euler to leapfrog"
+description: "Symplectic methods, order of accuracy, time-step choice, and a first look at block time steps."
+lecture: 2
+goal: "Explain why Euler adds energy, describe an N-body system as a Hamiltonian system, implement symplectic Euler and leapfrog (KDK and DKD), measure order of accuracy and long-term behaviour, and choose a time step from a physical criterion."
+publishDate: "2026-09-30"
+tags: ["n-body", "gravity", "integrators", "leapfrog", "symplectic"]
+draft: false
+downloads:
+  hints: "/downloads/nbody/L02-hints.zip"
+  solutions: "/downloads/nbody/L02-solution.zip"
+---
+
+import M from "@/components/course/M.astro";
+import Callout from "@/components/course/Callout.astro";
+import Figure from "@/components/course/Figure.astro";
+
+<Callout kind="goals">
+- Explain *why* Euler adds energy, with a calculation you can do by hand.
+- Describe an N-body system as a Hamiltonian system and say what "symplectic" means.
+- Write down and implement symplectic Euler and the leapfrog (kick&ndash;drift&ndash;kick and drift&ndash;kick&ndash;drift).
+- Measure the order of accuracy of an integrator and recognise bounded versus growing energy error.
+- Choose a time step from a physical criterion, and see why one step size for all particles is wasteful.
+</Callout>
+
+## Why Euler is not good enough
+
+In Lecture 1 you advanced the system with explicit Euler, Eq. (10) there. Its local error per step is <M t="\Oh{\Delta t^2}" />, so after <M t="n=T/\Delta t" /> steps the accumulated (global) error is <M t="\Oh{\Delta t}" />: the method is *first order*. First order alone is not the real problem. The real problem is how the error behaves. Consider the simplest oscillator, <M t="\ddot x=-\omega^2x" /> with <M t="\omega=1" />, written as <M t="\dot x=v" />, <M t="\dot v=-x" />. One Euler step is
+
+<M d tag="1" t="x'=x+v\,\Delta t,\qquad v'=v-x\,\Delta t ." />
+
+Squaring and adding gives, exactly,
+
+<M d id="eq-l02-eulergrowth" tag="2" t="x'^2+v'^2=(x^2+v^2)\,(1+\Delta t^2)." />
+
+So the energy <M t="E=\tfrac12(x^2+v^2)" /> is multiplied by <M t="1+\Delta t^2" /> *every step*. After time <M t="t=n\Delta t" /> it has grown by <M t="(1+\Delta t^2)^n\approx e^{t\,\Delta t}" />. The error does not merely exist; it grows exponentially in time, at a rate proportional to <M t="\Delta t" />. Real simulations run for thousands of dynamical times, so this cannot be tolerated. We want methods whose energy error stays *bounded*.
+
+## Hamiltonian view and phase space
+
+Gravity is conservative. Write the total energy of the <M t="N" /> particles as a function of positions <M t="\vect r_i" /> and momenta <M t="\vect p_i=m_i\vect v_i" />:
+
+<M d tag="3" t="H(\vect r,\vect p)=\underbrace{\sum_i\frac{|\vect p_i|^2}{2m_i}}_{K(\vect p)}+\underbrace{U(\vect r)}_{\text{Lecture 1, Eq. (9)}} ." />
+
+Hamilton's equations reproduce Newton's law:
+
+<M d tag="4" t="\dot{\vect r}_i=\frac{\partial H}{\partial\vect p_i}=\frac{\vect p_i}{m_i}=\vect v_i,\qquad \dot{\vect p}_i=-\frac{\partial H}{\partial\vect r_i}=m_i\vect a_i ." />
+
+The state of the system is a point in *phase space* (all positions and momenta). A key property of Hamiltonian motion is **Liouville's theorem**: a small blob of initial states keeps its phase-space volume as it moves; it may be sheared and stretched, but not squeezed or inflated. A numerical method is called **symplectic** if each step preserves the Hamiltonian structure of the equations; in particular it preserves phase-space volume exactly, and volume preservation is the property we will use.
+
+For the oscillator, phase space is the <M t="(x,v)" /> plane and "volume" is area. One Euler step is the linear map with matrix <M t="\begin{pmatrix}1&\Delta t\\-\Delta t&1\end{pmatrix}" />, whose determinant is <M t="1+\Delta t^2>1" />: Euler inflates areas, consistent with Eq. (2). The other methods of this lecture have determinant exactly <M t="1" />.
+
+<Figure svg="L02/phase_space" n={1} id="fig-l02-phase" widthPct={1.0} alt="A small square of initial states of the oscillator followed for 8 steps under Euler, symplectic Euler, and leapfrog KDK: Euler inflates the patch, the other two only shear and rotate it." caption="A small square of initial states (grey) of the oscillator dx/dt=v, dv/dt=-x followed with dt=0.5, snapshots every two steps (grey, blue, green, orange, red). Euler inflates the patch (area x1.25^8 = 5.96 after 8 steps). Symplectic Euler and leapfrog shear and rotate it but keep its area exactly." />
+
+## Building blocks: kick and drift
+
+Split the Hamiltonian into its two parts, <M t="H=K+U" />. Each part alone is easy to solve exactly:
+
+- Only <M t="K" />: forces are switched off, so velocities are constant and positions move in straight lines. This is a **drift**: <M t="\ \vect r\leftarrow\vect r+\vect v\,\tau" />.
+- Only <M t="U" />: particles do not move, but velocities change by the acceleration at the current positions. This is a **kick**: <M t="\ \vect v\leftarrow\vect v+\vect a(\vect r)\,\tau" />.
+
+Both are exact for their part of <M t="H" />, and each is a shear in phase space, so each preserves area. For the oscillator a drift is the matrix <M t="\begin{pmatrix}1&\tau\\0&1\end{pmatrix}" /> and a kick is <M t="\begin{pmatrix}1&0\\-\tau&1\end{pmatrix}" />; both have determinant <M t="1" />. Any *sequence* of kicks and drifts is therefore symplectic. The methods differ only in the order and the fractions of <M t="\Delta t" /> used.
+
+```python title="s1_kick_drift.py"
+import numpy as np
+
+def kick(vel, acc, dt):
+    """Change the velocity using the acceleration."""
+    return vel + acc * dt
+
+def drift(pos, vel, dt):
+    """Move the positions using the velocity."""
+    return pos + vel * dt
+
+# a step is a sequence of these two moves, in some order and with some dt
+pos, vel, acc = np.zeros(3), np.array([1., 0, 0]), np.array([0., 1, 0])
+print(kick(vel, acc, 0.1), drift(pos, vel, 0.1))   # [1.  0.1  0.] [0.1 0.  0.]
+```
+
+Assembling steps from these two building blocks is Homework 2.1.
+
+### Symplectic Euler
+
+Kick first, then drift using the *updated* velocity:
+
+<M d id="eq-l02-seuler" tag="5" t="\vect v_{n+1}=\vect v_n+\vect a(\vect r_n)\Delta t,\qquad \vect r_{n+1}=\vect r_n+\vect v_{n+1}\Delta t ." />
+
+Compared with explicit Euler, one detail changed: the position update uses <M t="\vect v_{n+1}" /> rather than <M t="\vect v_n" />. For the oscillator the matrix becomes <M t="\begin{pmatrix}1-\Delta t^2&\Delta t\\-\Delta t&1\end{pmatrix}" /> with determinant <M t="1-\Delta t^2+\Delta t^2=1" />. It is still first order, but the energy error now oscillates instead of growing.
+
+### Leapfrog: kick&ndash;drift&ndash;kick and drift&ndash;kick&ndash;drift
+
+A *symmetric* sequence is better. The **kick&ndash;drift&ndash;kick (KDK)** step is
+
+<M d tag="6" t="\vect v_{n+1/2}=\vect v_n+\tfrac12\Delta t\,\vect a(\vect r_n)," />
+<M d tag="7" t="\vect r_{n+1}=\vect r_n+\Delta t\,\vect v_{n+1/2}," />
+<M d tag="8" t="\vect v_{n+1}=\vect v_{n+1/2}+\tfrac12\Delta t\,\vect a(\vect r_{n+1})." />
+
+The **drift&ndash;kick&ndash;drift (DKD)** step is the mirror image: drift by <M t="\Delta t/2" />, kick by <M t="\Delta t" /> with the acceleration at the half-step position, drift by <M t="\Delta t/2" />. Both are second order, symplectic, and *time-reversible* (running the step backwards, with <M t="\Delta t\to-\Delta t" />, exactly undoes it).
+
+<Figure svg="L02/kdkdkd" n={2} id="fig-l02-kdkdkd" widthPct={1.0} alt="The KDK and DKD leapfrog steps drawn as sequences of kick and drift moves between labelled states." caption="The two leapfrog steps as sequences of moves. Blue boxes: states at whole steps; orange boxes: intermediate states." />
+
+**Why it is called leapfrog, and one force call per step.** In KDK the last half-kick of step <M t="n" /> and the first half-kick of step <M t="n+1" /> use the *same* acceleration <M t="\vect a(\vect r_{n+1})" /> and can be merged into one full kick. Written that way, velocities live at half-steps and positions at whole steps, and they "leap over" each other:
+
+<M d tag="9" t="\dots\ \vect r_n\ \xrightarrow{\ \vect v_{n+1/2}\ }\ \vect r_{n+1}\ \xrightarrow{\ \vect v_{n+3/2}\ }\ \vect r_{n+2}\dots" />
+
+In code, KDK needs only *one new force evaluation per step*: the acceleration at the end of step <M t="n" /> is stored and reused at the start of step <M t="n+1" />. That is why your KDK function receives `acc` as an argument and returns the new one. Force evaluations are the expensive part (Lecture 1), so it is important not to compute them twice.
+
+<Callout kind="history" title="History">
+Leapfrog-type schemes are old: St&oslash;rmer used the position-only form around 1907 for orbits of charged particles in the aurora, and Verlet popularised it in molecular dynamics in 1967. Cosmological codes prefer KDK, especially with individual time steps (Quinn et al. 1997; GADGET-2, Springel 2005), because forces are always evaluated at synchronised positions.
+</Callout>
+
+## What "symplectic" buys you
+
+**A conserved shadow energy.** A symplectic integrator with step <M t="\Delta t" /> is not the exact flow of <M t="H" />, but it *is*, to very high accuracy, the exact flow of a slightly different Hamiltonian <M t="\tilde H=H+\Delta t^2H_2+\Delta t^4H_4+\cdots" />, the *shadow* Hamiltonian (<M t="H_2,H_4,\dots" /> are functions we never need to know). The numerical map conserves <M t="\tilde H" />, so <M t="H=\tilde H-\Delta t^2H_2-\cdots" /> can only *oscillate*, by an amount <M t="\propto\Delta t^2" />, around the constant value of <M t="\tilde H" /> (which differs slightly from the initial <M t="H" />); it cannot drift. You can verify this in two lines for the oscillator with symplectic Euler: the map conserves <M t="Q=x^2+v^2-\Delta t\,x\,v" /> *exactly*, so the energy <M t="x^2+v^2=Q+\Delta t\,xv" /> merely wobbles by <M t="\Delta t\,xv" />. The statement needs a fixed step, a smooth <M t="H" /> and a step small compared with the shortest dynamical time (near a pericentre, the time to sweep through it). The series is asymptotic, so it holds for very long, not infinite, times.
+
+**Looking ahead.** Two remarks that matter later. (i) Any splitting <M t="H=K+U_1+U_2" /> still gives a symplectic scheme: kicks from <M t="U_1" /> and from <M t="U_2" /> are separate exact moves and can be interleaved. The force splitting of P&sup3;M and TreePM (Lecture 8) is of this kind. (ii) Tree forces (Lectures 4&ndash;5) are approximate and not exactly antisymmetric between particles, so momentum is no longer conserved exactly; mesh forces (Lecture 6) are also approximate and do not conserve energy exactly, whatever the integrator.
+
+**Phase errors still grow.** Bounded energy does not mean perfect orbits. The bodies stay on the right ellipse but arrive slightly early or late, and this timing (phase) error grows linearly with time. Leapfrog also makes the orbit precess slowly (too little to see in three orbits).
+
+<Figure svg="L02/kepler_orbits" n={3} id="fig-l02-orbits" widthPct={0.85} alt="Relative orbit of a two-body system with eccentricity 0.5 over three orbits: explicit Euler spirals outward, leapfrog stays on the same ellipse." caption="Relative orbit of a two-body system with eccentricity e=0.5 over three orbits with 200 steps per orbit (dot: start; cross: position of the other body, the origin of the relative coordinate). Left: explicit Euler spirals outward, having gained energy. Right: leapfrog stays on (almost) the same ellipse." />
+
+**Time reversibility.** KDK and DKD are exactly reversible: after <M t="n" /> steps, flip all velocities and take <M t="n" /> more steps, and you return to the start up to rounding error (<M t="\sim10^{-15}" />). Euler does not. Reversibility is a cheap and severe test of your implementation; you will use it in Homework 2.5.
+
+## The test problem: an eccentric Kepler orbit
+
+Two bodies with <M t="m_1=m_2=0.5" /> and <M t="G=1" /> have total mass <M t="M=1" />. Their relative orbit is a Kepler ellipse with semi-major axis <M t="a=1" /> and eccentricity <M t="e" />. Starting at apocentre (the farthest point of the orbit; the closest is the pericentre), the separation is <M t="r=a(1+e)" /> and the relative speed follows from the vis-viva equation <M t="v^2=GM(2/r-1/a)" />. Each body moves at half the relative speed about the centre of mass, in opposite directions.
+
+```python title="s2_kepler_ic.py"
+import numpy as np
+
+e, a = 0.5, 1.0                      # eccentricity, semi-major axis (G = M = 1)
+r = a * (1 + e)                      # start at apocentre
+v = np.sqrt(2 / r - 1 / a)           # vis-viva: relative speed at that distance
+pos = np.array([[r / 2, 0, 0], [-r / 2, 0, 0]])
+vel = np.array([[0, v / 2, 0], [0, -v / 2, 0]])
+mass = np.array([0.5, 0.5])
+period = 2 * np.pi * np.sqrt(a**3)   # Kepler's third law with G M = 1
+print(r, round(v, 4), round(period, 4))   # 1.5 0.5774 6.2832
+```
+
+Known values (use them to check your code):
+
+<M d id="eq-l02-kepler" tag="10" t="\begin{gathered} T=2\pi\sqrt{a^3/GM}=2\pi,\qquad E_0=-\frac{Gm_1m_2}{2a}=-0.125,\\ L_0=\mu\sqrt{GMa(1-e^2)},\ \ \mu=\frac{m_1m_2}{M}=0.25 . \end{gathered}" />
+
+For <M t="e=0.9" /> this gives <M t="L_0=0.25\sqrt{0.19}\approx0.10897" />. The pericentre distance is <M t="a(1-e)" />: <M t="0.5" /> for <M t="e=0.5" /> and only <M t="0.1" /> for <M t="e=0.9" />, where the bodies race past each other about <M t="19" /> times faster than at apocentre (the speed ratio is <M t="(1+e)/(1-e)" />).
+
+To compare integrators fairly, track the largest relative energy error during a run:
+
+```python title="s3_max_error.py"
+errors = []
+for step in range(n_steps):
+    ...                              # advance the system by one step
+    errors.append(abs(total_energy(pos, vel, mass) - E0) / abs(E0))
+print(max(errors))                   # the worst error seen during the run
+```
+
+<Callout kind="pitfall">
+Do not judge an integrator only from the energy at the end of a whole orbit. A symplectic integrator's energy error oscillates and passes through nearly zero at special phases (for example at each return to apocentre), so the end-of-orbit value can be tiny while the error *during* the orbit is large. Always use the maximum over the run.
+</Callout>
+
+## Order of accuracy and long-term behaviour
+
+The **order** <M t="p" /> of a method means the error scales as <M t="\Delta t^p" />. On log&ndash;log axes (see the box on reading log&ndash;log plots in Lecture 1) the maximum energy error versus <M t="\Delta t" /> is a line of slope <M t="p" />. For the <M t="e=0.5" /> orbit:
+
+<Figure svg="L02/convergence" n={4} id="fig-l02-conv" widthPct={0.62} alt="Log-log plot of the largest relative energy error during one orbit against time step, for Euler, symplectic Euler, leapfrog KDK, and RK4." caption="Largest relative energy error during one orbit versus time step (e=0.5). Explicit and symplectic Euler have slope about 1, leapfrog 2. The fourth-order Runge-Kutta method (RK4, optional) has slope about 4-5 and is by far the most accurate per step at small dt." />
+
+RK4, the classical fourth-order Runge&ndash;Kutta method (four force evaluations per step combined into one high-order update), is more accurate than leapfrog at the same <M t="\Delta t" />, so why do N-body codes use leapfrog? Because of the long-term behaviour (Figure 5). RK4 needs four force evaluations per step, is not symplectic, and its small errors slowly *accumulate*. For a fixed step and a smooth problem, leapfrog's error saturates and stays bounded however long you run (see the shadow-energy paragraph).
+
+<Figure svg="L02/energy_time" n={5} id="fig-l02-energy" widthPct={0.70} alt="Largest relative energy error within each orbit over 50 orbits: Euler grows without bound, symplectic Euler and leapfrog are flat, RK4 creeps upward." caption="Largest relative energy error within each orbit for 50 orbits (e=0.5; steps per orbit in the legend). Euler grows without bound, symplectic Euler and leapfrog are flat, and RK4 starts far lower but creeps upward." />
+
+<Callout kind="idea">
+For simulations that run for very many dynamical times (galaxies, cosmological boxes) the *shape* of the error matters more than its size at one time. A symplectic, reversible method with one force call per step gives bounded energy error at the lowest cost. This is why leapfrog is the workhorse of N-body codes.
+</Callout>
+
+In this test DKD has a smaller error constant than KDK (about <M t="3.7\times" /> smaller at <M t="100" /> steps per orbit; this constant depends on the problem). Both are second order. KDK is preferred with variable time steps; see [Choosing the time step](#choosing-the-time-step).
+
+## Choosing the time step
+
+Fixed <M t="\Delta t" /> wastes effort. In the <M t="e=0.9" /> orbit the bodies dawdle near apocentre and rush through pericentre, so a step small enough for pericentre is far too small elsewhere. A step-size *criterion* links <M t="\Delta t" /> to the local dynamics. A common choice uses the acceleration:
+
+<M d id="eq-l02-dt" tag="11" t="\Delta t=\eta\sqrt{\frac{\epsilon}{|\vect a|}}," />
+
+where <M t="\epsilon" /> is a length scale (in a simulation, the softening length of Lecture 1; in our Kepler test the force stays unsoftened and <M t="\epsilon=0.05" /> is only the length scale of the criterion) and <M t="\eta\sim0.01\text{--}0.1" /> is a dimensionless accuracy parameter. The idea: a particle with acceleration <M t="a" /> moves a distance <M t="\tfrac12a\tau^2" /> in time <M t="\tau" />; demanding this be a small fraction of <M t="\epsilon" /> gives <M t="\tau\propto\sqrt{\epsilon/a}" />. Another common criterion uses the crossing time, <M t="\Delta t=\eta\,r/|\vect v|" />. With several particles, the simplest rule uses the *largest* acceleration so that everyone is resolved (shared adaptive step).
+
+<Figure svg="L02/adaptive_dt" n={6} id="fig-l02-adaptive" widthPct={0.70} alt="Adaptive time step and separation against time on the eccentric Kepler orbit: the step size drops sharply near pericentre." caption="Adaptive step (KDK, eta=0.05, epsilon=0.05) on the e=0.9 orbit. The step size (blue, log scale) drops by a factor of about 20 at pericentre, where the separation (grey dashed) is smallest. The last step is shortened so that the run ends exactly at T." />
+
+The payoff is large. One orbit with <M t="e=0.9" />, <M t="\epsilon=0.05" /> (KDK with the step of Eq. (11) recomputed from the current acceleration):
+
+| <M t="\eta" /> | steps | max error, adaptive | max error, fixed step, same <M t="n" /> |
+|---|---|---|---|
+| 0.2 | 100 | <M t="7.8\times10^{-2}" /> | <M t="3.3" /> |
+| 0.1 | 199 | <M t="1.9\times10^{-2}" /> | <M t="0.68" /> |
+| 0.05 | 398 | <M t="4.6\times10^{-3}" /> | <M t="0.53" /> |
+| 0.025 | 795 | <M t="1.2\times10^{-3}" /> | <M t="0.14" /> |
+
+With the same number of steps, the adaptive run is about <M t="35" />&ndash;<M t="120\times" /> more accurate. The adaptive error scales as <M t="\eta^2" /> (a factor <M t="4" /> per halving of <M t="\eta" />), as expected for a second-order method.
+
+<Callout kind="pitfall">
+A step size that depends on the current state breaks the assumptions behind the shadow-Hamiltonian argument: the method is no longer strictly symplectic or reversible, and the energy error may slowly drift over very long runs (here it grows only from <M t="4.6\times10^{-3}" /> in orbit 1 to <M t="5.7\times10^{-3}" /> after 10 orbits). Production codes accept small drifts or use time-symmetrised criteria. Keep <M t="\Delta t" /> fixed *within* each kick&ndash;drift&ndash;kick step and compute it from the stored acceleration at the start of the step: this costs no extra force evaluation. It is not time-symmetric, so reversibility is lost.
+</Callout>
+
+## A first look at block time steps
+
+In an N-body system with many particles, a few particles (deep in dense cores) need tiny steps while most need large ones. Using the smallest step for everyone wastes almost all the force evaluations. Aarseth introduced **individual time steps** in the 1960s. Modern codes use **block** (hierarchical) steps: every particle's step is <M t="\Delta t_{\max}/2^k" /> for an integer *rung* <M t="k" />, chosen as the largest step not exceeding its criterion (Eq. 11). Because the steps are powers of two, all steps end at common times and particles can be advanced in synchronised groups.
+
+<Figure svg="L02/block" n={7} id="fig-l02-block" widthPct={0.977} alt="Block time steps diagram: four rungs of step size Delta t max divided by 1, 2, 4, and 8, with red dots marking where each rung's steps end." caption="Block time steps. A particle on rung k takes 2^k equal steps per delta-t-max. Red dots mark step ends at three example times: t0 + dtmax/8 (only rung 3), t0 + dtmax/2 (rungs 1-3) and t0 + dtmax (all rungs). At each such time only the particles whose step ends there (active particles) get a new force evaluation; the coarse rungs are evaluated rarely. At the end of the whole interval (all rungs) everything is synchronised." />
+
+Only *active* particles need new accelerations at each sub-step (though they still feel all other particles, drifted to the current time). In outline:
+
+1. Find the next time <M t="t_{\rm next}" /> at which some particle's step ends.
+2. Drift (predict) all particles to <M t="t_{\rm next}" />.
+3. For the active particles, compute new accelerations and finish their closing half-kick.
+4. Choose new steps for the active particles, apply their opening half-kick, and repeat.
+
+At the end of its step a particle may move to a finer rung, but to a coarser rung only at a time when the coarser step boundary lines up. Implementing this in a real code (with trees, Lecture 4 onwards) is discussed in Lecture 10, which implements it with a direct sum and treats the tree version as an optional exercise; here you only need the idea.
+
+## Homework 2
+
+<Callout kind="homework" title="Homework 2: integrators">
+
+Create `myOwnCode/L02/integrators.py` by copying `hw2_integrators_skeleton.py` from the hints zip. It imports *your own* Lecture 1 code (`acceleration`, `total_energy`); so finish Homework 1 first. Copy `hw2_run_experiments.py` next to it for the initial conditions and plotting. Rules: you may use whole-array arithmetic in the steppers; the force and energy come from your loop code from Lecture 1 (vectorising them is Lecture 3).
+
+**2.1 Steppers.** Implement `symplectic_euler_step`, `leapfrog_kdk_step` (takes and returns the acceleration: exactly one force call per step) and `leapfrog_dkd_step`. Hand check: two unit masses at <M t="(0,0,0)" /> and <M t="(1,0,0)" />, velocities <M t="(0,1,0)" /> and <M t="(0,-1,0)" />, <M t="\Delta t=0.1" />. Symplectic Euler gives positions <M t="(0.01,0.1,0)" /> and <M t="(0.99,-0.1,0)" /> and velocities <M t="(0.1,1,0)" />, <M t="(-0.1,-1,0)" />. None of the steppers may modify their input arrays.
+
+**2.2 Angular momentum.** Implement `angular_momentum(pos, vel, mass)`. Expect <M t="(0,0,0.7071)" /> for the circular orbit of Lecture 1 and <M t="(0,0,0.10897)" /> for the <M t="e=0.9" /> Kepler orbit. Show that leapfrog conserves it to rounding error, and explain (pairwise central forces) why explicit Euler does not.
+
+**2.3 Order of accuracy.** For the <M t="e=0.5" /> orbit, compute the maximum relative energy error over one orbit for explicit Euler (<M t="n=400,\dots,3200" /> steps per orbit), symplectic Euler, KDK and DKD (<M t="n=100,\dots,1600" />). Fit log&ndash;log slopes. Reference slopes: about <M t="0.8" />&ndash;<M t="1" />, <M t="1.0" />, <M t="2.0" />, <M t="2.0" />. Reference maximum errors for symplectic Euler (<M t="n=100,\dots,1600" />): <M t="9.3\times10^{-2}" />, <M t="4.5\times10^{-2}" />, <M t="2.2\times10^{-2}" />, <M t="1.1\times10^{-2}" />, <M t="5.5\times10^{-3}" />. *Optional:* implement `rk4_step` and check for slope <M t="4" />&ndash;<M t="5" /> (<M t="n=50,\dots,800" />). Reference values of the maximum error (KDK, <M t="n=100,\dots,1600" />): <M t="1.0\times10^{-2}" />, <M t="2.6\times10^{-3}" />, <M t="6.6\times10^{-4}" />, <M t="1.6\times10^{-4}" />, <M t="4.1\times10^{-5}" />.
+
+**2.4 Long-term behaviour.** Run <M t="50" /> orbits (<M t="e=0.5" />) and plot the maximum error within each orbit. Reference: KDK with <M t="200" /> steps per orbit stays at <M t="2.6\times10^{-3}" />; symplectic Euler (<M t="200" /> per orbit) stays at <M t="4.5\times10^{-2}" />; Euler (<M t="1600" /> per orbit) grows from <M t="0.10" /> (orbit 1) through <M t="0.45" /> (orbit 10) to <M t="0.75" /> (orbit 50). (Optional: RK4 with <M t="100" /> per orbit grows from <M t="2.9\times10^{-5}" /> to <M t="1.5\times10^{-3}" />.)
+
+**2.5 Reversibility.** For KDK and DKD: <M t="400" /> steps forward on the <M t="e=0.5" /> orbit, flip all velocities, <M t="400" /> steps back. The positions must return to the initial ones within <M t="10^{-9}" /> (you should see <M t="\sim10^{-15}" />). Try it for explicit Euler and describe the result.
+
+**2.6 Adaptive step.** Implement `timestep(acc, eps, eta)` <M t="=\eta\sqrt{\epsilon/\max_i|\vect a_i|}" />. Write a KDK loop that recomputes the step each time (trim the last step so the run ends exactly at <M t="T" />). For <M t="e=0.9" />, <M t="\epsilon=0.05" />, <M t="\eta=0.05" /> you should need about <M t="400" /> steps and reach a maximum energy error of about <M t="5\times10^{-3}" />. Here <M t="\epsilon" /> is only the length scale of the criterion: keep the force unsoftened (`eps=0` in the acceleration). Compare with a fixed-step KDK using the same number of steps.
+
+**2.7 Optional: back to the figure-8.** Evolve the figure-8 of Lecture 1 for one period with KDK and <M t="2000" /> steps. You should find a total energy of <M t="-1.28714" /> and a largest coordinate difference between final and initial positions of about <M t="1.6\times10^{-5}" />, compared with <M t="0.42" /> for Euler in Homework 1.5. Also check numerically that <M t="Q=x^2+v^2-\Delta t\,xv" /> is conserved by symplectic Euler for the oscillator (to rounding error).
+
+**Check yourself:** unzip the hints, `cd` into the unzipped `gravity-from-scratch/` folder, then run `python course/codeHints/L02/check_hw2.py`. It uses `myOwnCode/L01` and `myOwnCode/L02`; pass `--l01 DIR` / `--l02 DIR` to point elsewhere. Aim for all PASS; the checker does not judge your plots or explanations. Only after your own attempt passes, open the reference solution and compare. Lecture 3 asks you to rebuild the leapfrog in NumPy, so finish this homework before starting Lecture 3.
+
+</Callout>
+
+## Summary
+
+- Explicit Euler multiplies the oscillator energy by <M t="1+\Delta t^2" /> each step: exponential growth of energy error.
+- Hamiltonian flow preserves phase-space volume; a symplectic method does too. Kick (update <M t="\vect v" /> from <M t="\vect a" />) and drift (update <M t="\vect r" /> from <M t="\vect v" />) are exact, area-preserving pieces, and any sequence of them is symplectic.
+- Leapfrog (KDK/DKD) is second order, symplectic, reversible, and needs one force evaluation per step (KDK, reusing the stored acceleration). Its energy error is bounded, <M t="\propto\Delta t^2" />.
+- Judge integrators by the maximum error over a run and by long-term behaviour, not the error at one instant.
+- The step size should follow the local dynamics (<M t="\Delta t\propto\sqrt{\epsilon/a}" />); block time steps make this efficient for many particles.
+
+## Further reading
+
+- E. Hairer, C. Lubich &amp; G. Wanner, *Geometric Numerical Integration* (Springer, 2nd ed. 2006): symplectic methods and backward-error (shadow Hamiltonian) analysis.
+- T. Quinn, N. Katz, J. Stadel &amp; G. Lake, *Time stepping N-body simulations*, [arXiv:astro-ph/9710043](https://arxiv.org/abs/astro-ph/9710043) (1997).
+- V. Springel, *The cosmological simulation code GADGET-2*, MNRAS 364, 1105 (2005): the time integration and time-step criteria used in production.
+- B. Leimkuhler &amp; S. Reich, *Simulating Hamiltonian Dynamics* (Cambridge, 2004).
+
+## Downloads
+
+<div class="nb-downloads">
+	<a href="/downloads/nbody/L02-hints.zip">&#8681; Hints &amp; checker (L02-hints.zip)</a>
+	<a href="/downloads/nbody/L02-solution.zip">&#8681; Reference solution (L02-solution.zip)</a>
+</div>
+
+Only open the solution after your own `integrators.py` passes every check &mdash; that's the point of the exercise.
