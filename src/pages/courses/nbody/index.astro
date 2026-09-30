@@ -13,6 +13,17 @@ import "@/styles/course.css";
  */
 const entries = await getCollection("nbody", ({ data }) => import.meta.env.DEV || !data.draft);
 const bySlug = new Map(entries.map((e) => [e.id, e]));
+
+// Every lecture file must have a row in src/data/nbody.ts with the same slug, or it is silently missing
+// from this index. Fail the build (and `pnpm dev`) instead of publishing an unlinked lecture.
+const listed = new Set(nbodyLectures.map((l) => l.slug));
+const unlisted = entries.filter((e) => !listed.has(e.id)).map((e) => e.id);
+if (unlisted.length) {
+	throw new Error(
+		`Lecture file(s) without a matching slug in src/data/nbody.ts: ${unlisted.join(", ")}. ` +
+			`Rename the file or fix the slug so the course index links to them.`,
+	);
+}
 const written = entries.filter((e) => !e.data.draft).length;
 
 const meta = {

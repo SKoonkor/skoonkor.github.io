@@ -5,7 +5,13 @@
  * `nbody` content collection so that /courses/nbody/ can show all eleven lectures --
  * including the ones with no page yet -- rather than only the ones that happen to have an
  * .mdx file. The index page cross-references this against the collection by `slug` to decide
- * which rows are clickable.
+ * which rows are clickable, so a slug here MUST equal the lecture file's name (content/courses/nbody/
+ * <slug>.mdx): a mismatch leaves a published lecture unlinked from the index (L05 was missing for a day
+ * this way). The index page now throws at build time if a lecture file has no matching row.
+ *
+ * Naming rule: slug = the exact .mdx file name chosen when the lecture is ported; the row follows the
+ * file, never the title. Rows for lectures not yet ported are provisional guesses (L07-L10) that the
+ * guard will flag as soon as a differently named file lands.
  */
 export type NbodyLectureSummary = {
 	n: number;
@@ -49,7 +55,7 @@ export const nbodyLectures: NbodyLectureSummary[] = [
 	},
 	{
 		n: 5,
-		slug: "l05-multipoles-better-trees",
+		slug: "l05-multipoles",
 		title: "Multipoles & better trees",
 		blurb: "Quadrupole terms; opening criteria; periodic forces and the Ewald sum.",
 	},
