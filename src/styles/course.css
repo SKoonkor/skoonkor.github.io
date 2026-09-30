@@ -158,6 +158,20 @@
 /* Not done, on purpose: skipping KaTeX's invisible MathML copy (`.katex-mathml`, half of all KaTeX elements)
    with content-visibility. It saved ~10% more, but Chrome then dropped every math node from the
    accessibility tree (measured: 3004 -> 0 math roles on L05), i.e. equations vanish for screen readers. */
+/* Raster ink that cannot be recoloured (the cosmic-web point clouds are black-on-transparent PNGs): the SVG
+   carries two copies, a black one for the light theme and a white one for the dark theme. */
+.nb-figure svg image.nb-ink-dark {
+	display: none;
+}
+
+html[data-theme="dark"] .nb-figure svg image.nb-ink-dark {
+	display: inline;
+}
+
+html[data-theme="dark"] .nb-figure svg image.nb-ink-light {
+	display: none;
+}
+
 /* Off-screen figures are skipped (content-visibility on .nb-figure__canvas above). Equations, callouts
    and paragraphs are deliberately NOT: their heights are unknown until rendered, so skipping them makes
    anchor links land a few hundred pixels off (measured), and paint containment would clip KaTeX that

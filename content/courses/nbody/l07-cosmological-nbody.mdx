@@ -1,0 +1,327 @@
+---
+title: "Cosmological N-body simulations"
+description: "An expanding box, Gaussian initial conditions, and halos."
+lecture: 7
+goal: "Write gravity in comoving coordinates and integrate it with kick and drift factors, compute the linear growth factor, generate Gaussian random fields and Zel'dovich initial conditions, test the code on the analytic pancake, run a ΛCDM box with PM, and find halos with friends-of-friends."
+publishDate: "2026-09-30"
+tags: ["n-body", "gravity", "cosmology", "power-spectrum", "zeldovich", "halos"]
+draft: false
+downloads:
+  hints: "/downloads/nbody/L07-hints.zip"
+  solutions: "/downloads/nbody/L07-solution.zip"
+---
+
+import M from "@/components/course/M.astro";
+import Callout from "@/components/course/Callout.astro";
+import Figure from "@/components/course/Figure.astro";
+
+<Callout kind="goals">
+- Write Newtonian gravity in comoving coordinates and integrate it with a leapfrog whose kick and drift factors account for the expansion.
+- Compute the linear growth factor <M t="D(a)" /> and growth rate <M t="f(a)" /> of a <M t="\Lambda" />CDM universe.
+- Generate a Gaussian random density field with a given power spectrum <M t="P(k)" />, and measure <M t="P(k)" /> from a field or from particles.
+- Build Zel'dovich initial conditions and check the PM code against the analytic Zel'dovich "pancake".
+- Run a <M t="\Lambda" />CDM box with your PM code, watch the cosmic web form, and find halos with friends-of-friends.
+</Callout>
+
+## From a star cluster to a piece of the universe
+
+The codes of Lectures 1&ndash;6 evolve isolated systems in a static space. To simulate the dark matter of the universe we change three things. **(i)** Space expands, so we use *comoving* coordinates that expand with it. **(ii)** The box is periodic and represents a fair sample of the universe, so we need the PM force of Lecture 6 and the periodic Poisson equation, with the mean density removed. **(iii)** The particles must start as a realisation of the early, nearly uniform universe, whose fluctuations are a Gaussian random field with a known power spectrum. We then analyse the result: the power spectrum and the halos.
+
+<Callout kind="history" title="History">
+Zel'dovich (1970) showed that the first non-linear structures are sheets ("pancakes"). Davis, Efstathiou, Frenk & White (1985) showed with periodic N-body simulations that cold dark matter reproduces galaxy clustering; Efstathiou et al. (1985) described the numerical techniques (PM, P<sup>3</sup>M) used for such boxes. Bardeen, Bond, Kaiser & Szalay (BBKS, 1986) gave the analytic transfer function used below. The Millennium simulation (Springel et al. 2005) followed <M t="2160^3\approx10^{10}" /> particles in a <M t="500\,h^{-1}" />Mpc box with a TreePM code; the box of this lecture has <M t="32^3" /> to <M t="64^3" /> particles.
+</Callout>
+
+## Gravity in an expanding universe
+
+### Background expansion
+
+A homogeneous, isotropic universe is described by the scale factor <M t="a(t)" /> (<M t="a=1" /> today). Its expansion rate <M t="H=\dot a/a" /> obeys the Friedmann equation, which for a flat universe with matter (density parameter <M t="\Omega_m" />) and a cosmological constant <M t="\Omega_\Lambda=1-\Omega_m" /> reads
+
+<M d tag="1" id="eq-l07-hubble" t="H(a)=H_0\sqrt{\Omega_m a^{-3}+\Omega_\Lambda}." />
+
+We use <M t="\Omega_m=0.3" />, <M t="\Omega_\Lambda=0.7" /> and units in which lengths are in <M t="\mathrm{Mpc}/h" /> and <M t="H_0=100" />, so velocities come out in <M t="\mathrm{km\,s^{-1}}" /> and <M t="h" /> never appears. The special case <M t="\Omega_m=1" />, <M t="\Omega_\Lambda=0" /> is the *Einstein&ndash;de Sitter* (EdS) universe, <M t="H=H_0a^{-3/2}" />; it has simple analytic solutions, which we use as tests. It is convenient to use <M t="a" /> rather than time as the time variable: <M t="\dd t=\dd a/(aH)" />.
+
+### Comoving coordinates
+
+Let <M t="\vect r" /> be a physical position and <M t="\vect x=\vect r/a" /> the **comoving** position. A particle that moves only with the expansion has constant <M t="\vect x" />; its **peculiar velocity** <M t="\vect v=a\dot{\vect x}" /> is the motion relative to the expansion. The gravity that acts on the particle comes only from the density *contrast* <M t="\delta=\rho/\bar\rho-1" />, because the uniform part drives the background expansion. Write <M t="\vect r=a\vect x" />; then <M t="\ddot{\vect r}=a\ddot{\vect x}+2\dot a\dot{\vect x}+\ddot a\vect x" />. The last term is cancelled by the acceleration of the uniform background, <M t="\ddot a\vect x=-(4\pi G\bar\rho/3)\,a\vect x" /> (Friedmann's second equation for matter; a cosmological constant adds a term that cancels in the same way), and what remains of the gravitational force is that of the density contrast. Dividing by <M t="a" /> and using <M t="\nabla_r=a^{-1}\nabla_x" /> gives
+
+<M d tag="2" id="eq-l07-eom" t="\ddot{\vect x}+2H\dot{\vect x}=-\frac{1}{a^2}\nabla_x\phi,\qquad\nabla_x^2\phi=4\pi G\,a^2\bar\rho\,\delta ." />
+
+The term <M t="2H\dot{\vect x}" /> is Hubble friction (<M t="\nabla_x" /> is the gradient with respect to the comoving coordinate; <M t="\vect x" /> is in <M t="\mathrm{Mpc}/h" />). Because <M t="\bar\rho=3\Omega_mH_0^2/(8\pi G\,a^3)" />, the source of the potential is <M t="4\pi Ga^2\bar\rho\,\delta=\tfrac32\Omega_mH_0^2\,\delta/a" />. Now define the **canonical momentum** <M t="\vect p=a^2\dot{\vect x}" /> (so <M t="\vect v=\vect p/a" />; it is the momentum conjugate to <M t="\vect x" /> for the Lagrangian <M t="a^2\dot{\vect x}^2/2-\phi" />). Then <M t="\dot{\vect p}=a^2(\ddot{\vect x}+2H\dot{\vect x})=-\nabla_x\phi" />, which removes the friction term. Finally write <M t="\phi=\tilde\phi/a" />, so that <M t="\nabla^2\tilde\phi=a\nabla^2\phi" /> has a constant source:
+
+<M d tag="3" id="eq-l07-canon" t="\frac{\dd\vect x}{\dd t}=\frac{\vect p}{a^2},\qquad\frac{\dd\vect p}{\dd t}=-\frac{1}{a}\nabla_x\tilde\phi,\qquad\nabla_x^2\tilde\phi=\tfrac32\,\Omega_mH_0^2\,\delta ." />
+
+Two things have happened: the Hubble friction has disappeared from the equation of motion, and the source of the Poisson equation depends on time only through <M t="\delta" />. Your PM code from Lecture 6 already solves <M t="\nabla^2\tilde\phi=4\pi G\rho" /> with the mean density removed; we only have to choose the constants (see the section on running the box).
+
+<Figure
+	svg="L07/comoving"
+	n={1}
+	id="fig-l07-comoving"
+	widthPct={0.709}
+	alt="Three square boxes side by side, for a equal to 0.25, 0.5 and 1, growing in size from small to large. Each box has the same 3 by 3 grid of comoving coordinate lines and four blue particles at the same fractional positions, plus one red particle that sits at a different place in each box, moving from the upper right towards the centre. A caption line says grid lines are fixed comoving coordinates x and the physical box size a L grows."
+	caption="Comoving coordinates. Positions that only follow the expansion (blue dots) keep the same comoving coordinates x (the grid) while the physical box grows with a. The red dot has a peculiar velocity, so it moves across the comoving grid (from upper right towards the centre); only this motion, driven by the density contrast, is simulated."
+/>
+
+### Leapfrog in the expanding background
+
+Equations (3) look like the Hamiltonian equations of Lecture 2 with two changes: the "drift" acts over <M t="\dd t/a^2" /> and the "kick" over <M t="\dd t/a" />. Since <M t="\vect g" /> depends only on positions, integrating <M t="\dd\vect p/\dd t=\vect g/a" /> over a half step with <M t="\vect g" /> held fixed gives <M t="\vect g\int\dd t/a" />, and likewise for the drift. The symplectic KDK leapfrog therefore carries over unchanged, with <M t="\Delta t" /> replaced by the two integrals below (use <M t="\dd t=\dd a/(aH)" /> to write them as integrals over <M t="a" />):
+
+<M d tag="4" id="eq-l07-factors" t="I_{\rm kick}(a_0,a_1)=\int\frac{\dd t}{a}=\int_{a_0}^{a_1}\frac{\dd a}{a^2H(a)},\qquad I_{\rm drift}(a_0,a_1)=\int\frac{\dd t}{a^2}=\int_{a_0}^{a_1}\frac{\dd a}{a^3H(a)}." />
+
+For a step from <M t="a_0" /> to <M t="a_1" /> with <M t="a_{1/2}=\sqrt{a_0a_1}" /> (or any midpoint):
+
+<M d t="\vect p\leftarrow\vect p+\vect g(\vect x)\,I_{\rm kick}(a_0,a_{1/2}),\qquad\vect x\leftarrow\vect x+\vect p\,I_{\rm drift}(a_0,a_1),\qquad\vect p\leftarrow\vect p+\vect g(\vect x)\,I_{\rm kick}(a_{1/2},a_1)," />
+
+where <M t="\vect g=-\nabla\tilde\phi" /> is the PM acceleration for the density contrast (Eq. (3)). The integrals are evaluated numerically (or analytically in EdS). A good choice of steps is uniform in <M t="\ln a" />, because the dynamical time grows with <M t="a" />.
+
+```python title="s1_factors_eds.py"
+import numpy as np
+
+# Einstein-de Sitter: H(a) = H0 a^(-3/2). Kick factor = int da / (a^2 H).
+H0, a0, a1 = 100.0, 0.2, 0.6
+a = np.linspace(a0, a1, 2001)                  # fine grid in a
+kick_num = np.trapezoid(1.0 / (a**2 * H0 * a**-1.5), a)
+kick_exact = 2 * (np.sqrt(a1) - np.sqrt(a0)) / H0
+print(kick_num, kick_exact)                    # 0.006547... twice
+```
+
+The listing checks the kick factor in an Einstein&ndash;de Sitter universe numerically.
+
+<Callout kind="pitfall">
+Using <M t="\dd t" /> instead of the kick and drift factors, or <M t="1/a" /> where <M t="1/a^2" /> belongs, produces a code that still runs and produces plausible-looking structure with the wrong growth rate. The pancake test in the Zel'dovich section below catches this.
+</Callout>
+
+## Linear growth of structure
+
+While <M t="\delta\ll1" /> the density contrast of matter satisfies <M t="\ddot\delta+2H\dot\delta=\tfrac32\Omega_m(a)H^2\delta" />, with <M t="\Omega_m(a)=\Omega_ma^{-3}H_0^2/H^2" />. In the variable <M t="\ln a" /> this reads <M t="\delta''+\big(2+\tfrac{\dd\ln H}{\dd\ln a}\big)\delta'=\tfrac32\Omega_m(a)\,\delta" /> (primes: <M t="\dd/\dd\ln a" />), which can be integrated numerically. It has a growing and a decaying solution; the growing one, <M t="\delta(\vect x,a)=D(a)\,\delta_0(\vect x)" />, depends on time only through the **growth factor** <M t="D(a)" />, normalised here to <M t="D(1)=1" />. For a flat universe,
+
+<M d tag="5" id="eq-l07-growth" t="D(a)\propto H(a)\int_0^a\frac{\dd a'}{[a'H(a')]^3},\qquad f(a)\equiv\frac{\dd\ln D}{\dd\ln a}\approx\Omega_m(a)^{0.55}." />
+
+In EdS this gives <M t="D=a" /> and <M t="f=1" />. With a cosmological constant growth slows at late times (Figure 2). The rate <M t="f" /> enters the initial velocities. Checking your <M t="D(a)" /> against a numerical solution of this differential equation is an optional exercise in Homework 7.1 (the checker does it for you).
+
+<Figure
+	svg="L07/growth"
+	n={2}
+	id="fig-l07-growth"
+	widthPct={0.8}
+	alt="Two panels against the scale factor a from 0.02 to 1 on a logarithmic axis. Left: the growth factor D(a) on a log-log scale for Lambda-CDM (solid blue) and for Einstein-de Sitter, D equal to a (dashed red); both reach 1 at a equal to 1 and the Lambda-CDM curve lies above the EdS line. Right: the growth rate f equal to d ln D over d ln a for Lambda-CDM, staying near 1 until a of about 0.3 and then falling to about 0.51 at a equal to 1, overlaid by the dotted approximation Omega_m(a) to the power 0.55; a dashed red line marks f equal to 1."
+	caption="Left: linear growth factor for ΛCDM (Ω_m=0.3) and EdS. Right: the growth rate f=d ln D/d ln a and the approximation Ω_m(a)^0.55 (accurate to about 0.6% here)."
+/>
+
+## Initial conditions
+
+### The power spectrum
+
+The early universe is described statistically: we cannot predict where each fluctuation is, only how strong the fluctuations are on each scale. The **power spectrum** <M t="P(k)" /> is the variance of the Fourier mode at wavenumber <M t="k" /> (per unit volume), and <M t="\sigma^2=\int P(k)\,\dd^3k/(2\pi)^3" /> is the variance of <M t="\delta" />. For a homogeneous, isotropic Gaussian field the Fourier modes <M t="\tilde\delta(\vect k)" /> are independent Gaussian variables with
+
+<M d tag="6" id="eq-l07-pk" t="\big\langle\tilde\delta(\vect k)\tilde\delta^*(\vect k')\big\rangle=(2\pi)^3\delta_D(\vect k-\vect k')\,P(k)." />
+
+On a periodic grid of volume <M t="V=L^3" /> with <M t="N_g=n^3" /> cells this becomes (with the unnormalised FFT of Lecture 6) <M t="\langle|\hat\delta_{\vect m}|^2\rangle=N_g^2\,P(k)/V" /> (the continuum relation, with <M t="(2\pi)^3\delta_D(0)\to V" />, gives <M t="\langle|\tilde\delta|^2\rangle=VP" />, and <M t="\hat\delta_{\vect m}=N_g\tilde\delta/V" /> for the unnormalised discrete transform). This gives two recipes:
+
+- **Estimating <M t="P(k)" />:** <M t="P(k)=\dfrac{V}{N_g^2}\big\langle|\hat\delta_{\vect m}|^2\big\rangle" />, averaged over the modes with <M t="|\vect k|" /> in a shell around <M t="k" />. Use shells centred on multiples of the fundamental frequency <M t="k_f=2\pi/L" />: shell <M t="m" /> contains the modes with <M t="(m-\frac12)k_f\le|\vect k|<(m+\frac12)k_f" />, for <M t="m=1,\dots,n/2" />. The binning listing below shows the binning in 2D.
+- **Generating a field:** draw a real white-noise field <M t="w(\vect x)" /> of unit variance per cell; its FFT has <M t="\langle|\hat w|^2\rangle=\sum_x\langle w^2\rangle=N_g" />, and because <M t="w" /> is real, <M t="\hat w(-\vect k)=\hat w^*(\vect k)" /> (Lecture 6), so after multiplying by a function of <M t="|\vect k|" /> the inverse transform is real again. (Filling Fourier space with random complex numbers yourself would require imposing this symmetry by hand.) Multiply <M t="\hat w" /> by <M t="\sqrt{N_g\,P(k)/V}" /> (zero the <M t="k=0" /> mode) and transform back; the result is a real field with power spectrum <M t="P(k)" />. The Gaussian-field listing below does this in 1D.
+
+```python title="s4_shells_2d.py"
+import numpy as np
+
+n, L = 8, 8.0
+k1 = 2 * np.pi * np.fft.fftfreq(n, d=L / n)
+kx, ky = np.meshgrid(k1, k1, indexing="ij")
+kmag = np.hypot(kx, ky)
+kf = 2 * np.pi / L                             # fundamental frequency
+shell = np.rint(kmag / kf).astype(int)         # shell index 0, 1, 2, ...
+power = np.ones((n, n))                        # pretend |delta_k|^2 = 1
+counts = np.bincount(shell.ravel())
+means = np.bincount(shell.ravel(), weights=power.ravel()) / counts
+print(counts[:4], means[:4])                   
+```
+
+The listing bins <M t="|\hat\delta|^2" /> in shells (a 2D toy).
+
+```python title="s2_gaussian_1d.py"
+import numpy as np
+
+n, L = 4096, 100.0
+pk = lambda k: 50.0 * np.exp(-k)              # any positive toy spectrum
+rng = np.random.default_rng(0)
+w = rng.standard_normal(n)                    # white noise: real, <|w_k|^2> = n
+k = 2 * np.pi * np.fft.fftfreq(n, d=L / n)
+amp = np.sqrt(pk(np.abs(k)) * n / L)          # sqrt(P n / L) in 1D (n^3/V in 3D)
+amp[0] = 0.0                                  # zero mean
+delta = np.fft.ifft(np.fft.fft(w) * amp)
+print(np.abs(delta.imag).max() < 1e-12)       # True: the field is real
+print(np.var(delta.real), np.sum(pk(np.abs(k[1:]))) / L)   # similar (one realisation)
+```
+
+The listing generates a Gaussian random field with a given spectrum (a 1D toy).
+
+For <M t="\Lambda" />CDM we use the BBKS fit <M t="P(k)\propto k^{n_s}T^2(k)" /> with <M t="T(q)=\frac{\ln(1+2.34q)}{2.34q}\big[1+3.89q+(16.1q)^2+(5.46q)^3+(6.71q)^4\big]^{-1/4}" />, <M t="q=k/(\Omega_mh)" />, <M t="n_s=0.96" />, <M t="h=0.7" />, normalised so that the linear rms fluctuation in spheres of radius <M t="8\,h^{-1}" />Mpc is <M t="\sigma_8=0.8" /> at <M t="z=0" />. <M t="\sigma_8" /> is <M t="\sigma" /> of <M t="\delta" /> smoothed with a spherical top-hat of radius <M t="8\,h^{-1}" />Mpc. The skeleton provides the spectrum as `bbks_pk` (it is a fit, not something to derive). The <M t="z=0" /> spectrum is scaled back to the initial time by <M t="D^2(a)" />.
+
+<Figure
+	svg="L07/grf"
+	n={3}
+	id="fig-l07-grf"
+	widthPct={0.85}
+	alt="Left: log-log plot of the power spectrum P(k) against k in h per Mpc from 0.05 to 3. The black BBKS curve falls from about 10 to the fourth at small k to about 5 at k of 3; blue dots, the shell-averaged spectrum of one 64 cubed realisation, follow it closely with a little scatter at low k. A dotted vertical line marks the Nyquist wavenumber near 2. Right: a colour map of a 100 by 100 Mpc per h slice of the density field delta_0 in red and blue, saturating at plus and minus 4, showing grid-scale blocky noise with larger blobs."
+	caption="Left: the BBKS P(k) and the shell-averaged spectrum of one 64³ realisation in a 100 h⁻¹Mpc box; the scatter at low k is cosmic variance (few modes per shell). k_N=πn/L is the Nyquist wavenumber. Right: a slice of the field δ_0 (linearly extrapolated to z=0; values of order ±4 at the grid scale mean the field is non-linear there, so we start at high redshift)."
+/>
+
+### The Zel'dovich approximation
+
+The particles start on a regular lattice at positions <M t="\vect q" /> (**Lagrangian** coordinates). Zel'dovich's approximation moves each particle along a straight line, with the displacement growing as <M t="D(a)" />:
+
+<M d tag="7" id="eq-l07-zel" t="\vect x(\vect q,a)=\vect q+D(a)\,\vect\psi(\vect q),\qquad\vect\psi_{\vect k}=\frac{i\vect k}{k^2}\,\delta_{0,\vect k}\quad\Longleftrightarrow\quad-\nabla\!\cdot\!\vect\psi=\delta_0 ." />
+
+Lagrangian coordinates <M t="\vect q" /> label particles; Eulerian coordinates <M t="\vect x" /> are positions in space. The condition <M t="-\nabla\cdot\vect\psi=\delta_0" /> follows from mass conservation: the mass <M t="\bar\rho\,\dd^3q" /> of a lattice cell ends up in the volume <M t="\dd^3x=\det(\delta_{ij}+D\,\partial\psi_i/\partial q_j)\,\dd^3q" />, so <M t="1+\delta=1/\det(\dots)\approx1-D\nabla\cdot\vect\psi" /> to first order, i.e. <M t="\delta=D\delta_0" /> with <M t="\delta_0=-\nabla\cdot\vect\psi" />. We take <M t="\vect\psi" /> curl-free (gravity is a gradient force, so the growing mode has no vorticity), which gives <M t="\vect\psi_{\vect k}\propto\vect k" />. The trajectory <M t="\vect x=\vect q+D\vect\psi" /> satisfies the equation of motion to first order because <M t="D" /> solves the growth equation. The momentum follows from <M t="\vect p=a^2\dot{\vect x}=a^2\dot D\,\vect\psi=a^2H\,f\,D\,\vect\psi" />. With <M t="\vect\psi" /> computed from <M t="\delta_0" /> by an FFT, a multiplication by <M t="i\vect k/k^2" /> (`np.fft` uses <M t="e^{-i\vect k\cdot\vect x}" /> in the forward transform, so this sign is right in the convention of Lecture 6) and an inverse FFT (zero the <M t="k=0" /> and Nyquist planes), this defines the initial conditions at a starting scale factor <M t="a_i" />, for example <M t="a_i=0.02" /> (<M t="z=49" />).
+
+The Zel'dovich solution is exact for a plane wave, <M t="\delta_0=A\cos(kx)" />, until particles cross: then <M t="x=q-DA\sin(kq)/k" />, <M t="\dd x/\dd q=1-DA\cos(kq)" /> and the density <M t="\bar\rho/|\dd x/\dd q|" /> (before crossing) diverges when <M t="DA=1" />, first at <M t="q=0" /> and <M t="q=L" />. Neighbouring particles cross, forming a **caustic**, the sheet of a "pancake". Beyond that the approximation fails, but N-body gravity continues correctly. This gives a clean test of the whole machinery: run your code on a plane wave in an Einstein&ndash;de Sitter universe and compare with the analytic trajectories (Homework 7.4).
+
+```python title="s3_zeldovich_1d.py"
+import numpy as np
+
+L, n, A = 100.0, 10, 1.3                       # box, particles, amplitude A = D * delta_0
+k = 2 * np.pi / L
+q = np.arange(n) * L / n                       # lattice (Lagrangian) positions
+psi = -np.sin(k * q) / k                       # for delta_0 = cos(k q)
+x = (q + A * psi) % L                          # Eulerian positions
+print(np.round(x, 1))
+dxdq = 1 - A * np.cos(k * q)                 # stretching dx/dq; density = 1 / dxdq
+print(np.round(dxdq, 2))
+print("shell crossing:", dxdq.min() <= 0)  # True for A = 1.3, False for A < 1
+```
+
+The listing shows a displaced 1D lattice and its shell crossing.
+
+<Figure
+	svg="L07/pancake"
+	n={4}
+	id="fig-l07-pancake"
+	widthPct={0.85}
+	alt="Left: the analytic Zel'dovich trajectories x against q from 0 to 100 Mpc per h for growth D equal to 0.3, 0.6, 1.0 and 1.4. All pass through the centre; the curves steepen with D and at D of 1.0 the slope is flat at both ends, while at D of 1.4 they overshoot and fold over at the ends, marking shell crossing. Right: the displacement x minus q of a line of 32 particles at a equal to 0.5 from the PM code (blue dots) on top of the analytic Zel'dovich sine curve (black line), with an amplitude of about 8 Mpc per h; the dots follow the curve closely."
+	caption="The Zel'dovich pancake. Left: the analytic trajectories x(q) for increasing growth D (amplitude A=1); at D=1 the slope at q=0 and q=L vanishes and the curves fold over afterwards (shell crossing). Right: displacement of a line of 32 particles at D=a=0.5 from the PM code (32³ particles, 64³ mesh, CIC, four-point gradient, EdS, start a_i=0.02, 40 steps in ln a) against the analytic solution; the maximum deviation is 5% of the displacement. (The homework version shifts the wave phase so that particles cross the box edge and exercise the periodic wrap.)"
+/>
+
+<Callout kind="pitfall">
+Zel'dovich initial conditions carry errors of order <M t="D(a_i)" />: start too late and the transient decaying modes and second-order effects contaminate the result; start too early and the particle displacements are smaller than the numerical noise of the force. <M t="a_i=0.02" /> is adequate for our purposes; production codes use second-order Lagrangian perturbation theory (2LPT) and start around <M t="z\approx50" />&ndash;<M t="100" />.
+</Callout>
+
+## Running the box
+
+Put everything together:
+
+1. Draw <M t="\delta_0" /> from BBKS with `gaussian_field`; compute <M t="\vect\psi" />; build the lattice at <M t="a_i" /> with positions and momenta (`zeldovich_ics`).
+2. For each step of the KDK scheme call the PM force of Lecture 6 on the current positions, with <M t="N" /> particles of unit mass, and <M t="G=3\Omega_mH_0^2L^3/(8\pi N)" />. Then the mean density is <M t="\bar\rho=N/L^3" /> and <M t="4\pi G\bar\rho=\tfrac32\Omega_mH_0^2" />, so `pm_acceleration` returns <M t="-\nabla\tilde\phi" /> of Eq. (3). Use CIC and the four-point gradient. The force is not divided by <M t="a" />; that is in the kick factor.
+3. Advance in <M t="\ln a" /> from <M t="a_i" /> to <M t="1" />, storing snapshots at chosen <M t="a" />.
+
+<Callout kind="idea">
+The comoving PM code differs from the Lecture 6 code in three places only: the constants in <M t="G" /> (a product of <M t="\Omega_m" />, <M t="H_0" /> and the box size), the kick and drift factors instead of <M t="\Delta t" />, and <M t="\vect p=a^2\dot{\vect x}" /> instead of <M t="\vect v" />. All of it is contained in `evolve`.
+</Callout>
+
+<Figure
+	svg="L07/web"
+	n={5}
+	id="fig-l07-web"
+	widthPct={0.9}
+	alt="Three square panels showing a 10 Mpc per h thick slice of the particle positions in a 100 Mpc per h box, at a equal to 0.1, 0.3 and 1.0. At a of 0.1 the particles form a near-regular lattice with faint swirling patterns; at 0.3 sheets and filaments are visible; at a of 1.0 the particles have collected into dense sheets, filaments, and knots surrounding emptier regions, the cosmic web."
+	caption="A 10 h⁻¹Mpc thick slice of a 64³-particle run (100 h⁻¹Mpc box, 64³ mesh, 60 steps; several seconds to a minute depending on the machine). At a=0.1 the particles are still close to their lattice. By a=1 they have collected in sheets, filaments and dense knots: the cosmic web."
+/>
+
+The mesh spacing here is <M t="1.6\,h^{-1}" />Mpc, so forces (and the internal structure of halos) below a few <M t="h^{-1}" />Mpc are smoothed: P<sup>3</sup>M and TreePM (Lecture 8) remove this limitation by adding an accurate short-range force.
+
+### What to check: growth of the power spectrum
+
+Linear theory says <M t="P(k,a)=D^2(a)P_0(k)" />. Measuring <M t="P(k)" /> of the particles requires the CIC density <M t="\rho" /> of the particles (Lecture 6), <M t="\delta=\rho/\bar\rho-1" />, division of <M t="\hat\delta" /> by the CIC window <M t="\prod_a\mathrm{sinc}^2(k_ah/2)" /> (the assignment smoothed the field; Lecture 6, Fig. 3), and the shell average. Do *not* subtract the shot noise <M t="V/N" /> here: it is the right correction for randomly placed particles, but a lattice (the initial conditions) has no shot noise, and the correction would give negative powers. At low <M t="k" /> the signal is well above <M t="V/N" /> from <M t="a\gtrsim0.1" /> anyway.
+
+<Figure
+	svg="L07/pk_growth"
+	n={6}
+	id="fig-l07-pkgrowth"
+	widthPct={0.88}
+	alt="Left: log-log plot of the measured power spectrum P(k) against k from 0.08 to 2 in h per Mpc at a equal to 0.1 (blue), 0.3 (green) and 1.0 (red), stacked from bottom to top, with dotted lines showing D squared times P_0 for each; the solid and dotted curves agree at low k, and the red solid curve lies well above its dotted line at high k. A dotted vertical line marks k_N over 2. Right: the ratio of measured to linear power against k on a linear axis from 0 to 3, with a horizontal line at 1: the blue curve stays near 1 then declines below 1 at high k to about 0.5, the green curve stays near 1, and the red curve rises above 1.5 for k above about 0.3 and leaves the top of the plot."
+	caption="Growth of the power spectrum in the 64³ run. Left: measured P(k) (solid) and D²(a)P_0(k) (dotted), where P_0 is the spectrum of the same realisation of δ_0, at a=0.1, 0.3, 1. Right: the ratio. At a=0.1 and 0.3 it stays close to 1 over the lowest shells (within a few per cent at a=0.1, fluctuating by up to about 20% at a=0.3 from mode coupling and the finite number of modes); at a=1 it rises above 1.5 for k ≳ 0.3 h/Mpc because non-linear collapse transfers power to small scales; at a=0.1 it declines gradually below 1 from k≈0.3 (to about 0.5 at k≈2) because the force is smoothed on the scale of the mesh (h_mesh=1.6 h⁻¹Mpc). The dotted vertical line marks k_N/2; the a=1 ratio exceeds about 3 for k>0.6 (off the plot). Your 32³-particle homework run shows the same trends."
+/>
+
+Three cautions apply to every P(k) of this kind. Below <M t="\sim2" />&ndash;<M t="3\,k_f" /> there are too few modes for a precise comparison. Above <M t="\sim k_N/2" /> the results are dominated by the mesh and the particle discreteness (aliasing, force smoothing). In between, at late times, the growth is faster than linear: that is the non-linear physics you want the simulation for.
+
+## Finding halos: friends-of-friends
+
+Dark matter collapses into gravitationally bound clumps, **halos**, in which galaxies form. The simplest halo finder is **friends-of-friends** (FoF; Davis et al. 1985): two particles are *friends* if their distance is less than a linking length <M t="b\,\bar d" />, where <M t="\bar d=L/N^{1/3}" /> is the mean particle spacing and <M t="b\simeq0.2" />; a halo is a connected group of friends (friends of friends are friends). The value <M t="b\simeq0.2" /> is the customary choice: it picks out roughly virialised objects.
+
+An algorithm has two steps. **(1)** Find all pairs closer than <M t="b\bar d" /> without looking at all <M t="N^2" /> pairs: sort the particles into cells of side <M t="\ge b\bar d" /> (the *chaining mesh*, the same idea as in P<sup>3</sup>M of Lecture 8), and compare only particles in the same or neighbouring cells, using the periodic (minimum-image) distance. **(2)** Group particles connected by pairs: the connected-components listing below propagates the smallest label along the pairs until nothing changes. You should vectorise this over pairs with NumPy: for <M t="N=32^3" /> particles the reference finds the groups in about <M t="0.1" /> s.
+
+```python title="s5_components.py"
+import numpy as np
+
+# Linked pairs 0-1, 1-2, 3-4 among 6 particles: groups {0,1,2}, {3,4}, {5}.
+pairs = [(0, 1), (1, 2), (3, 4)]
+label = np.arange(6)
+changed = True
+while changed:                                 # pass the smallest label along links
+    changed = False
+    for i, j in pairs:
+        m = min(label[i], label[j])
+        if label[i] != m or label[j] != m:
+            label[i] = label[j] = m
+            changed = True
+print(label)                                   # [0 0 0 3 3 5]
+```
+
+The listing finds connected components by propagating the smallest label (a toy with 6 particles).
+
+<Figure
+	svg="L07/fof"
+	n={7}
+	id="fig-l07-fof"
+	widthPct={0.85}
+	alt="Left: a scatter of particle positions in a 24 by 24 Mpc per h slice centred on the largest halo. Most particles are grey; a dense grey blob sits at the centre where the largest halo lies, and several smaller groups in purple, brown, blue and cyan, marking other halos with at least 20 particles, are scattered around it. Right: a log-log plot of the number of halos per mass bin against halo mass from about 5 times 10 to the 13 to about 10 to the 15 solar masses per h, falling from about 30 at the low-mass end to about 1 at the high-mass end."
+	caption="FoF halos in a 32³-particle run (mesh 64³, a=1, b=0.2). Left: a 24 h⁻¹Mpc-wide slice around the largest halo; particles in halos with ≥20 members are coloured, others grey. Right: number of halos per mass bin (m_p=2.5×10¹² M_⊙/h per particle): 75 halos with ≥20 particles, the largest with 358 (9×10¹⁴ M_⊙/h). Only ≈14% of the particles are in halos of this size, since at this resolution smaller halos are not resolved."
+/>
+
+Halo counts depend on the linking length, and FoF sometimes joins two halos by a thin bridge of particles; more elaborate finders (spherical overdensity, phase-space methods) fix such issues. The halo mass function is described analytically by Press&ndash;Schechter (1974) and Sheth&ndash;Tormen (1999).
+
+## Homework 7
+
+<Callout kind="homework" title="Homework 7: A cosmological PM box">
+Create `myOwnCode/L07/cosmo.py` from `hw7_cosmo_skeleton.py` in the hints zip (it provides `bbks_pk`); copy `hw7_run_experiments.py` next to it. It uses your `pm.py` of Lecture 6. Units: <M t="\mathrm{Mpc}/h" />, <M t="H_0=100" />; particle <M t="(i,j,k)" /> has index <M t="(i\,n+j)\,n+k" /> (C order) and <M t="\vect q=(i,j,k)L/n" />.
+
+**7.1 Background.** `hubble`, `growth_factor` (numerical integral of Eq. (5), <M t="D(1)=1" />, scalar or array), `growth_rate`, `kick_factor`, `drift_factor`. Checks: EdS gives <M t="D=a" /> and the kick <M t="2(\sqrt{a_1}-\sqrt{a_0})/H_0" />, the drift <M t="2(a_0^{-1/2}-a_1^{-1/2})/H_0" />; <M t="\Lambda" />CDM has <M t="D(0.5)=0.612" />, <M t="f(1)=0.513" />. *Optional:* solve <M t="D''+(2+\dd\ln H/\dd\ln a)D'-\tfrac32\Omega_m(a)D=0" /> in <M t="\ln a" /> with RK4 (start in the matter era, <M t="D=a" />) and compare.
+
+**7.2 Gaussian field and <M t="P(k)" />.** `gaussian_field(n, box, pk, seed)` and `measure_pk(delta, box)` (shells <M t="m=1..n/2" />). Checks: white noise of variance <M t="\sigma^2" /> gives <M t="P=\sigma^2V/N_g" />; the average over seeds of <M t="P/P_{\rm in}" /> is <M t="1\pm" /> a few per cent; the field is real with zero mean. (Optional: the left panel of Figure 3.)
+
+**7.3 Zel'dovich ICs.** `displacement_field(delta0, box)` and `zeldovich_ics(psi, box, a, Om, OL)`. For <M t="\delta_0=A\cos kx" /> you must get <M t="\psi_x=-(A/k)\sin kx" />; the momentum is <M t="a^2HfD\psi" /> (<M t="f" /> matters in <M t="\Lambda" />CDM).
+
+**7.4 Evolution and the pancake.** `evolve(pos, mom, a_start, a_end, nsteps, box, ngrid, Om, OL)`, KDK with steps uniform in <M t="\ln a" />. Pancake test (as Figure 4, but with the wave phase shifted by <M t="0.7" /> so that particles cross the box edge): EdS, <M t="\delta_0=\cos(kx+0.7)" />, <M t="32^3" /> particles, <M t="64^3" /> mesh, <M t="a=0.02\to0.5" />, <M t="40" /> steps. Reference: the fitted displacement amplitude is <M t="1.00\pm0.01" /> of the analytic value, the largest deviation is <M t="5\%" /> of the displacement, and <M t="20" /> against <M t="40" /> steps differ by <M t="0.6\%" />; no motion appears in <M t="y" /> or <M t="z" />, total momentum stays zero.
+
+**7.5 <M t="P(k)" /> growth.** `particle_pk(pos, box, n)` (CIC, window deconvolved, no shot-noise subtraction). Check: random particles give <M t="V/N" />; lattice ICs give <M t="D^2P_0" />. Then run a <M t="\Lambda" />CDM box (<M t="32^3" /> particles, <M t="64^3" /> mesh, box <M t="100\,h^{-1}" />Mpc, <M t="a_i=0.02" />, <M t="60" /> steps to <M t="a=1" />, a few seconds) and reproduce Figure 6; at <M t="a=0.2" /> the ratio <M t="P/(D^2P_0)" /> for the lowest two shells should be close to <M t="1" /> (within a few per cent; the next shells scatter by 10&ndash;30% from mode coupling and the small number of modes, and it depends on the seed). Save the <M t="z=0" /> positions (`np.savez`) if you want to analyse them later.
+
+**7.6 Friends-of-friends.** `friends_of_friends(pos, box, link)` <M t="\to" /> label per particle, periodic, vectorised (no <M t="O(N^2)" /> loops); compare with a brute-force version on 500 particles. Then find halos in your <M t="z=0" /> box with <M t="b=0.2" />, count those with <M t="\ge20" /> particles (the reference realisation, seed <M t="3" /> with <M t="32^3" /> particles, has <M t="75" /> and the largest has <M t="358" /> particles; other seeds give the same order), and plot a slice as in Figure 7.
+
+*Optional:* (a) the mass function and its dependence on the resolution or on <M t="b" />; (b) second-order Lagrangian ICs; (c) a <M t="64^3" />-particle run (tens of seconds) and comparison of <M t="P(k)" /> with the <M t="32^3" /> run at the same <M t="k" />.
+
+Plan for about 6&ndash;8 hours (the pancake test and friends-of-friends take the longest); the optional parts are extra. **Check yourself:** unzip the hints, `cd` into `gravity-from-scratch/`, then run `python course/codeHints/L07/check_hw7.py` (about 10 s; it uses `myOwnCode/L06` and `myOwnCode/L07`; it generates its own linear field for the growth test). Only after your own attempt passes, open the reference solution. Lecture 8 reuses your PM code and <M t="\Lambda" />CDM box (so does the optional capstone of Lecture 10).
+</Callout>
+
+## Summary
+
+- In comoving coordinates with <M t="\vect p=a^2\dot{\vect x}" /> the equations of motion are those of Lecture 2 with kick factor <M t="\int\dd a/(a^2H)" /> and drift factor <M t="\int\dd a/(a^3H)" />, and the force sourced by the density contrast, <M t="\nabla^2\tilde\phi=\tfrac32\Omega_mH_0^2\delta" />.
+- Linear perturbations grow as <M t="D(a)" /> (Eq. (5)); velocities in the initial conditions carry <M t="f=\dd\ln D/\dd\ln a" />.
+- A Gaussian field with spectrum <M t="P(k)" /> is white noise multiplied by <M t="\sqrt{N_gP(k)/V}" /> in Fourier space; the same normalisation measures <M t="P(k)" />.
+- Zel'dovich initial conditions displace a lattice by <M t="D\,\vect\psi" /> with <M t="-\nabla\cdot\vect\psi=\delta_0" />; the plane-wave pancake is an exact test for the code until shell crossing.
+- The PM run reproduces linear growth on large scales, and the cosmic web and non-linear power on small ones, and FoF finds the halos.
+
+## Further reading
+
+- G. Efstathiou, M. Davis, C. Frenk & S. White, ApJS 57, 241 (1985): the method of this lecture.
+- J. Bardeen, J. Bond, N. Kaiser & A. Szalay, ApJ 304, 15 (1986): the transfer function.
+- Ya. B. Zel'dovich, A&A 5, 84 (1970): the approximation.
+- M. Davis, G. Efstathiou, C. Frenk & S. White, ApJ 292, 371 (1985): friends-of-friends.
+- V. Springel et al., Nature 435, 629 (2005): the Millennium simulation.
+
+## Downloads
+
+<div class="nb-downloads">
+<a href="/downloads/nbody/L07-hints.zip">&#8681; Hints &amp; checker (L07-hints.zip)</a>
+<a href="/downloads/nbody/L07-solution.zip">&#8681; Reference solution (L07-solution.zip)</a>
+</div>
+
+Only open the solution after your own `cosmo.py` passes every check &mdash; that's the point of the exercise.
