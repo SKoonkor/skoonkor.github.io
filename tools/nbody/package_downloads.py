@@ -78,7 +78,8 @@ def build_hints(src: Path, lecture: str, staging: Path) -> Path:
 	flags = re.findall(r'add_argument\("(--\S+)"', checker_text)
 	if not flags:
 		# checkers that build their flags in a loop: for name in ("l03", "l04"): ap.add_argument(f"--{name}", ...)
-		loop = re.search(r'for (\w+) in \(([^)]*)\):\s*\n\s*\w+\.add_argument\(f"--\{\1\}"', checker_text)
+		# (or ap.add_argument("--" + name, ...))
+		loop = re.search(r'for (\w+) in \(([^)]*)\):\s*\n\s*\w+\.add_argument\((?:f"--\{\1\}"|"--"\s*\+\s*\1\b)', checker_text)
 		if loop:
 			flags = [f"--{n}" for n in re.findall(r'"([^"]+)"', loop.group(2))]
 	if flags:

@@ -1,0 +1,344 @@
+---
+title: "Hybrid methods: P³M and TreePM"
+description: "Splitting the force into a mesh part and a short-range part."
+lecture: 8
+goal: "Split gravity into a smooth mesh part and a short-range part with a Gaussian (erfc) filter, compute the mesh part with a window-deconvolved FFT and the short range part with a chaining mesh (P³M) or a truncated tree (TreePM), and test the hybrid force against Ewald and in a cosmological box."
+publishDate: "2026-09-30"
+tags: ["n-body", "gravity", "p3m", "treepm", "force-split", "ewald"]
+draft: false
+downloads:
+  hints: "/downloads/nbody/L08-hints.zip"
+  solutions: "/downloads/nbody/L08-solution.zip"
+---
+
+import M from "@/components/course/M.astro";
+import Callout from "@/components/course/Callout.astro";
+import Figure from "@/components/course/Figure.astro";
+
+<Callout kind="goals">
+- Split the gravitational force into a smooth long-range part and a short-range part with Gaussian (erfc) filtering, and derive both parts.
+- Compute the long-range part on a mesh, with the window deconvolution that makes it accurate down to about two cells.
+- Compute the short-range part with a chaining mesh (P<sup>3</sup>M), and with a tree that stops at a cutoff (TreePM).
+- Measure the accuracy of the combined force against the exact periodic (Ewald) force, and understand how <M t="r_s" />, <M t="r_{\rm cut}" /> and <M t="\theta" /> trade accuracy for cost.
+- Use the hybrid force in the expanding box of Lecture 7, and test a hybrid code systematically.
+</Callout>
+
+## Two methods, two weaknesses
+
+The particle&ndash;mesh method of Lecture 6 is fast, periodic and independent of clustering, but its force is smoothed on the scale of a grid cell: for two particles closer than about <M t="2h" /> the force is wrong by tens of per cent, and inside a dense halo it is wrong by a factor of three or more (see the section on the cosmological run below). Tree and direct methods (Lectures 1&ndash;5) resolve any scale but have to sum over all far-away particles and do not treat periodicity naturally. Each method is good exactly where the other is poor. A **hybrid** method splits the force into two pieces, one for each:
+
+<M d tag="1" id="eq-l08-split" t="\vect F(r)=\vect F_{\rm long}(r)+\vect F_{\rm short}(r)," />
+
+where <M t="\vect F_{\rm long}" /> is smooth and is computed by the mesh, and <M t="\vect F_{\rm short}" /> is significant only at <M t="r\lesssim r_{\rm cut}" /> and is computed by summing over close neighbours: with a chaining mesh (**P<sup>3</sup>M**: particle&ndash;particle particle&ndash;mesh) or with a tree (**TreePM**). Both are used in current cosmological codes.
+
+<Callout kind="history" title="History">
+Hockney & Eastwood (1981) introduced P<sup>3</sup>M for plasmas and Efstathiou & Eastwood (1981) applied it to gravity. Couchman (1991) added adaptive refinement of the short-range sums in clustered regions (AP3M). Xu (1995) and Bagla (2002) combined a mesh with a tree (TreePM). GADGET-2 (Springel 2005) uses TreePM with the Gaussian split of this lecture, and so do its successors (GADGET-4, Springel et al. 2021, and AREPO for gravity); HACC and others use related splits.
+</Callout>
+
+## The Gaussian force split
+
+We want a split of the Newtonian point-mass force <M t="Gm/r^2" /> such that <M t="\vect F_{\rm long}" /> is easy for a mesh (smooth, so its Fourier transform decays quickly) and <M t="\vect F_{\rm short}" /> vanishes beyond a finite radius. Split the *mass*, not the force: replace the point mass <M t="m" /> by a Gaussian cloud
+
+<M d tag="2" id="eq-l08-cloud" t="\rho_s(r)=\frac{m}{(4\pi r_s^2)^{3/2}}\,e^{-r^2/4r_s^2},\qquad\hat\rho_s(k)=m\,e^{-k^2r_s^2}." />
+
+The potential of this cloud follows from its enclosed mass <M t="M(<r)=m\,[\mathrm{erf}(r/2r_s)-\tfrac{r}{r_s\sqrt\pi}e^{-r^2/4r_s^2}]" /> (Gauss's law) or, in Fourier space, it is just the usual <M t="-4\pi Gm/k^2" /> times the filter <M t="e^{-k^2r_s^2}" />; in real space <M t="\Phi_{\rm long}=-Gm\,\mathrm{erf}(r/2r_s)/r" />. The short-range part is what is left of the point mass, the point mass *minus* the cloud:
+
+<M d tag="3" id="eq-l08-potsplit" t="\frac{1}{r}=\underbrace{\frac{\mathrm{erf}(r/2r_s)}{r}}_{\text{long range (mesh)}}+\underbrace{\frac{\mathrm{erfc}(r/2r_s)}{r}}_{\text{short range}} ." />
+
+Differentiating the short-range term (with <M t="x=r/2r_s" /> and <M t="\dd\,\mathrm{erfc}(x)/\dd x=-\tfrac{2}{\sqrt\pi}e^{-x^2}" />) gives its force,
+
+<M d tag="4" id="eq-l08-S" t="\vect F_{\rm short}=\frac{Gm\,\hat{\vect r}}{r^2}\,S(r),\qquad S(r)=\mathrm{erfc}\!\Big(\frac{r}{2r_s}\Big)+\frac{r}{r_s\sqrt\pi}\,e^{-r^2/4r_s^2}," />
+
+and the long-range force is <M t="Gm/r^2\,(1-S)" />; both are attractive, with <M t="\hat{\vect r}" /> the unit vector towards the source. (For <M t="r\ll r_s" />, <M t="S\to1" />: close pairs feel the full Newtonian force from the short-range part.) The function <M t="S" /> falls from <M t="1" /> at <M t="r=0" /> to <M t="0.5" /> at <M t="r\approx2.2\,r_s" /> and to <M t="0.0175" /> at <M t="4.5\,r_s" /> (Figure 1); the short-range force is dropped beyond a **cutoff** <M t="r_{\rm cut}=4.5\,r_s" />. The scale <M t="r_s" /> is a choice: GADGET-2 uses <M t="r_s=1.25\,h" />, where <M t="h" /> is the mesh cell size.
+
+**Relation to the Ewald sum.** This is the same idea as the Ewald sum of Lecture 5, whose <M t="\mathrm{erfc}(\alpha r)" /> real-space and <M t="\mathrm{erf}" /> Fourier-space pieces correspond to <M t="\alpha=1/(2r_s)" />. The differences are in what is kept: Ewald sums the short-range piece over all periodic images and the long-range piece over many Fourier modes, to machine accuracy; P<sup>3</sup>M keeps only the nearest image within <M t="r_{\rm cut}" /> (fine, since <M t="r_{\rm cut}<L/2" /> and <M t="S" /> is small beyond) and the long-range piece on the grid. The mesh force is periodic automatically, and the <M t="\vect k=0" /> mode is dropped as in Lecture 6. This is also why the Ewald force is the right reference for testing.
+
+<Figure
+	svg="L08/split"
+	n={1}
+	id="fig-l08-split"
+	widthPct={0.95}
+	alt="Two panels against r over r_s from 0 to 8. Left, linear scale: a flat black line at 1 for Newton, a red short-range fraction S falling from 1 to near 0 by about 5 with a value of 0.5 near 2.2, and a blue long-range fraction 1 minus S rising from 0 to 1; a dotted vertical line marks r_cut equal to 4.5 r_s. Right, log scale from 1e-4 to 1: the same two curves, S falling steeply and reaching 0.018 at 4.5 r_s, 1 minus S rising from tiny values."
+	caption="The Gaussian split of the Newtonian force (in units of Gm/r²). The short-range fraction S(r) (red) is 1 at small r and negligible beyond r_cut=4.5 r_s (dotted); the long-range fraction 1−S (blue) is what the mesh must supply. Right: the same on a log scale."
+/>
+
+**What to implement.** The function <M t="S" /> needs <M t="\mathrm{erfc}" />, which NumPy does not have. Use `math.erfc` through `np.frompyfunc`, or tabulate <M t="S" /> once and interpolate with `np.interp` (see the lookup-table listing below); both are fast enough here.
+
+```python title="s1_table.py"
+import math
+import numpy as np
+
+rs = 1.0
+erfc = np.frompyfunc(math.erfc, 1, 1)          # numpy has no erfc: apply math.erfc element-wise
+S = lambda r: erfc(r / (2 * rs)).astype(float) + r / (rs * math.sqrt(math.pi)) * np.exp(-(r / (2 * rs)) ** 2)
+
+r_tab = np.linspace(0.0, 5.0, 501)             # tabulate once ...
+S_tab = S(r_tab)
+r = np.random.default_rng(0).random(5) * 4.5
+print(np.abs(np.interp(r, r_tab, S_tab) - S(r)).max())   # ... look up with np.interp: error ~4e-6
+```
+
+The listing computes the short-range factor by table lookup (`np.frompyfunc` applies `math.erfc` element-wise).
+
+## The long-range part on the mesh
+
+The mesh needs only two changes to the PM code of Lecture 6. **(i)** Multiply <M t="\hat\rho(\vect k)" /> by <M t="e^{-k^2r_s^2}" /> before solving Poisson's equation: this is the Fourier-space version of Eq. (3). The filter listing below shows that <M t="e^{-k^2r_s^2}" /> smooths a point mass into a Gaussian of width <M t="\sqrt2\,r_s" />. **(ii)** Deconvolve the assignment window.
+
+```python title="s2_gaussian_filter_1d.py"
+import numpy as np
+
+n, L, rs = 512, 1.0, 0.02
+x = np.arange(n) * L / n
+rho = np.zeros(n)
+rho[n // 2] = n / L                            # a unit mass in one cell (delta function)
+k = 2 * np.pi * np.fft.fftfreq(n, d=L / n)
+rho_s = np.fft.ifft(np.fft.fft(rho) * np.exp(-k**2 * rs**2)).real
+dx = x - x[n // 2]
+sigma = np.sqrt(np.sum(rho_s * dx**2) * L / n)  # width of the smoothed mass
+print(sigma / rs)                              # ~1.414: exp(-k^2 rs^2) is a Gaussian of width sqrt(2) rs
+```
+
+The listing shows that the filter <M t="e^{-k^2r_s^2}" /> turns a point mass into a Gaussian cloud (a 1D toy).
+
+### Why the window must be deconvolved
+
+Mass assignment and force interpolation each convolve with the assignment kernel, whose Fourier transform is <M t="W(\vect k)=\prod_a\mathrm{sinc}^p(k_ah/2)" /> (<M t="p=2" /> for CIC, <M t="3" /> for TSC; Lecture 6). The mesh force is therefore smoothed by <M t="W^2" /> (once for assignment, once for interpolation) on top of the Gaussian filter, which makes it too small at <M t="r\lesssim3h" />, exactly where the short-range part hands over to it. Plain PM (Lecture 6) does not divide by <M t="W^2" /> because near the Nyquist wavenumber <M t="W^2" /> is small (<M t="0.16" /> for CIC and <M t="0.07" /> for TSC per axis at <M t="k_N=\pi/h" />) and the division would amplify grid noise and aliasing. Here the Gaussian filter has already suppressed those modes: for <M t="r_s=1.25h" />, <M t="e^{-k^2r_s^2}\approx2\times10^{-7}" /> at <M t="k_N" /> and <M t="0.02" /> at <M t="k_N/2" /> (Figure 2), so we can divide out the smoothing safely:
+
+<M d tag="5" id="eq-l08-longk" t="\hat\Phi_{\rm long}(\vect k)=-\frac{4\pi G}{k^2}\,\frac{e^{-k^2r_s^2}}{W^2(\vect k)}\,\hat\rho(\vect k)." />
+
+Figure 3 shows the effect: without the deconvolution the CIC mesh force is <M t="12" />&ndash;<M t="15\%" /> too small below <M t="2h" /> (TSC: <M t="20\%" />); with it, the error is about <M t="2\%" /> at worst and about <M t="0.1\%" /> beyond <M t="4h" />. The residual comes mostly from the four-point finite-difference gradient (with a spectral gradient the TSC error is within <M t="0.4\%" />); the rest is aliasing, which the deconvolution does not remove. (Figure 3 shows the case without deconvolution for CIC only; TSC without deconvolution is about <M t="20\%" /> low.) (The reference, the expected long-range force, is the Ewald force minus the short-range part of Eq. (4), since the mesh force is periodic.) The gradient and the interpolation are as in Lecture 6 (four-point gradient); the potential solver uses the spectral <M t="k^2" />.
+
+<Figure
+	svg="L08/filters_k"
+	n={2}
+	id="fig-l08-filters"
+	widthPct={0.8}
+	alt="Two panels against k over k_N from 0 to 1 on a log vertical scale from 1e-6 to 1. Left: the Gaussian e to the minus k squared r_s squared for r_s of 1.25 h in black, falling steeply to about 1e-6 near k_N; the window squared for CIC (orange) and TSC (blue) fall gently to about 0.16 and 0.07 at k_N. Right: the total mesh filter Gaussian over W squared for CIC and TSC, both falling to about 1e-6 near k_N and lying close to the dotted Gaussian-only curve."
+	caption="Fourier-space factors along an axis for r_s=1.25h. Left: the Gaussian e^(−k²r_s²) (black) and the window squared W² for CIC and TSC. Right: the total mesh filter e^(−k²r_s²)/W²: the Gaussian wins by orders of magnitude near k_N, so the deconvolution amplifies nothing that matters."
+/>
+
+<Figure
+	svg="L08/mesh_force"
+	n={3}
+	id="fig-l08-meshforce"
+	widthPct={0.95}
+	alt="Two panels against r over h from 0 to 14. Left: the mesh force times r squared over G m for pairs of particles, rising from near 0 at small r to a peak near 1 at r over h of 6 and then falling to about 0.7 at 14; four curves lie close together: CIC without deconvolution (red), CIC deconvolved (orange), TSC deconvolved (blue) and the expected Ewald minus short-range force (black). Right: the relative error of the mesh force from minus 0.2 to plus 0.2: the red curve, without deconvolution, is about minus 0.15 at small r and returns to zero by r over h of about 6; the orange and blue curves stay within about 2 per cent of zero."
+	caption="The mesh force alone for pairs of particles (32³ mesh, r_s=1.25 h; median of 150 random pairs per separation), against the expected long-range force. Without the window deconvolution (red) the force is 15% too low at small r. With it (orange, blue) the error is ≲2%. (The expected force falls beyond r≈6h because the periodic force vanishes at the box half-width, 16h.)"
+/>
+
+<Callout kind="idea">
+The mesh only has to be right where the short-range force has faded, at <M t="r\gtrsim2\,r_s" />. The Gaussian filter ensures that: it removes the grid-scale structure, so the mesh part is smooth and its error is small. That is why the mesh can be as coarse as <M t="r_s\approx1.25" /> cells.
+</Callout>
+
+## The short-range part
+
+### P3M: a chaining mesh
+
+The short-range force of a particle needs the neighbours closer than <M t="r_{\rm cut}" />. Sort the particles into cells of side at least <M t="r_{\rm cut}" /> (the **chaining mesh**, a different, coarser grid than the PM mesh); the neighbours of a particle then lie in its own cell and the <M t="26" /> adjacent ones (Figure 4). This is the pair search you wrote for friends-of-friends in Lecture 7, with <M t="r_{\rm cut}" /> in place of the linking length; the box is periodic, so the distance is the minimum-image distance, <M t="\vect d\leftarrow\vect d-L\,\mathrm{round}(\vect d/L)" />. Three practical points. (i) To find the pairs of two cells with no Python loop over particles, sort the particles by cell index, note where each cell starts (`np.searchsorted`) and how many particles it holds, and for each of the <M t="27" /> neighbour offsets build the flat index arrays of all (particle in cell <M t="A" />, particle in neighbour cell <M t="B" />) combinations at once (`np.repeat` of the cell numbers by the product of the two counts, and a running index within each block); then filter by distance. (ii) If <M t="L/r_{\rm cut}<3" /> the same neighbour cell is reached through several offsets, so a pair can be listed more than once: list each pair once (for example keep <M t="i<j" /> and remove duplicates). (iii) Accumulate the forces with `np.bincount`, adding <M t="\vect f_{ij}" /> to particle <M t="i" /> and subtracting it from <M t="j" />, so that Newton's third law and momentum conservation hold exactly. The minimum-image distance needs <M t="r_{\rm cut}\le L/2" />.
+
+<Figure
+	svg="L08/chain"
+	n={4}
+	id="fig-l08-chain"
+	widthPct={0.668}
+	alt="A square periodic box divided into a 7 by 7 grid, with a shaded 3 by 3 block of cells around a red particle i. A dashed circle of radius r_cut is drawn around i. Ten blue dots inside the shaded block are the candidate neighbours; ten grey dots elsewhere are never examined. A text note to the right says cell side is at least r_cut, the shaded block holds the 3 by 3 (by 3) cells that can hold neighbours, and the dashed circle is r less than r_cut. An arrow below marks the box length L."
+	caption="A chaining mesh in 2D (3D: 27 cells). Only particles in the shaded block of cells (blue dots) are tested against the cutoff circle; the others (grey) are never looked at."
+/>
+
+The short-range force on particle <M t="i" /> is
+
+<M d tag="6" id="eq-l08-pp" t="\vect a_i=G\sum_{j:\,r_{ij}<r_{\rm cut}}m_j\,S(r_{ij})\,\frac{\vect d_{ij}}{(r_{ij}^2+\epsilon^2)^{3/2}},\qquad\vect d_{ij}=\vect x_j-\vect x_i\ \text{(minimum image)}," />
+
+with the Plummer softening <M t="\epsilon" /> of Lecture 1 (softening acts only on the short-range part). The total force is the sum of the mesh force and Eq. (6). <M t="S" /> is evaluated with the true <M t="r_{ij}" /> (not the softened one), and the sum is truncated sharply at <M t="r_{\rm cut}" />, which leaves a <M t="1.8\%" /> jump in the force at the cutoff.
+
+```python title="s3_cells_1d.py"
+import numpy as np
+
+L, rcut, N = 10.0, 0.8, 300
+x = np.random.default_rng(1).random(N) * L
+nc = int(L / rcut)                             # cells at least rcut wide
+cell = (x / (L / nc)).astype(int) % nc
+order = np.argsort(cell)
+start = np.searchsorted(cell[order], np.arange(nc + 1))    # particles of cell c: order[start[c]:start[c+1]]
+count = 0
+for c in range(nc):
+    mine = order[start[c]:start[c + 1]]
+    near = np.concatenate([order[start[(c + s) % nc]:start[(c + s) % nc + 1]] for s in (-1, 0, 1)])
+    d = x[near][None, :] - x[mine][:, None]
+    d -= L * np.rint(d / L)                    # minimum image
+    count += np.sum(np.abs(d) < rcut) - len(mine)           # minus self pairs
+d = x[:, None] - x[None, :]
+d -= L * np.rint(d / L)
+print(count // 2, (np.sum(np.abs(d) < rcut) - N) // 2)      # same pair count twice
+```
+
+The listing shows cell lists in 1D finding the same pairs as a brute-force search (a toy).
+
+### Accuracy and cost: choosing <M t="r_s" /> and <M t="r_{\rm cut}" />
+
+Figure 5 shows the accuracy of the sum of the two parts for a pair of particles, against the exact periodic force. The mesh alone (grey) has errors of <M t="100\%" /> below <M t="h" /> and <M t="5" />&ndash;<M t="20\%" /> at <M t="2" />&ndash;<M t="3\,h" />. With the split the maximum error is about <M t="1\%" /> for TSC and <M t="3\%" /> for CIC at any separation, and at <M t="r\le h" />, where the short-range part dominates, the error is below a few <M t="10^{-3}" />.
+
+<Figure
+	svg="L08/pair_error"
+	n={5}
+	id="fig-l08-pairerr"
+	widthPct={0.95}
+	alt="Two log-log panels of relative force error against pair separation r over h from 0.3 to 12: median on the left, maximum on the right. The grey curve, PM only, is near 1 at small separation and falls to about 0.01 to 0.04 at large separation. The orange P3M with CIC and blue P3M with TSC curves rise from about 1e-4 at r over h of 0.3 to a peak near 1e-2 (median) or 3e-2 (maximum, CIC) around r over h of 3 to 6, then decline; TSC is lower than CIC."
+	caption="Relative error of the force between two particles against the exact periodic (Ewald) force (32³ mesh, r_s=1.25 h, r_cut=4.5 r_s; 100 random pairs per separation, median left, maximum right). The mesh alone (grey) is poor below 3h. P3M with TSC (blue) and CIC (orange) is accurate to about 1% and 3% at worst, both with the window deconvolution."
+/>
+
+The parameters trade accuracy against cost. A cluster of <M t="400" /> particles (eight Gaussian blobs of width <M t="0.03\,L" />; Figure 6) compared with the Ewald forces gives a median error of <M t="0.15" />&ndash;<M t="0.2\%" /> (maximum <M t="0.3" />&ndash;<M t="0.8\%" />) for <M t="r_s=1.25\,h" /> and TSC, <M t="0.02\%" /> for <M t="r_s=2\,h" />, and <M t="0.35" />&ndash;<M t="0.4\%" /> for <M t="r_s=1\,h" />. For <M t="r_s=1.25h" /> the error stops improving beyond <M t="r_{\rm cut}\approx4.5\,r_s" />, where <M t="S=1.8\%" />; a cutoff of <M t="3.5\,r_s" /> (<M t="S=11\%" />) is noticeably worse in the tail (maximum <M t="1\%" /> against <M t="0.3\%" />), and <M t="2.5\,r_s" /> is poor (median <M t="0.8" />&ndash;<M t="1.6\%" />, maximum <M t="12\%" />). But the cost grows with <M t="r_{\rm cut}^3" />: a particle has <M t="(4\pi/3)\bar n\,r_{\rm cut}^3" /> neighbours at mean number density <M t="\bar n" />. Larger <M t="r_s" /> improves the accuracy by shifting work from the mesh error to the neighbour sum.
+
+<Figure
+	svg="L08/tradeoff"
+	n={6}
+	id="fig-l08-tradeoff"
+	widthPct={0.95}
+	alt="Two panels against r_cut over r_s from 3 to 7 on log vertical scales. Left: median force error of P3M with TSC for the clustered test set, for r_s of 1.0 h (red, about 4e-3 to 8e-3), 1.25 h (orange, about 1.5e-3 to 2e-3) and 2.0 h (blue, falling from about 4e-4 to 1.3e-4); each curve flattens beyond r_cut of about 4.5 r_s. Right: the number of neighbours within r_cut per particle for uniform particles, rising steeply with r_cut, about as its cube, with larger r_s having more neighbours."
+	caption="Left: median force error of P3M (TSC) for the clustered test set against r_cut/r_s, for three values of r_s (in mesh cells h). For r_s=1.25h the error saturates beyond 4.5 r_s (for r_s=2h it keeps falling to about 5 r_s). Right: the number of neighbours within r_cut per particle for uniformly distributed particles (N=4000 in a unit box): the cost grows as r_cut³."
+/>
+
+### A worked example and rules for the parameters
+
+Take the box of Lecture 7: <M t="L=100\,h^{-1}" />Mpc, a <M t="64^3" /> mesh, <M t="32^3" /> particles. Then
+
+| quantity | value |
+|:---|---:|
+| mesh cell <M t="h=L/n" /> | <M t="1.56\,h^{-1}" />Mpc |
+| <M t="r_s=1.25\,h" /> | <M t="1.95\,h^{-1}" />Mpc |
+| <M t="r_{\rm cut}=4.5\,r_s" /> | <M t="8.8\,h^{-1}" />Mpc |
+| chaining-mesh cells (<M t="\ge r_{\rm cut}" />) | <M t="11^3" /> |
+| mean particle number density <M t="\bar n" /> | <M t="0.033\,(h/\mathrm{Mpc})^3" /> |
+| neighbours per particle, uniform: <M t="\tfrac{4\pi}{3}\bar nr_{\rm cut}^3" /> | <M t="93" /> |
+| the same at <M t="100\times" /> the mean density | <M t="9\,300" /> |
+| measured at <M t="a=1" /> (average) | <M t="179" /> |
+
+so the pair sum at <M t="a=1" /> costs about <M t="179\,N/2\approx3\times10^6" /> pair evaluations against <M t="\Oh{N}+\Oh{n^3\log n}" /> for the mesh (the pure-NumPy P3M force takes about <M t="1.5" />&ndash;<M t="2" /> s against <M t="20" /> ms for PM).
+
+The parameters are tied together by four rules. **(i)** The mesh must be accurate where the short-range force has faded (<M t="S\lesssim0.5" />, <M t="r\gtrsim2r_s" />), and the Gaussian must remove modes near <M t="k_N" />: <M t="r_s\approx1.25" /> cells does both. A larger <M t="r_s" /> makes the mesh part more accurate (Figure 6) but the pair sum more expensive. **(ii)** <M t="r_{\rm cut}" /> is chosen where <M t="S" /> is small, <M t="4.5\,r_s" />; it must be at most <M t="L/2" /> for the minimum-image convention (so the mesh cannot be smaller than about <M t="12^3" /> at the default <M t="r_s" />). **(iii)** The softening <M t="\epsilon" /> acts only on the short-range force and must be well below <M t="r_s" /> (we use <M t="0.05\times" /> the mean particle spacing, about <M t="0.15" /> Mpc/<M t="h" /> here, against <M t="r_s=1.95" />); the mesh force is unsoftened but smooth. **(iv)** Use about two mesh cells per mean particle spacing (a <M t="64^3" /> mesh for <M t="32^3" /> particles): coarser meshes push work to the pair sum, finer ones add noise.
+
+### The weakness of P3M: clustering
+
+The neighbour count is per particle, <M t="\propto\rho_{\rm local}\,r_{\rm cut}^3" />: in a dense halo, where <M t="\rho_{\rm local}" /> is thousands of times the mean, one particle can have thousands of neighbours within <M t="r_{\rm cut}" />, and the cost of the short-range sum grows towards <M t="N_{\rm halo}^2" />. This is what the tree is for.
+
+## Testing a hybrid code
+
+A hybrid code has many places to go wrong, and errors in one part are hidden by the other. Test from the bottom up. **(1)** The split function: <M t="S(0)=1" />, <M t="S(r)r^{-2}" /> equals minus the derivative of <M t="\mathrm{erfc}(r/2r_s)/r" />. **(2)** Each part alone: the mesh force between two particles should equal the Ewald force minus <M t="Gm\,S/r^2" />, and the short-range sum should equal a brute-force <M t="O(N^2)" /> sum over all pairs. **(3)** The total: the force between two particles against the Ewald force at many separations (Figure 5), and for a small clustered set against Ewald (Ewald is expensive: about 60 test particles suffice). **(4)** Invariances: shifting all positions by a box length, momentum conservation (to roundoff, about <M t="10^{-15}" /> or better relative to the sum of the absolute forces, for mesh and pair sum), <M t="G" /> scaling. **(5)** The tree: TreePM with <M t="\theta\to0" /> must reproduce P<sup>3</sup>M.
+
+Typical symptoms: an error that peaks at <M t="r\approx1" />&ndash;<M t="3h" /> means a missing window deconvolution or a wrong filter width; a smooth <M t="\sim2\%" /> error at <M t="r\approx4.5\,r_s" /> means the cutoff or <M t="S" />; errors only for particles near the box edges point to the minimum image; pairs counted twice appear as a factor of <M t="2" /> at small <M t="L/r_{\rm cut}" />.
+
+## TreePM: a tree for the short-range part
+
+Replace the chaining-mesh sum by a Barnes&ndash;Hut tree walk that is *truncated* at <M t="r_{\rm cut}" />. Your Lecture 4 walk needs three changes, all visible in the schematic of Figure 7:
+
+1. **Prune:** skip a cell entirely if the smallest distance from the particle to the cell is greater than <M t="r_{\rm cut}" /> (see the cell-gap listing below). Nothing inside can contribute.
+2. **Cut and weight:** a cell accepted by the opening criterion is used as a point mass *with the short-range factor*: <M t="\vect a=Gm\,S(r)\,\vect d/(r^2+\epsilon^2)^{3/2}" /> evaluated at the distance <M t="r" /> to its centre of mass (skipped if <M t="r>r_{\rm cut}" />); the same for particles in a leaf.
+3. **Periodicity:** use the minimum-image distance to a cell centre, to its centre of mass, and to particles. Cells larger than half the box cannot be pruned this way; open them (the root always contains the particle).
+
+Everything else (tree build, opening criterion, stack) is your Lecture 4 code. Because only the short-range force is needed, the walk visits only cells near the particle, and its cost is smaller than for the full force.
+
+```python title="s4_cell_gap.py"
+import numpy as np
+
+def gap_to_cell(p, centre, half, box):
+    """Smallest distance (minimum image) from point p to the cube of half-width `half` around `centre`."""
+    dc = centre - p
+    dc -= box * np.rint(dc / box)
+    gap = np.maximum(np.abs(dc) - half, 0.0)
+    return np.linalg.norm(gap)
+
+box, rcut = 10.0, 1.0
+p = np.array([9.8, 5.0, 5.0])
+print(round(gap_to_cell(p, np.array([0.6, 5.0, 5.0]), 0.5, box), 3))   # 0.3: the cell just across the boundary is near
+print(gap_to_cell(p, np.array([5.0, 5.0, 5.0]), 0.5, box) > rcut)   # True: skip this cell
+```
+
+The listing computes the distance from a point to a cell with the minimum image (a fragment).
+
+<Figure
+	svg="L08/treecut"
+	n={7}
+	id="fig-l08-treecut"
+	widthPct={0.644}
+	alt="An 8 by 8 grid of unit cells with a black dot i at the centre and a thick dashed circle of radius r_cut around it. Cells fully outside the circle are shaded grey (pruned). Cells nearest to the particle, within a short distance, are pink (opened: particles summed). The remaining cells inside the circle are light blue (accepted: monopole times S of r). A legend to the right names the three colours."
+	caption="The TreePM short-range walk in 2D (schematic; a real tree merges cells where the opening criterion allows, so cells of size s are accepted at distance d>s/θ, and the box is periodic, so cells across an edge are near as well). Cells beyond the cutoff circle (grey) are pruned. Near the particle the cells are opened down to particles (red). In between, cells small compared with their distance are accepted as point masses (blue), each weighted by S(r)."
+/>
+
+**Accuracy.** Against the Ewald force on the clustered test set (eight blobs, <M t="N=400" />), the TreePM force at <M t="\theta=0.5" /> has a median error <M t="0.4\%" />, <M t="90\%" /> of the particles below <M t="1.3\%" /> and a maximum of <M t="2" />&ndash;<M t="3\%" />; at <M t="\theta=0.7" />: <M t="1.2" />&ndash;<M t="1.4\%" />, <M t="3\%" /> and <M t="6" />&ndash;<M t="13\%" />; at <M t="\theta=1" />: <M t="3.6" />&ndash;<M t="3.7\%" /> (maximum <M t="16" />&ndash;<M t="54\%" />). For <M t="\theta\to0" /> it reproduces P<sup>3</sup>M (largest difference <M t="\lesssim3\times10^{-4}" /> at <M t="\theta=0.1" />), a useful check of the pruning and the minimum image. Unlike the mesh and pair parts, the tree force does not conserve momentum exactly (the monopole interaction of a cell is not pairwise antisymmetric): at <M t="\theta=0.5" /> the net force is about <M t="10^{-4}" /> of the sum of the absolute forces.
+
+**Cost.** Figure 8 counts the short-range interactions per particle. For *uniform* particles the tree does not pay: the pair sum needs fewer interactions at these <M t="N" />. For *clumped* particles the pair count rises quickly with <M t="N" /> while the tree's grows slowly; at <M t="N=3200" /> the tree needs about <M t="2.6\times" /> fewer interactions, and the gap keeps growing. In a cosmological run late in time, most particles are in clumps, so this is the regime that matters. (Our pure-Python tree is far too slow for the full box; in a compiled code the short-range tree is very fast, and, as we will see in Lecture 10, its cost per particle is low enough to update only the particles that need it in each step.)
+
+<Figure
+	svg="L08/pp_vs_tree"
+	n={8}
+	id="fig-l08-ppvstree"
+	widthPct={0.95}
+	alt="Two log-log panels of short-range interactions per particle against N from 200 to 3200. Left, uniform particles: the red P3M pair count lies below the blue TreePM interaction count at every N, both rising with N. Right, 8 Gaussian blobs of width 0.02: the red pair count rises faster than the blue tree count, crossing above it near N of 400, and reaches about 500 against about 190 for the tree at N of 3200."
+	caption="Short-range interactions per particle: pairs within r_cut (P3M, red) and tree interactions at θ=0.5 (TreePM, blue), against N in a unit periodic box with a 32³ mesh (r_s=1.25h, r_cut=4.5r_s). Left: uniform particles. Right: 8 Gaussian blobs of width 0.02. Clustering makes the pair sum expensive."
+/>
+
+## The hybrid force in a cosmological run
+
+The hybrid force can be used in the comoving leapfrog of Lecture 7 unchanged: the acceleration is <M t="-\nabla\tilde\phi" /> with <M t="G=3\Omega_mH_0^2L^3/(8\pi N)" />, and the kick and drift factors are the same. Two things need care. **Softening:** with a resolved short-range force the particles interact like real point masses, and two-body encounters between the few particles per halo scatter and heat them. Take <M t="\epsilon" /> at a few per cent of the mean particle spacing (we use <M t="\epsilon=0.05\,L/N^{1/3}" />). **Time step:** the short-range force changes fast in dense regions: a particle on a bound orbit needs <M t="\Delta t\lesssim\eta\sqrt{\epsilon/|\vect a|}" /> (with <M t="\eta\approx0.02" />&ndash;<M t="0.05" />), which is far smaller than a step that suits the smooth mesh force. A single global step would be set by the densest clump; Lecture 10 introduces individual (block) time steps, where the short-range tree makes updating only the particles that need it cheap.
+
+To see what the short-range force adds, we evolve the <M t="32^3" />-particle, <M t="100\,h^{-1}" />Mpc box of Lecture 7 to <M t="a=1" /> with PM alone and with P3M (mesh <M t="64^3" />, TSC, <M t="r_s=1.25h" />, <M t="\epsilon=0.05\,\bar d" />), and compare (Figure 9):
+
+- *Forces:* on the final PM particle positions, the PM force magnitude relative to the P3M force is <M t="1.0" /> in regions near the mean density, <M t="0.93" /> at <M t="3" />&ndash;<M t="10" /> times the mean, <M t="0.49" /> at <M t="10" />&ndash;<M t="30" />, <M t="0.34" /> at <M t="30" />&ndash;<M t="100" /> and <M t="0.27" /> above <M t="100" />: **the mesh force in dense regions is a factor of three or four too small**, which is the resolution limit of Lecture 6.
+- *Power spectrum:* the two runs agree to <M t="\lesssim8\%" /> for <M t="k<1.3\,h/" />Mpc: <M t="P(k)" /> on these scales is dominated by the large-scale structure, which the mesh gets right. (P<sup>3</sup>M has <M t="4" />&ndash;<M t="8\%" /> less power at <M t="k\approx0.3" />&ndash;<M t="1" />, and up to about <M t="10\%" /> more at <M t="k=1.3" />&ndash;<M t="2" />, near the mesh Nyquist wavenumber.) The two-body scattering of the sparse particle set is part of this; a sparser run (<M t="16^3" /> particles on a <M t="32^3" /> mesh) differs by <M t="20" />&ndash;<M t="40\%" /> at <M t="k\approx0.3" />&ndash;<M t="0.6" />, so the comparison is only meaningful when the particle number is adequate.
+- *Halos:* FoF finds <M t="75" /> halos of <M t="\ge20" /> particles in the PM run and <M t="65" /> in the P3M run, with the largest at <M t="358" /> and <M t="352" /> particles.
+
+The cost is the price of the accuracy: on our machine one P3M force at <M t="a=1" /> with this pure-NumPy code takes about <M t="1.5" />&ndash;<M t="2" /> s and the 60-step run about <M t="2" />&ndash;<M t="4" /> minutes, against a few seconds for the PM run (timings vary with the machine).
+
+<Figure
+	svg="L08/cosmo_compare"
+	n={9}
+	id="fig-l08-cosmo"
+	widthPct={0.95}
+	alt="Left: a scatter of the ratio of the PM to the P3M force magnitude for each particle of the a equal to 1 PM snapshot, against local density on a log axis from 1 to 500. Grey points scatter around 1 at low density and spread widely below 1 at high density; a red line with dots, the median in density bins, is about 1 up to a density of 3, then falls through 0.6 near 10 to about 0.3 above 30. A horizontal line marks 1. Right: the ratio of the P3M to PM power spectra at a equal to 1 against k from 0.08 to 2 h per Mpc: it is 1 at low k, dips to about 0.92 near 0.7, and rises to about 1.1 at k of 2; a dotted vertical line marks half the mesh Nyquist wavenumber."
+	caption="Left: ratio of the PM to the P3M force magnitude for the particles of the a=1 PM snapshot (32³ particles, 64³ mesh), against the local density; the red line is the median in density bins. Where the density exceeds 30 times the mean, the PM force is ∼3 times too small. Right: ratio of the power spectra of the P3M and PM runs at a=1 (dotted: half the mesh Nyquist wavenumber)."
+/>
+
+## Homework 8
+
+<Callout kind="homework" title="Homework 8: P³M and TreePM">
+Create `myOwnCode/L08/hybrid.py` from `hw8_hybrid_skeleton.py` in the hints zip; copy `hw8_run_experiments.py` next to it. It uses your `pm.py` (L6), `tree.py` (L4) and `cosmo.py` (L7). Box <M t="L=1" /> unless said otherwise; `ngrid` is the mesh size <M t="n" />, <M t="h=L/n" />; defaults <M t="r_s=1.25h" />, <M t="r_{\rm cut}=4.5r_s" />, TSC with the four-point gradient. **Rules:** no Python loops over particles or pairs in 8.1&ndash;8.3 (loops over cell offsets are fine); the tree walk of 8.4 may loop over particles.
+
+**8.1 The split.** `short_range_factor(r, rs)` (Eq. (4); scalar or array). Checks: for <M t="r_s=1" />, <M t="S(0)=1" />, <M t="S(1)=0.9189" />, <M t="S(2)=0.5724" />, <M t="S(4.5)=0.01753" />; <M t="S" /> depends on <M t="r/r_s" />; and <M t="r^2\,(-\dd/\dd r)[\mathrm{erfc}(r/2r_s)/r]=S(r)" /> (finite differences). Optionally plot Figure 1.
+
+**8.2 Mesh part.** `long_range_acceleration(pos, mass, G, box, ngrid, rs, scheme, deriv, deconvolve)` following Eq. (5), built from your Lecture 6 functions plus your own FFT filter. Checks: total momentum change zero, periodic, scales with <M t="G" />; and for pairs the mesh force is the Ewald force minus <M t="Gm\,S(r)/r^2" /> to within about <M t="2\%" /> (the checker allows <M t="5\%" /> for TSC at <M t="r\ge0.5h" /> and <M t="6\%" /> for CIC at <M t="r\ge h" />); without `deconvolve` the CIC error is about <M t="15\%" /> below <M t="2h" /> (Figure 3).
+
+**8.3 P3M.** `find_pairs(pos, box, rcut)` (all pairs once, minimum image, including <M t="L/r_{\rm cut}<3" />), `short_range_pp`, `p3m_acceleration`. Checks: identical to a brute-force search and a brute-force sum (softened Eq. (6)), momentum conserved, <M t="20\,000" /> particles fast. Then the physics: for the clustered set of <M t="400" /> particles (<M t="8" /> blobs of width <M t="0.03" />, the checker builds it) the P3M force against the Ewald force of Lecture 5 must have a median error below <M t="0.6\%" /> (reference: <M t="0.15" />&ndash;<M t="0.18\%" />; maximum <M t="0.3" />&ndash;<M t="0.8\%" />), for CIC below <M t="1.2\%" /> (reference <M t="0.26" />&ndash;<M t="0.33\%" />). For pairs at <M t="r=0.5h,\dots,9h" /> the maximum error stays near <M t="1\%" /> (reference; the checker allows <M t="4\%" />), and a <M t="64^3" /> mesh with the defaults gives median <M t="\lesssim0.4\%" /> on the clustered set. Reproduce Figure 5.
+
+**8.4 TreePM.** `tree_short_range` and `treepm_acceleration` using your Lecture 4 `build_tree` and `accept`. Checks: for <M t="\theta=0.1" /> it agrees with your P3M (median <M t="<2\times10^{-3}" />, maximum <M t="<2\times10^{-2}" />; reference <M t="\lesssim3\times10^{-4}" />); for <M t="\theta=0.5" /> the error against Ewald has median <M t="<1\%" /> (reference <M t="0.4\%" />), <M t="90\%" /> below <M t="3\%" />, maximum <M t="<12\%" /> (reference <M t="3\%" />); a larger <M t="\theta" /> gives a larger error and fewer interactions; for <M t="1600" /> particles in <M t="8" /> Gaussian blobs of width <M t="0.02" /> (built by the checker) the tree needs fewer interactions than the pair sum, where the pair sum counts <M t="2\times" /> the number of pairs (reference ratio <M t="0.55" />, required <M t="<0.9" />), and for <M t="1000" /> uniform particles about <M t="50" /> tree interactions per particle (required <M t="<100" />: cells beyond the cutoff must be pruned). `stats["interactions"]` counts node and particle interactions as in Lecture 4. Optional: reproduce Figure 8.
+
+**8.5 Cosmology.** `evolve_hybrid(pos, mom, a_start, a_end, nsteps, box, ngrid, Om, OL, method, theta, eps)` with your Lecture 7 factors; `method` is `"p3m"` or `"treepm"`. Checks on a small box (<M t="8^3" /> particles, mesh <M t="16^3" />): P3M momentum conserved (TreePM only approximately), the run follows the Zel'dovich solution at early times, an EdS plane-wave pancake (<M t="16^3" /> particles, <M t="32^3" /> mesh, <M t="12" /> steps from <M t="a=0.05" /> to <M t="0.5" />) reaches the analytic amplitude to within <M t="2\%" /> (reference <M t="0.994" />), a large `eps` changes the result, and P3M and TreePM (<M t="\theta=0.2" />) agree. Then reproduce Figure 9: PM and P3M runs of your <M t="32^3" />-particle box (<M t="64^3" /> mesh, <M t="\epsilon=0.05\bar d" />, <M t="60" /> steps; the P3M run takes minutes in this NumPy code; use <M t="16^3" /> particles for a faster test) and the force ratio against local density.
+
+*Optional:* (a) Figure 6: the cost&ndash;accuracy curves for <M t="r_s=1,1.25,2h" />; (b) Figure 1 and Figure 3; (c) compare TreePM and P3M run times on the clumped set; (d) count the interactions as a function of <M t="\theta" /> on a cosmological snapshot.
+
+Plan for about 9&ndash;12 hours (8.2&ndash;8.4 take the longest; the long runs of 8.5 run unattended); the optional figures are extra. **Check yourself:** unzip the hints, `cd` into `gravity-from-scratch/`, then run `python course/codeHints/L08/check_hw8.py` (about 25&ndash;35 s, longer for a slow tree walk; it needs `myOwnCode/L04`, `L06`, `L07`, `L08`; it contains its own Ewald reference). Only after your own attempt passes, open the reference solution. Lecture 10 reuses your P3M and TreePM codes.
+</Callout>
+
+## Summary
+
+- The Gaussian split <M t="1/r=\mathrm{erf}(r/2r_s)/r+\mathrm{erfc}(r/2r_s)/r" /> gives a smooth long-range part (filter <M t="e^{-k^2r_s^2}" /> on the mesh) and a short-range force <M t="Gm\,S(r)/r^2" /> that is negligible beyond <M t="r_{\rm cut}\approx4.5\,r_s" />.
+- The mesh part needs the window deconvolved twice (assign and interpolate), <M t="\hat\rho\to\hat\rho\,e^{-k^2r_s^2}/W^2" />; then the total force is accurate to about <M t="1\%" /> at any separation.
+- P<sup>3</sup>M sums the short-range force over neighbours from a chaining mesh (minimum image, Newton's third law); TreePM uses a tree pruned at <M t="r_{\rm cut}" />, with <M t="S(r)" /> applied to every interaction.
+- <M t="r_s" /> and <M t="r_{\rm cut}" /> trade accuracy for cost (<M t="\propto r_{\rm cut}^3" /> neighbours); the tree wins where particles are clustered.
+- In a cosmological box the PM force in dense regions is a factor three or four too small; the hybrid fixes it, at a cost that is much higher than PM alone.
+
+## Further reading
+
+- R. W. Hockney & J. W. Eastwood, *Computer Simulation Using Particles* (1981), the P<sup>3</sup>M chapter; G. Efstathiou & J. W. Eastwood, MNRAS 194, 503 (1981).
+- H. M. P. Couchman, ApJ 368, L23 (1991): adaptive P<sup>3</sup>M.
+- G. Xu, ApJS 98, 355 (1995): TreePM; J. S. Bagla, J. Astrophys. Astron. 23, 185 (2002).
+- V. Springel, MNRAS 364, 1105 (2005): the TreePM method of GADGET-2 (Gaussian split with <M t="r_s=1.25h" /> and <M t="r_{\rm cut}=4.5\,r_s" />; see the section &ldquo;TreePM: a tree for the short-range part&rdquo;).
+- V. Springel et al., MNRAS 506, 2871 (2021): GADGET-4.
+
+## Downloads
+
+<div class="nb-downloads">
+<a href="/downloads/nbody/L08-hints.zip">&#8681; Hints &amp; checker (L08-hints.zip)</a>
+<a href="/downloads/nbody/L08-solution.zip">&#8681; Reference solution (L08-solution.zip)</a>
+</div>
+
+Only open the solution after your own `hybrid.py` passes every check &mdash; that's the point of the exercise.
