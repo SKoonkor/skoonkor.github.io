@@ -1,0 +1,366 @@
+---
+title: "The Barnes–Hut tree"
+description: "Quadtrees and octrees, the opening angle, and the first algorithm better than O(N²)."
+lecture: 4
+goal: "Explain why a distant group of particles can be replaced by one point mass, build a quadtree or octree with mass and centre of mass in every cell, compute forces by walking the tree with the opening criterion s/d < θ, and measure both its accuracy and its cost honestly."
+publishDate: "2026-09-30"
+tags: ["n-body", "gravity", "barnes-hut", "tree-code", "octree"]
+draft: false
+downloads:
+  hints: "/downloads/nbody/L04-hints.zip"
+  solutions: "/downloads/nbody/L04-solution.zip"
+---
+
+import M from "@/components/course/M.astro";
+import Callout from "@/components/course/Callout.astro";
+import Figure from "@/components/course/Figure.astro";
+
+<Callout kind="goals">
+- Explain why a distant group of particles can be replaced by one particle at its centre of mass.
+- Build a quadtree (2D) and an octree (3D) by recursive subdivision, and store mass and centre of mass in every cell.
+- Compute forces by walking the tree with the opening criterion <M t="s/d<\theta" />.
+- Measure the accuracy against direct summation and the number of interactions as <M t="N" /> grows.
+- Understand honestly what the tree buys (fewer interactions) and what it costs (a slower, more complex code).
+</Callout>
+
+## The idea: far away, a group acts like one particle
+
+Direct summation (Lectures 1 and 3) adds the pull of all <M t="N-1" /> other particles on every particle. But a particle in one galaxy does not feel the individual stars of another galaxy, only their combined pull, and from far away that combined pull is almost the pull of a single body located at the group's centre of mass. Newton proved this exactly for the pull of a spherically symmetric body on points outside it (the shell theorem); for irregular groups it holds approximately, with an error that shrinks with distance.
+
+<Figure
+	svg="L04/idea"
+	n={1}
+	id="fig-l04-idea"
+	widthPct={0.65}
+	alt="A star marking particle i on the left with individual arrows to a near group of five particles, and one thick arrow to a dashed ellipse around a far group of seven particles, drawn as a single square at their centre of mass."
+	caption="The tree idea. Particles near i are treated one by one. A distant group (dashed) is replaced by a single particle at its centre of mass (square) with the group's total mass: one interaction instead of seven."
+/>
+
+If we could do this systematically, the cost per particle would fall from <M t="N-1" /> to roughly the number of groups needed to cover the sky as seen from that particle, which grows only logarithmically with <M t="N" />. The Barnes&ndash;Hut algorithm (1986) does exactly this using a hierarchy of cubic cells.
+
+<Callout kind="history" title="History">
+Tree codes for gravity were introduced by A. Appel (1985) and, in the form used ever since, by J. Barnes and P. Hut (*Nature* 324, 446, 1986). Barnes (1990) showed how to walk the tree for groups of nearby particles at once, and L. Hernquist (1987) analysed the performance of tree codes. Tree gravity is used, often combined with a mesh (Lecture 8), in most large simulation codes.
+</Callout>
+
+## The tree of cells
+
+Enclose all particles in one cube, the **root cell**. Split it into <M t="2^{\rm dim}" /> equal child cells: four quadrants in 2D (a **quadtree**), eight octants in 3D (an **octree**). Any child holding more than one particle is split again, and so on, until every cell holds at most one particle (the **leaves**). Empty children are simply not created.
+
+<Figure
+	svg="L04/quadtree"
+	n={2}
+	id="fig-l04-quadtree"
+	widthPct={0.845}
+	alt="Left: a square divided into quadrants, with the north-east quadrant divided again, and six numbered particles. Right: the same cells drawn as a tree, with a root node, three leaves for particles 1, 2 and 3, and a north-east node with three leaves for particles 4, 5 and 6."
+	caption="A quadtree for six particles. The root is split into four quadrants (SW, SE, NW, NE). Only the NE quadrant holds more than one particle, so only it is split again. Empty cells are not stored. The leaf labels are particle numbers."
+/>
+
+The tree adapts to the particle distribution: where particles are dense the cells are small, where they are sparse a few big cells suffice (Figure 3).
+
+<Figure
+	svg="L04/depth_series"
+	n={3}
+	id="fig-l04-depth"
+	widthPct={1.0}
+	alt="Four square panels showing the same 220 points, two clumps on a uniform background, with the quadtree drawn down to depth 1, 2, 3 and 5. The clumps get many small cells and the empty regions stay coarse."
+	caption="The quadtree of 220 points (two clumps and a uniform background) shown down to depth 1, 2, 3 and 5. Cells are only refined where particles are: the tight clump on the lower left gets many small cells and the empty regions stay coarse."
+/>
+
+Every cell is described by a small record: centre, half of its side length, total mass, centre of mass, and either its children or, for a leaf, the particle indices it holds. The attribute names are fixed; the checker reads them.
+
+```python title="s1_node.py"
+import numpy as np
+
+class Node:
+    """One cell of the tree (the attribute names are fixed by the checker)."""
+    def __init__(self, center, half):
+        self.center = center      # (dim,) centre of the cubic cell
+        self.half = half          # half of its side length
+        self.mass = 0.0           # total mass inside the cell
+        self.com = None           # centre of mass of the particles inside
+        self.children = None      # list of child nodes; None for a leaf
+        self.indices = None       # particle indices (leaves only)
+        self.quad = None          # quadrupole moment (used from Lecture 5)
+
+root = Node(np.array([0.5, 0.5]), 0.5)      # the unit square in 2D
+print(root.half, root.children is None)     # 0.5 True: a fresh node is a leaf
+```
+
+## Building the tree
+
+The simplest way to build the tree is recursive and top-down: given a cell and the list of particles inside it, either stop (few enough particles) or sort the particles into the child cells and recurse into each non-empty child.
+
+```text
+build(particle indices, centre, half, depth):
+    make a node; compute its mass and centre of mass
+    if <= leaf_size particles or depth = max_depth:
+        store the indices, return the node (a leaf)
+    for each non-empty child cell:
+        build(its particles, child centre, half/2, depth+1)
+    return the node
+```
+
+Most of the work is the *partition* step: given the array of particle indices in a cell, compute the child number of each one at once, then select the indices of each child with a boolean mask; only non-empty children become nodes. Because the depth is limited by `max_depth`, Python's recursion limit is not a problem. A worked trace for the six particles of Figure 2 (imagine the root cell fixed as <M t="[0,4]^2" />; `build_tree` on these six points alone would use their bounding box and give a slightly different tree):
+
+| call | particles in the cell | what happens |
+|:---|:---|:---|
+| build(\{1..6\}, root, 0) | 1, 2, 3, 4, 5, 6 | 6 > 1: split; codes 0, 1, 2, 3, 3, 3 → children \{1\}, \{2\}, \{3\}, \{4,5,6\} |
+| &nbsp;&nbsp;build(\{1\}, SW, 1) | 1 | one particle: leaf |
+| &nbsp;&nbsp;build(\{2\}, SE, 1) | 2 | leaf |
+| &nbsp;&nbsp;build(\{3\}, NW, 1) | 3 | leaf |
+| &nbsp;&nbsp;build(\{4,5,6\}, NE, 1) | 4, 5, 6 | 3 > 1: split about (3,3); codes 2, 1, 3 → \{4\}, \{5\}, \{6\} |
+| &nbsp;&nbsp;&nbsp;&nbsp;build(\{4\}, 2), build(\{5\}, 2), build(\{6\}, 2) | one each | three leaves |
+
+Two details need care. First, **which child does a particle belong to?** Compare each coordinate with the cell centre: the child number is the bit pattern of the comparisons <M t="x_k>c_k" /> (with <M t="x_k" /> the particle and <M t="c_k" /> the centre; Figure 4), and the child cell's centre is the parent's centre shifted by <M t="\pm\tfrac12" /> of the parent's half size in each coordinate. The same code then works in any dimension.
+
+```python title="s2_child_index.py"
+import numpy as np
+
+center, half = np.array([0.5, 0.5]), 0.5     # a 2D cell
+p = np.array([0.8, 0.3])                     # a point inside it
+bits = p > center                            # [ True False]: right, below
+child = int(bits @ (1 << np.arange(2)))      # 1*True + 2*False = 1
+signs = np.where(bits, 1.0, -1.0)            # [ 1. -1.]
+child_center = center + 0.5 * half * signs   # centre of that child cell
+print(child, child_center)                   # 1 [0.75 0.25]
+```
+
+<Figure
+	svg="L04/childindex"
+	n={4}
+	id="fig-l04-childindex"
+	widthPct={0.711}
+	alt="A square cell divided into four quadrants numbered 0 (lower left), 1 (lower right), 2 (upper left) and 3 (upper right) with their bit patterns, and a red point in the lower right quadrant. Text on the right gives the rule for the child number and the child centre."
+	caption="Which child a point belongs to. Comparing each coordinate with the cell centre gives one bit per axis (bit 0 is x, bit 1 is y); the bits form the child number. The point of the listing lies right of and below the centre, so b_x=1, b_y=0: child 1 (lower right), with centre c + (h/2)(+1,-1). The names SW, SE, NW, NE of Figure 2 are children 0, 1, 2, 3."
+/>
+
+Second, **the root cell.** It must be a *cube* (equal sides) that contains every particle: take the centre of the bounding box and half of its largest side, with a whisker of padding so that particles on the boundary do not fall outside.
+
+<Callout kind="pitfall">
+If two particles sit at exactly the same position, no amount of subdivision separates them and the recursion never ends. Real data can do this (for example, initial conditions with duplicated points). The `max_depth` limit prevents it: at that depth a leaf may hold several particles, and their mutual forces are computed directly.
+</Callout>
+
+The original algorithm inserts particles one at a time into a growing tree and splits a leaf when it receives a second particle. The result is the same tree; the top-down version above is shorter in Python and easier to get right.
+
+## Mass and centre of mass in every cell
+
+Each cell stores the total mass <M t="M_c=\sum_{j\in c}m_j" /> and the centre of mass
+
+<M d tag="1" id="eq-l04-com" t="\vect R_c=\frac{1}{M_c}\sum_{j\in c}m_j\vect r_j ." />
+
+A cell's centre of mass can be computed from its particles directly, or from its children (<M t="M_c=\sum M_{\rm child}" />, <M t="\vect R_c=\sum M_{\rm child}\vect R_{\rm child}/M_c" />). Either way it costs <M t="\Oh{N}" /> per level of the tree.
+
+```python title="s3_com_toy.py"
+import numpy as np
+
+m = np.array([1.0, 3.0])                     # two masses ...
+x = np.array([[0.0, 0.0], [4.0, 0.0]])       # ... at these positions
+M = m.sum()
+com = (m[:, None] * x).sum(axis=0) / M       # mass-weighted mean position
+print(M, com)                                # 4.0 [3. 0.]
+```
+
+Replacing a group by a point mass is called the **monopole approximation**: the first term of a *multipole expansion* of the group's gravitational field. Why put the point mass at the centre of mass and not, say, at the geometric centre of the cell? Because about the centre of mass the next term, the **dipole moment** <M t="\sum_jm_j(\vect r_j-\vect R_c)" />, is exactly zero (one line of algebra from Eq. (1); do it). The first neglected term is then the **quadrupole**, whose size relative to the monopole is of order <M t="(s/d)^2" />, with <M t="s" /> the size of the group and <M t="d" /> the distance to it. Using the geometric centre would leave a dipole term of relative order <M t="s/d" />, much larger. (Lecture 5 derives all this and adds the quadrupole to the force.)
+
+## Computing the force: walking the tree
+
+To find the acceleration on particle <M t="i" />, start at the root and decide, cell by cell, whether the cell is far enough to be treated as a point.
+
+**The opening criterion.** Let <M t="s" /> be the side length of a cell and <M t="d" /> the distance from particle <M t="i" /> to the cell's centre of mass. The angle the cell subtends as seen from <M t="i" /> is about <M t="s/d" />. The cell is used as a single point mass if
+
+<M d tag="2" id="eq-l04-opening" t="\frac{s}{d}<\theta ." />
+
+The **opening angle** <M t="\theta" /> is a dimensionless accuracy parameter, typically <M t="0.5" />&ndash;<M t="1" />. Otherwise the cell is *opened*: we go on to its children. A leaf is never opened; its particles interact directly with <M t="i" /> (skipping <M t="i" /> itself, by index). A cell **contains** <M t="i" /> if the position of <M t="i" /> lies inside the cell region, <M t="|\vect r_i-\vect c|\le h" /> in every coordinate (centre <M t="\vect c" />, half size <M t="h" />); a cell containing <M t="i" /> is never accepted (see the pitfall below). Keep the acceptance test in a small function of its own, `accept(node, dd, theta)`, where `dd` is the *squared* distance <M t="d^2" /> from the particle to the cell's centre of mass: Lecture 5 replaces it by other criteria.
+
+```python title="s4_opening.py"
+import numpy as np
+
+half, com = 0.25, np.array([1.0, 1.0])       # cell of side 0.5, its COM
+p, theta = np.array([0.0, 0.0]), 0.5         # particle, opening angle
+s = 2 * half                                 # side length of the cell
+d = np.linalg.norm(com - p)                  # distance to the COM
+print(round(s / d, 3), s / d < theta)        # 0.354 True: use the monopole
+```
+
+<Figure
+	svg="L04/opening"
+	n={5}
+	id="fig-l04-opening"
+	widthPct={0.777}
+	alt="Two rows. Top, far: a star at the left, a small cell far to the right with a square at its centre of mass, distance d, side s, and the note that s over d is less than theta so the monopole is used. Bottom, near: the same star and a larger, closer cell, with the note that s over d is at least theta so the cell is opened."
+	caption="The opening criterion. A small cell far away subtends a small angle s/d and is replaced by its centre of mass. A big cell close by subtends a large angle and is opened: its children are examined instead."
+/>
+
+<Figure
+	svg="L04/walk_cells"
+	n={6}
+	id="fig-l04-walk"
+	widthPct={0.95}
+	alt="Two square panels of the same 220 points, with a star marking one particle. Blue shaded cells with blue squares are accepted as single points; red dots are particles used individually. The left panel, with theta 1.0, uses few large cells; the right, with theta 0.5, uses more and smaller cells and more single particles."
+	caption="One tree walk in 2D, for the particle marked by the star (same 220 points as before). Blue shaded cells are accepted as single points (blue squares: their centres of mass); red dots are particles used individually. Left: θ=1.0, 24 interactions. Right: θ=0.5, 60 interactions. Direct summation would use 219. Cells shrink as they approach the particle."
+/>
+
+The walk, in pseudocode (a stack is a to-do list; popping from the end of a Python list gives the last item pushed):
+
+```text
+for each particle i:  a_i <- 0;  stack <- [root]
+    while the stack is not empty: pop a node
+        if leaf: add the direct force of each particle in it except i
+        else if it does not contain i and accept(node):
+            add the force of the node's point mass
+        else: push all its children
+```
+
+**A worked walk.** Take the six particles of Figure 2 and follow particle 1 with <M t="\theta=0.7" />. Popping from the end of a Python list gives a depth-first walk (the order does not change the sum). The NE cell has <M t="s=2" />, mass <M t="3" /> and centre of mass <M t="(3.2,\,3.17)" />, so <M t="d=\sqrt{2.5^2+2.57^2}=3.58" /> and <M t="s/d=0.56<0.7" />.
+
+| step | popped node | test | decision | stack afterwards | interactions |
+|---:|:---|:---|:---|:---|---:|
+| 1 | root (contains 1) | contains i | open | SW, SE, NW, NE | 0 |
+| 2 | NE (s = 2, d = 3.58) | 0.56 < 0.7 | accept: one point mass | SW, SE, NW | 1 |
+| 3 | NW (leaf, particle 3) | leaf | direct force | SW, SE | 2 |
+| 4 | SE (leaf, particle 2) | leaf | direct force | SW | 3 |
+| 5 | SW (leaf, particle 1) | it is i itself | skip | (empty) | 3 |
+
+Three interactions replace the five of direct summation. With <M t="\theta=0.5" /> the NE cell fails the test (<M t="0.56\ge0.5" />) and is opened: particles 4, 5, 6 are then used individually, five interactions in all.
+
+Every interaction, whether with a particle or a cell, has the softened form of Lecture 1,
+
+<M d tag="3" id="eq-l04-force" t="\vect a\mathrel{+}=G\,M\,\frac{\vect R-\vect r_i}{\big(|\vect R-\vect r_i|^2+\epsilon^2\big)^{3/2}} ," />
+
+with <M t="M,\vect R" /> the particle's or cell's mass and position. The softening must be used for cells too; with a large <M t="\epsilon" /> leaving it out makes visible errors.
+
+<Callout kind="pitfall">
+Two easy mistakes. (i) With <M t="\theta=0" /> the criterion never accepts a cell, so the walk must reproduce direct summation *exactly*: this is your best test. (ii) A cell that *contains* particle <M t="i" /> must always be opened: otherwise particle <M t="i" /> is part of the group that attracts it (a small self-force). A point inside a cube of side <M t="s" /> is at most <M t="\sqrt3\,s" /> from any other point of the cube, so a containing cell can pass Eq. (2) only if <M t="\theta>1/\sqrt3\approx0.58" /> (in 2D, <M t="\theta>0.71" />); below that the rule is harmless but still correct. For <M t="\theta\lesssim1" /> the effect is tiny; it becomes visible for <M t="\theta\gtrsim1.5" />. Also count interactions as you go (Homework 4.5): the count, not the wall-clock time, is what measures the algorithm.
+</Callout>
+
+## Cost: why <M t="N\log N" /> (eventually)
+
+Each level of the tree halves the cell size. Looking from particle <M t="i" />, only a bounded number of cells at each level are close enough to be opened or used (of order <M t="1/\theta^3" /> in 3D); cells at a given level that are farther away are already covered by their parents one level up. Figure 7 shows this for a sample: every level contributes at most a couple of hundred interactions, and only the levels between the root and the size of the interparticle spacing contribute at all. The number of such levels grows like <M t="\log_8N" /> in 3D (<M t="\log_4N" /> in 2D) for a well-behaved distribution. So the work per particle grows like <M t="\log N" />, and the total like <M t="N\log N" />, compared with <M t="N^2" /> for direct summation. Building the tree also costs <M t="\Oh{N\log N}" />.
+
+<Figure
+	svg="L04/per_level"
+	n={7}
+	id="fig-l04-perlevel"
+	widthPct={0.62}
+	alt="A stacked bar chart of interactions per particle against tree level, from the root at level 0 to level 13. Bars are small at the top levels, peak at levels 8 and 9 at about 190, and are nearly zero by level 13. Blue segments are cells used as points and red segments are single particles in leaves."
+	caption="Where the interactions come from: average interactions per particle at each tree level, for a Plummer sphere with N=4000, θ=0.5 (400 sample particles). Blue: cells used as point masses; red: single particles in leaves. The total (≈745) is spread over about eight levels, each contributing a bounded number. Doubling N adds roughly 200 interactions per particle (about one more level's worth); a full extra level needs 8 times more particles, and at these small N the existing levels are still filling up."
+/>
+
+<Figure
+	svg="L04/interactions_vs_N"
+	n={8}
+	id="fig-l04-inter"
+	widthPct={0.62}
+	alt="Log-log plot of interactions per particle against N from 125 to 2000 for a tree with theta 0.3, 0.5 and 1.0, and for direct summation, which is the dashed straight line N minus 1. The tree curves rise more slowly than the direct line."
+	caption="Interactions per particle against N for a Plummer sphere (a=1), tree with θ=0.3, 0.5, 1.0 (coloured) and direct summation (N−1, dashed). The tree curves rise much more slowly, but at these N they have not yet reached the pure logarithmic regime."
+/>
+
+The measured numbers (Plummer sphere, <M t="\theta=0.5" />, mean of six random samples; single samples differ by a few percent) are:
+
+| <M t="N" /> | tree: interactions per particle | direct: <M t="N-1" /> |
+|---:|---:|---:|
+| 125 | 84 | 124 |
+| 250 | 142 | 249 |
+| 500 | 236 | 499 |
+| 1000 | 362 | 999 |
+| 2000 | 531 | 1999 |
+| 4000 | 743 | 3999 |
+
+At <M t="N=4000" /> the tree does <M t="5\times" /> fewer interactions. The saving grows with <M t="N" />, but slowly at first: for small <M t="N" /> the constant in front of the logarithm is large (<M t="\sim1/\theta^3" />). Counting interactions, trees clearly pay off for <M t="N\gtrsim10^4" /> and become indispensable at <M t="10^6" /> and beyond; the reality-check section below shows what happens to the running time.
+
+## Accuracy: choosing <M t="\theta" />
+
+The error of a cell interaction comes from replacing the cell by a point mass. Because the centre of mass is used, the leading correction is the quadrupole term, which relative to the point-mass force is of order <M t="(s/d)^2" />; so we expect the force error to fall roughly like <M t="\theta^2" />. The total error on a particle is a sum over many cells with partly random signs (the quadrupole tensor is traceless), so the errors partly cancel and the total falls somewhat faster than the error of a single cell. Figure 9 shows the measurement.
+
+<Figure
+	svg="L04/error_vs_theta"
+	n={9}
+	id="fig-l04-error"
+	widthPct={0.95}
+	alt="Left: log-log plot of relative force error against opening angle theta, with curves for the median, 90th and 99th percentile rising from about 2e-4 to 2e-2, 5e-2 and 1e-1, and reference slopes theta squared and theta cubed. Right: a histogram of the log10 relative error at theta 0.5, peaked near minus 2.5 with a long tail to larger errors."
+	caption="Relative force error |a_tree − a_direct| / |a_direct| for one Plummer sphere with N=1000, ε=0.05. Left: median, 90th and 99th percentile against θ (dotted and dashed: slopes 2 and 3). Right: histogram of the errors at θ=0.5; the distribution has a long tail towards large errors."
+/>
+
+Mean of six random samples (<M t="N=1000" />; the median error varies by about <M t="\pm15\%" /> and the 99th percentile by <M t="\pm35\%" /> from sample to sample):
+
+| <M t="\theta" /> | median error | 99th percentile | interactions per particle |
+|---:|---:|---:|---:|
+| 0.2 | <M t="2.4\times10^{-4}" /> | <M t="7.5\times10^{-4}" /> | 741 |
+| 0.3 | <M t="8.1\times10^{-4}" /> | <M t="3.0\times10^{-3}" /> | 583 |
+| 0.5 | <M t="3.2\times10^{-3}" /> | <M t="1.7\times10^{-2}" /> | 362 |
+| 0.7 | <M t="7.6\times10^{-3}" /> | <M t="4.4\times10^{-2}" /> | 239 |
+| 1.0 | <M t="2.0\times10^{-2}" /> | <M t="1.3\times10^{-1}" /> | 147 |
+
+Three observations. (i) The median error falls between <M t="\theta^2" /> and <M t="\theta^3" /> (the local slope is about <M t="3" /> at small <M t="\theta" /> and <M t="2.6" /> at large <M t="\theta" />). (ii) The tail is much worse than the median: a few particles, typically where the total force is small because opposite pulls nearly cancel (near the cluster centre), have large relative errors. (iii) Typical choices are <M t="\theta\approx0.5" />&ndash;<M t="0.7" />: force errors around <M t="0.3" />&ndash;<M t="1\%" />, which is far below the noise from the finite number of particles in the simulation itself (Lecture 3). Going from <M t="\theta=0.5" /> to <M t="0.3" /> costs about <M t="1.6\times" /> more interactions for a <M t="\sim4\times" /> smaller median error.
+
+Tree forces are not exactly antisymmetric: the force of <M t="j" /> on <M t="i" /> need not equal minus the force of <M t="i" /> on <M t="j" /> because the two use different cell groupings. Total momentum is therefore conserved only approximately. This is a further reason to keep <M t="\theta" /> moderate.
+
+## Reality check: interactions are not seconds
+
+Now compare running times (Figure 10). Our tree is written in pure Python.
+
+<Figure
+	svg="L04/timing_tree"
+	n={10}
+	id="fig-l04-timing"
+	widthPct={0.62}
+	alt="Log-log plot of seconds per force evaluation against N from 125 to 2000. The tree, in pure Python, and the loop-based direct sum lie close together and high; the NumPy direct sum lies about two orders of magnitude lower. The tree has the shallowest slope."
+	caption="Time for one force evaluation: tree (pure Python, θ=0.5), direct summation with NumPy (Lecture 3) and with Python loops (Lecture 1). The tree scales better, but its curve starts far higher."
+/>
+
+On our machine, at <M t="N=1000" /> the tree walk takes typically <M t="1.5" />&ndash;<M t="2.5" /> s (it varies with machine load), whereas NumPy direct summation takes about <M t="0.04" /> s: the tree is <M t="40" />&ndash;<M t="60\times" /> *slower*. Each tree interaction costs a few microseconds of interpreter work, the NumPy direct interaction a few tens of nanoseconds (the whole array is processed in compiled code), a factor of order <M t="100" />. The tree only wins when the saving in interactions exceeds this factor; extrapolating the interaction counts and per-interaction costs puts the crossover at <M t="N\sim10^5" />&ndash;<M t="10^6" /> for this implementation.
+
+<Callout kind="idea">
+If your tree is slower than your Lecture 3 NumPy sum at <M t="N=1000" />, that is expected, not a bug. Judge the algorithm by *interactions per particle*, not by seconds. Against the Lecture 1 loops the tree is already competitive at <M t="N\sim500" /> (Figure 10) and its curve is flatter. The overhead is a property of pure Python, not of the algorithm: compiled codes (C, Fortran) have a tree-to-direct per-interaction cost ratio of only a few, and they walk the tree for groups of neighbouring particles at once (Barnes 1990) to amortise the overhead. Homework optional (c) tries that idea.
+</Callout>
+
+## Using the tree in a simulation
+
+The tree force has the same interface as your Lecture 3 force, `force(pos, mass, G, eps)`, so it plugs into the same leapfrog stepper (`evolve_kdk`). The tree is rebuilt at every step: the particles have moved, and a build costs far less than a force calculation (about <M t="12" /> ms against <M t="1.5" /> s at <M t="N=1000" />). For a Plummer sphere of <M t="100" /> particles over two dynamical times (<M t="a=G=M=1" />), the largest position difference between the tree force and direct summation is only <M t="\sim3" />&ndash;<M t="4\times10^{-3}" /> (the cluster size is of order <M t="1" />), and the energy error is <M t="3\times10^{-5}" />&ndash;<M t="5\times10^{-4}" /> (occasionally up to <M t="10^{-3}" />), often several times larger than with direct summation, though the ratio depends strongly on the random sample (from comparable to about ten times). The tree force is not the gradient of a single potential, and its small asymmetries make the energy error larger and less predictable.
+
+## Homework 4
+
+<Callout kind="homework" title="Homework 4: Barnes–Hut tree">
+Create `myOwnCode/L04/tree.py` by copying `hw4_tree_skeleton.py` from the hints zip; copy `hw4_run_experiments.py` next to it (it holds the cell-plotting and error helpers; you write the experiments in its `main` block). The checker compares your tree forces with your Lecture 3 direct sum and uses your `plummer_sphere` and `evolve_kdk`, so finish Homework 3 first. The `Node` class is given: its attribute names are fixed. Write one code path that works in 2D and 3D. **Rule:** no shortcuts that skip the tree (for example, do not call your direct sum inside `tree_acceleration`).
+
+**4.1 Build.** `build_tree(pos, mass, leaf_size=1, max_depth=40)` <M t="\to" /> root `Node`. Cubic root cell, recursive splitting into <M t="2^{\rm dim}" /> children; each leaf holds at most `leaf_size` particles unless `max_depth` is reached; coincident particles must not cause infinite recursion. Plot the cells of a 2D tree for <M t="200" /> uniform points and for two Gaussian clumps (Figure 3 shows the kind of picture to expect).
+
+**4.2 Mass and centre of mass.** Every node has `mass` and `com`, Eq. (1). Check by hand first: three unit masses at <M t="(0,0),(1,0),(0,1)" /> have total mass <M t="3" /> and centre of mass <M t="(1/3,1/3)" />; build their tree and print every node's mass and centre of mass.
+
+**4.3 Force.** `tree_acceleration(pos, mass, G, eps, theta, root, stats)` <M t="\to(N,{\rm dim})" />: the walk above with criterion (2) (<M t="s" /> is the cell's *side* length, <M t="d" /> the distance to its centre of mass). Write the test as a separate function `accept(node, dd, theta)` (<M t="dd=d^2" />, the squared distance from the particle to the cell's centre of mass). The walk must reproduce your direct sum at <M t="\theta=0" /> (to <M t="10^{-10}" />), use softening for cells and for particles, never accept a cell that contains the particle, accept a prebuilt `root`, and, if `stats` is a dict, add every interaction to `stats["interactions"]` (these counts feed 4.4 and 4.5).
+
+**4.4 Accuracy.** Plummer sphere, <M t="N=1000" />, <M t="\epsilon=0.05" />: for <M t="\theta=0.2,0.3,0.5,0.7,1.0" /> compute the median and the <M t="99" />th percentile of the relative force error against your direct sum, and the interactions per particle. Compare with the table in the accuracy section (your numbers should be within a factor <M t="\sim2" />) and plot error against <M t="\theta" /> on log&ndash;log axes (Figure 9).
+
+**4.5 Cost.** Interactions per particle at <M t="\theta=0.5" /> for <M t="N=125,250,500,1000,2000" /> (reference: <M t="84,142,236,362,531" />, within about <M t="\pm5\%" /> for another random sample); time build and walk against <M t="N" /> (expect walk <M t="\approx1.5" /> s at <M t="N=1000" /> in plain Python, machine-dependent). Plot interactions per particle against <M t="N" /> with the direct-sum line <M t="N-1" /> (Figure 8).
+
+**4.6 Dynamics.** Evolve a Plummer sphere (<M t="N=250" />, <M t="\epsilon=0.05" />, <M t="\Delta t=0.02" />, <M t="200" /> steps) with `evolve_kdk` using the tree force. Compare energy conservation and the Lagrangian radii with direct summation. (Runs in about a minute. Reference for the checker's smaller test, <M t="N=100" />, <M t="100" /> steps: position difference <M t="\sim3\times10^{-3}" />, energy error <M t="10^{-4}" />&ndash;<M t="5\times10^{-4}" />.)
+
+*Optional:* (a) compare `leaf_size` = 1 and 8 in interactions and time; (b) measure the effect of allowing a cell to contain the particle, at <M t="\theta=1.5" /> and <M t="2" /> (at <M t="\theta=1" /> it is almost invisible); (c) *stretch, about 2 hours:* rewrite the walk to process all particles of a leaf together (Barnes' grouped walk).
+
+Plan for about 6&ndash;9 hours in total (4.6 is the item to drop if you are short of time). **Check yourself:** unzip the hints, `cd` into `gravity-from-scratch/`, then run `python course/codeHints/L04/check_hw4.py` (it uses `myOwnCode/L03` and `myOwnCode/L04`; about 7 seconds). The checker does not judge your plots. Only after your own attempt passes, open the reference solution and compare. Later lectures reuse your `tree.py`, so finish it before Lecture 5.
+</Callout>
+
+## Summary
+
+- A tree of cubic cells (quadtree, octree) groups particles hierarchically; each cell stores its total mass and centre of mass.
+- The force on a particle is a walk over the tree: a cell with <M t="s/d<\theta" /> acts as one point mass, otherwise it is opened; leaves are summed directly.
+- At <M t="\theta=0" /> the method equals direct summation. The error falls roughly as <M t="\theta^2" />&ndash;<M t="\theta^3" />; <M t="\theta\approx0.5" />&ndash;<M t="0.7" /> gives sub-percent forces.
+- Interactions per particle grow like <M t="\log N" /> (asymptotically), but a pure-Python tree is slower than vectorised direct summation until <M t="N" /> is very large: constant factors matter.
+- Tree forces are approximate and not exactly antisymmetric; momentum is conserved only approximately.
+
+## Further reading
+
+- J. Barnes & P. Hut, Nature 324, 446 (1986).
+- A. W. Appel, SIAM J. Sci. Stat. Comput. 6, 85 (1985).
+- J. Barnes, J. Comput. Phys. 87, 161 (1990): the modified (grouped) tree walk.
+- L. Hernquist, Astrophys. J. Suppl. 64, 715 (1987): performance characteristics of tree codes.
+- V. Springel, MNRAS 364, 1105 (2005): the tree walk and opening criteria in GADGET-2.
+
+## Downloads
+
+<div class="nb-downloads">
+<a href="/downloads/nbody/L04-hints.zip">&#8681; Hints &amp; checker (L04-hints.zip)</a>
+<a href="/downloads/nbody/L04-solution.zip">&#8681; Reference solution (L04-solution.zip)</a>
+</div>
+
+Only open the solution after your own `tree.py` passes every check &mdash; that's the point of the exercise.
