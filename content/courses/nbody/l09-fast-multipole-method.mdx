@@ -1,0 +1,371 @@
+---
+title: "The fast multipole method"
+description: "Cell–cell interactions with multipole and local expansions."
+lecture: 9
+goal: "Add local expansions and cell–cell interactions to a tree code to get O(N) cost. Derive the five expansion operators (P2M, M2M, M2L, L2L, L2P) in 2D with complex numbers, build the quadtree interaction lists, and measure error against p and cost against N, then compare with Barnes–Hut."
+publishDate: "2026-09-30"
+tags: ["n-body", "gravity", "fmm", "multipole", "tree"]
+draft: false
+downloads:
+  hints: "/downloads/nbody/L09-hints.zip"
+  solutions: "/downloads/nbody/L09-solution.zip"
+---
+
+import M from "@/components/course/M.astro";
+import Callout from "@/components/course/Callout.astro";
+import Figure from "@/components/course/Figure.astro";
+
+<Callout kind="goals">
+- Explain what the fast multipole method (FMM) adds to a tree code: local expansions and cell&ndash;cell interactions, which reduce the cost from <M t="O(N\log N)" /> to <M t="O(N)" />.
+- Derive and implement the five expansion operators (P2M, M2M, M2L, L2L, L2P) in 2D with complex numbers, and check each against a direct sum.
+- Build the interaction lists of a quadtree and see why they cover every pair of particles exactly once.
+- Assemble the FMM on a uniform quadtree, measure its error against the number of terms <M t="p" />, and its cost against <M t="N" /> and against the tree depth.
+- Compare FMM with Barnes&ndash;Hut, and know how the method is adapted for astrophysical gravity in 3D.
+</Callout>
+
+## Beyond the tree: interactions between cells
+
+A Barnes&ndash;Hut tree (Lectures 4&ndash;5) lets each particle interact with a few hundred cells instead of <M t="N" /> particles: the cost is <M t="O(N\log N)" />. Yet a particle still walks the tree on its own, and two neighbouring particles repeat almost the same walk. The fast multipole method removes this redundancy. It makes two changes:
+
+1. **Local expansions.** Instead of evaluating a cell's multipole expansion at each target particle, evaluate it *once* at the centre of a target *cell*, as a Taylor series in the distance from that centre (a *local expansion*); the particles of the target cell then only evaluate this Taylor series.
+2. **Hierarchical translation.** Expansions are moved from a cell to its parent (multipole-to-multipole) and from a parent to its children (local-to-local) exactly, using algebraic formulas; then a cell needs the far field only from cells of a similar size.
+
+The result is **cell&ndash;cell** interactions, with a fixed number of them per cell: the total work is proportional to the number of cells, hence to <M t="N" />.
+
+**Who supplies which part of the far field?** Without a hierarchy, every cell would need the field of every well-separated cell (at leaf level, <M t="\sim N^2/n^2" /> pairs). The hierarchy splits the far field of a leaf by distance: the cells *just beyond its neighbours* (the interaction list of Figure 4, all of similar size to the leaf) come in by M2L at the leaf level; the cells beyond those were already well separated from the leaf's *parent*, so they came in by M2L at the parent's level, and reach the leaf through the L2L shift from the parent; and so on up the ancestors. Each interaction is done once, at the coarsest level where the two cells are well separated, and every cell only ever does a constant number (<M t="\le27" />) of M2L operations.
+
+<Callout kind="history" title="History">
+Appel (1985) and Barnes & Hut (1986) put particles into hierarchical trees; Greengard & Rokhlin (1987) added local expansions and the translation operators, giving a method with <M t="O(N)" /> cost and controllable accuracy. Dongarra & Sullivan (*Computing in Science & Engineering*, 2000) listed it among the ten most influential algorithms of the 20th century. Carrier, Greengard & Rokhlin (1988) made it adaptive to clustered particle sets and Cheng, Greengard & Rokhlin (1999) gave an adaptive 3D version. In astrophysics, Dehnen (2000, 2002) introduced a momentum-conserving tree code and a fast dual-tree FMM (falcON) for softened gravity, and Dehnen (2014) a cache-friendly FMM for stellar dynamics; GADGET-4 (Springel et al. 2021) includes an FMM for its short-range force.
+</Callout>
+
+<Figure
+	svg="L09/passes"
+	n={1}
+	id="fig-l09-passes"
+	widthPct={0.7}
+	alt="Flow diagram. At the bottom a wide grey box, particles: masses and positions. On the left a column of three blue boxes, multipole at the leaves, at level l and at level 2, joined upwards by arrows labelled P2M from the particles to the leaf multipole and M2M between the levels. On the right a column of three orange boxes, local at the leaves, at level l and at level 2, joined downwards by arrows labelled L2L, with an arrow labelled L2P from the leaf local expansion to the particles. Horizontal arrows labelled M2L join each blue box to the orange box at the same level. A dashed loop on the particle box is labelled P2P, the near field."
+	caption="The FMM in one picture. Blue: multipole expansions of the particles in a cell; orange: local expansions of the field from all well-separated cells. Upward pass: particles → leaf multipoles (P2M), and multipoles of children → parent (M2M). M2L: each cell receives the multipoles of its interaction list as a local expansion. Downward pass: parent's local expansion → children (L2L), leaves → particles (L2P). Particles in neighbouring leaves interact directly (P2P)."
+/>
+
+## Two-dimensional gravity with complex numbers
+
+We work in 2D. A particle at <M t="z_j=x_j+iy_j" /> with mass <M t="q_j" /> attracts a point <M t="z" /> with the two-dimensional force law <M t="\propto1/r" /> (the field of an infinite line mass), i.e. with acceleration <M t="G\,q_j\,\hat{\vect r}/r" />. The trick of the method is that the whole force can be written as the conjugate of one *analytic* function,
+
+<M d tag="1" id="eq-l09-f" t="f(z)=\sum_j\frac{q_j}{z-z_j},\qquad a(z)=-G\,\overline{f(z)}," />
+
+(check: <M t="-G\,\overline{q/(z-z_j)}=-Gq\,(z-z_j)/|z-z_j|^2" /> points from <M t="z" /> towards <M t="z_j" /> and has magnitude <M t="Gq/r" />). Because <M t="f" /> is analytic away from the sources, it has convergent power-series expansions, and all operators become polynomial algebra. The lessons carry over to 3D, where one uses real spherical harmonics or Cartesian Taylor tensors instead of powers of <M t="z" /> (see the section on clustered particles and 3D gravity below).
+
+## The expansions
+
+### Multipole expansion (P2M)
+
+Let the sources lie in a disc of radius <M t="r" /> around a centre <M t="z_c" /> and let <M t="|z-z_c|=R>r" />. Write <M t="z-z_j=(z-z_c)-(z_j-z_c)" /> and expand the geometric series:
+
+<M d tag="2" id="eq-l09-geom" t="\frac{1}{z-z_j}=\sum_{k=0}^{p-1}\frac{(z_j-z_c)^k}{(z-z_c)^{k+1}}+\frac{(z_j-z_c)^p}{(z-z_c)^p\,(z-z_j)} ." />
+
+Summing over the sources gives the **multipole expansion** with <M t="p" /> terms and the exact remainder:
+
+<M d tag="3" id="eq-l09-multipole" t="f(z)=\sum_{k=0}^{p-1}\frac{c_k}{(z-z_c)^{k+1}}+\text{remainder},\qquad c_k=\sum_jq_j\,(z_j-z_c)^k,\qquad|\text{remainder}|\le\frac{\sum_j|q_j|}{R-r}\Big(\frac rR\Big)^p ." />
+
+The coefficients <M t="c_k" /> are the *moments* of the cell, computed once from its particles; the bound follows from <M t="|z-z_j|\ge R-r" /> (Figure 3, left, shows it holds for real data). The connection to Lecture 5 is direct: <M t="c_0=\sum q_j" /> is the mass (the monopole); <M t="c_1=\sum q_j(z_j-z_c)" /> vanishes if <M t="z_c" /> is the centre of mass (no dipole about the centre of mass); <M t="c_2=\sum q_j(z_j-z_c)^2" /> is the (traceless) quadrupole about the centre, built from <M t="x^2-y^2" /> and <M t="xy" />. Truncating after <M t="p" /> terms is what limits accuracy: the bound is the geometric-series remainder of the listing below.
+
+```python title="s2_geometric.py"
+import numpy as np
+
+# 1/(1 - x) = sum_k x^k: truncating after p terms leaves x^p / (1 - x). This is the origin of every error bound.
+x = 0.5 + 0.2j
+exact = 1 / (1 - x)
+for p in (2, 4, 8, 16):
+    partial = sum(x**k for k in range(p))
+    print(p, abs(exact - partial), abs(x) ** p / abs(1 - x))       # the bound is attained up to a phase
+```
+
+The remainder of a geometric series, <M t="x^p/(1-x)" />, is the origin of every error bound.
+
+### Moving a multipole expansion (M2M)
+
+To use the moments of the four children in the parent, shift the centre. With <M t="z_j-z_{\rm new}=(z_j-z_{\rm old})+(z_{\rm old}-z_{\rm new})=(z_j-z_{\rm old})+d" />, the binomial theorem gives
+
+<M d tag="4" id="eq-l09-m2m" t="c_k^{\rm new}=\sum_{m=0}^{k}\binom km\,c_m^{\rm old}\,d^{\,k-m},\qquad d=z_{\rm old}-z_{\rm new}." />
+
+This is *exact* (no truncation error beyond the <M t="p" /> terms already dropped): the shifted coefficients equal those you would obtain by a P2M from scratch about the new centre. For <M t="k=2" /> it reads <M t="c_2'=c_2+2c_1d+c_0d^2" />; about the centre of mass (<M t="c_1=0" />) it reduces to <M t="c_2'=c_2+c_0d^2" />, the analogue of the parallel-axis theorem <M t="I=I_{\rm cm}+Md^2" /> of Lecture 5.
+
+### Local expansion and M2L
+
+Let a target cell have centre <M t="z_t" />, and let a multipole expansion about <M t="z_c" /> be given, with <M t="d=z_t-z_c" />. The series below converges for <M t="|w|<|d|" /> and the multipole series for all points farther than <M t="r" /> from <M t="z_c" />; so the M2L expansion is valid for target points <M t="z" /> with <M t="|z-z_t|<|d|-r" />, that is when the source and target discs do not overlap. Put <M t="w=z-z_t" />, so <M t="z-z_c=w+d" />, and expand each term in powers of <M t="w" /> (the binomial series of <M t="(1+w/d)^{-(k+1)}" />, obtained by differentiating the geometric series <M t="k" /> times; for <M t="k=0" /> it is <M t="1/(w+d)=\sum_l(-w)^l/d^{l+1}" />):
+
+<M d tag="5" id="eq-l09-binom" t="\frac{1}{(w+d)^{k+1}}=\sum_{l=0}^{\infty}(-1)^l\binom{k+l}{l}\frac{w^l}{d^{\,k+l+1}} ." />
+
+Substituting into Eq. (3) gives the **local expansion** <M t="f(z)=\sum_lL_l\,w^l" /> with
+
+<M d tag="6" id="eq-l09-m2l" t="L_l=\sum_{k=0}^{p-1}c_k\,(-1)^l\binom{k+l}{l}\frac{1}{d^{\,k+l+1}},\qquad l=0,\dots,p-1." />
+
+This is a matrix&ndash;vector product <M t="\vect L=T(d)\,\vect c" /> with a <M t="p\times p" /> matrix that depends only on <M t="d" />. The **M2L** operation is the heart of the FMM: it converts *all* the sources in one cell into a field expansion valid everywhere in another cell.
+
+### Local shift (L2L) and evaluation (L2P)
+
+A local expansion is a polynomial in <M t="w=z-z_{\rm old}" />; with the new centre at <M t="z_{\rm new}=z_{\rm old}+s" /> we have <M t="w=w'+s" />, where <M t="w'=z-z_{\rm new}" />, and <M t="(w'+s)^l=\sum_{m\le l}\binom lm w'^m s^{l-m}" />. Collecting the coefficient of <M t="w'^m" /> (so the sum over <M t="l" /> starts at <M t="m" />) gives an expansion that is exact for the truncated polynomial:
+
+<M d tag="7" id="eq-l09-l2l" t="L^{\rm new}_m=\sum_{l=m}^{p-1}\binom lm\,L_l\,s^{\,l-m},\qquad s=z_{\rm new}-z_{\rm old}." />
+
+At a leaf, the field of the far cells at a particle is <M t="f(z)=\sum_lL_l\,(z-z_t)^l" /> (**L2P**). Evaluating a multipole expansion directly, <M t="\sum_kc_k/(z-z_c)^{k+1}" />, is **M2P**, the operation used by a tree code.
+
+```python title="s1_binomial.py"
+from math import comb
+
+# Shifting a centre needs (a + b)^k = sum_j C(k, j) a^j b^(k-j): the binomial theorem for complex numbers.
+a, b, k = 0.3 + 0.2j, -0.5 + 0.1j, 5
+lhs = (a + b) ** k
+rhs = sum(comb(k, j) * a**j * b ** (k - j) for j in range(k + 1))
+print(abs(lhs - rhs))                          # ~1e-17
+```
+
+The binomial theorem underlies both shifts (M2M and L2L).
+
+<Figure
+	svg="L09/shifts"
+	n={2}
+	id="fig-l09-shifts"
+	widthPct={0.95}
+	alt="Three panels, each with square boxes and a red arrow for the shift vector. Left, M2M: a large box with a smaller grey box inside its lower left quarter holding three blue source points; a black dot marks the old centre, a red dot the new centre at the middle of the large box, and a red arrow points from the new centre to the old centre, labelled d equals z old minus z new. Middle, M2L: two separate boxes, the source box on the left with three blue points and its centre z c, the target box up and to the right with its centre z t in red, and a red arrow from z c to z t, labelled d equals z t minus z c. Right, L2L: a large box with its upper right quarter outlined in grey; a black dot marks the old centre at the middle of the large box and a red dot the new centre in the middle of the quarter, with a red arrow from old to new, labelled s equals z new minus z old."
+	caption="The three translation operators and the sign convention of their shift vectors. M2M moves the centre of a multipole expansion from a child to its parent; M2L turns a multipole expansion about z_c into a local expansion about the centre z_t of a well-separated cell; L2L moves a local expansion from a parent to a child. In the M2M panel the arrow drawn is d, pointing from the new centre to the old one. Getting the sign of the vector right is the most common mistake. The rule to remember: the shift is always the new (or target) centre minus the old (or source) centre, except in M2M, where the vector d = z_old − z_new enters through z_j − z_new = (z_j − z_old) + d."
+/>
+
+### A worked example
+
+Take two sources on the real axis: mass <M t="1" /> at <M t="z=1" /> and mass <M t="2" /> at <M t="z=-1" />, expanded about <M t="z_c=0" />. Then <M t="c_k=1\cdot1^k+2\cdot(-1)^k" />, i.e. <M t="c=(3,-1,3,-1,\dots)" />. Check every operator by hand (the exact values are <M t="f(5)=\tfrac14+\tfrac26=0.58333" />, <M t="f(10)=0.29293" />, <M t="f'(10)=-0.028875" />):
+
+| operation | result (<M t="p=4" />) |
+|:---|:---|
+| P2M about <M t="0" /> | <M t="c=(3,\,-1,\,3,\,-1)" /> |
+| M2P at <M t="z=5" />, terms <M t="p=1,2,3,4" /> | <M t="0.6,\ 0.56,\ 0.584,\ 0.5824" /> (exact <M t="0.58333" />) |
+| M2M to the centre <M t="2" /> (<M t="d=-2" />) | <M t="c'=(3,\,-7,\,19,\,-55)" /> = P2M about <M t="2" /> |
+| M2L to the centre <M t="10" /> (<M t="d=10" />) | <M t="L=(0.2929,\,-0.02886,\,0.00287,\,-0.000288)" /> (exact <M t="f(10)=0.29293" />, <M t="f'(10)=-0.028875" />) |
+| L2L to the centre <M t="12" /> (<M t="s=2" />) | <M t="L'=(0.244356,\,-0.020836,\,0.001142,\,-0.000288)" /> |
+| L2P at <M t="z=12" /> | <M t="0.244356" /> (exact <M t="0.244755" />; the difference is the M2L truncation) |
+
+Your checker uses exactly these numbers for the first tests. The three shifts use different sign conventions:
+
+| operation | shift vector | used in |
+|:---|:---|:---|
+| M2M | <M t="d=z_{\rm old}-z_{\rm new}" /> (child &minus; parent) | <M t="c_k^{\rm new}=\sum_m\binom km c_m^{\rm old}d^{k-m}" /> |
+| M2L | <M t="d=z_t-z_c" /> (target &minus; source) | <M t="1/d^{k+l+1}" /> |
+| L2L | <M t="s=z_{\rm new}-z_{\rm old}" /> (child &minus; parent) | <M t="L_l s^{l-m}" /> |
+
+<Figure
+	svg="L09/convergence"
+	n={3}
+	id="fig-l09-conv"
+	widthPct={0.95}
+	alt="Two panels against the number of terms p from 1 to 24, on a log vertical scale. Left: the largest measured error of a multipole expansion of 40 random sources for R over r equal to 2 (red), 3 (orange) and 5 (blue) as dots, each falling in a straight line on the log scale, with the corresponding bound of Eq. (3) as a solid line just above the dots; the dots flatten at a rounding floor near 1e-15 at large p. Right: the worst relative error of M2L between two unit boxes whose centres are 2 (red) and 3 (blue) box widths apart; both fall steadily, the closer boxes more slowly, with a dashed black line for the rate 0.55 to the p lying above them."
+	caption="Convergence with the number of terms p. Left: multipole expansion of 40 random sources in a disc of radius r, evaluated at distance R; points are the largest of 60 measured errors, lines the bound of Eq. (3). Right: M2L between two boxes of unit width whose centres are D=2 or 3 box widths apart, worst relative error over 40 target points; the dashed line is the conservative rate 0.55^p of the text; the observed decay for the closest boxes is ≈0.4 per term. The measured points at large p on the left are the rounding floor (∼10⁻¹⁵)."
+/>
+
+### How many terms?
+
+For two boxes of side <M t="s" /> whose centres are at least <M t="2s" /> apart (one empty box in between), the source radius (half the diagonal) is <M t="r=s/\sqrt2" />, and the target points lie within the same distance of the target centre. The M2L series converges at least as fast as <M t="\big[r/(D-r)\big]^p=[0.71/(2-0.71)]^p\approx0.55^p" /> (Figure 3, right; this is a *bound*, and the observed decay is <M t="\approx0.4" /> per term, because the worst geometry is rare). So <M t="p\approx\ln\varepsilon/\ln0.55=1.7\ln(1/\varepsilon)" /> terms are always enough for relative accuracy <M t="\varepsilon" />: <M t="p=8" /> for <M t="10^{-2}" /> and <M t="p=16" /> for <M t="10^{-4}" />; in practice <M t="p\approx5" />&ndash;<M t="6" /> and <M t="11" />&ndash;<M t="12" /> suffice. The other operators add no error: M2M and L2L are exact for the truncated series, so the only approximation is the truncation of the multipole series in M2L.
+
+## The tree and the interaction lists
+
+Use a **uniform quadtree** of <M t="L" /> levels: level <M t="l" /> has <M t="2^l\times2^l" /> boxes, the box <M t="(i_x,i_y)" /> has centre <M t="((i_x+\tfrac12)/2^l,(i_y+\tfrac12)/2^l)" /> in the unit square, and each box has four children. Two boxes at the same level are **neighbours** if they touch (up to <M t="8" /> neighbours); non-neighbours are **well separated**. The **interaction list** of a box <M t="B" /> at level <M t="l" /> contains the children of the neighbours of <M t="B" />'s *parent* that are not neighbours of <M t="B" /> (Figure 4). In 2D, it has at most <M t="6\times6-3\times3=27" /> boxes (in 3D, <M t="189" />).
+
+<Figure
+	svg="L09/list"
+	n={4}
+	id="fig-l09-list"
+	widthPct={0.7}
+	alt="An 8 by 8 grid of boxes, with the boxes of the parent level marked by heavier lines. A red box B sits in the middle. The eight boxes touching B are orange. A thick outline encloses a 6 by 6 block of boxes, the children of the parent's neighbours, and the boxes of this block that are not orange are blue: these 27 boxes are the interaction list. The remaining boxes outside the outline are light grey. A legend on the right explains the four colours."
+	caption="The interaction list of the box B (red) at level l. The thick lines mark the parent boxes (level l−1); the thick outline is the 6×6 block of children of the parent's 3×3 neighbours. Removing B's own neighbours (orange, 3×3) leaves the 27 boxes of the list (blue). Boxes outside the outline are well separated from B's parent (the parent's neighbours end at the outline), so they were already handled at a coarser level, where they are in the list of an ancestor of B."
+/>
+
+**Why this construction.** The children of the parent's neighbours are at most <M t="3" /> box widths away: close enough that their own parents were *not* well separated from <M t="B" />'s parent (so the interaction was not done at the coarser level), and, once the boxes of the list are separated from <M t="B" /> by at least one box, they satisfy the convergence condition of the previous section. Every pair of leaf boxes is therefore covered *exactly once*: either they are near neighbours (direct sum), or they are in the interaction list of one pair of ancestors. The 1D analogue is in the listing below (the counts <M t="3" />, <M t="27" />, <M t="189" /> are the sizes of the 1D, 2D, 3D lists), and your checker tests the partition property.
+
+```python title="s3_lists_1d.py"
+# Interaction lists in 1D: boxes 0..2^l-1; the parent of box i is i // 2.
+# List(i) = children of the parent's neighbours that are not neighbours of i (and not i itself).
+def interaction_list_1d(i, level):
+    n = 2**level
+    parent = i // 2
+    kids = [c for pn in (parent - 1, parent, parent + 1) for c in (2 * pn, 2 * pn + 1) if 0 <= c < n]
+    return [c for c in kids if abs(c - i) > 1]
+
+print(interaction_list_1d(5, 3), interaction_list_1d(4, 3))   # [2, 3, 7] [2, 6, 7]: 3 boxes in 1D (27 in 2D, 189 in 3D)
+
+# Exercise: show that every leaf is either a neighbour of leaf i or lies in the list of exactly one ancestor of i.
+```
+
+Interaction lists in 1D: at most 3 boxes. The near field plus the lists of all ancestors cover every leaf exactly once; write this test yourself.
+
+## The algorithm
+
+Given <M t="N" /> particles in the unit square, <M t="p" /> terms and <M t="L\ge2" /> levels:
+
+1. **Sort** the particles into leaf boxes (the leaf-sorting listing below).
+2. **Upward pass.** P2M at every non-empty leaf; for <M t="l=L-1,\dots,2" />, M2M from the four children into each box.
+3. **Downward pass.** For <M t="l=2,\dots,L" /> and every box: <M t="\vect L\leftarrow" /> L2L of the parent's local expansion (for <M t="l>2" />) <M t="+\sum_{B'\in\text{list}(B)}" /> M2L<M t="(B'\to B)" />.
+4. **Leaves.** For every particle in a leaf: L2P of the leaf's local expansion, plus the direct sum <M t="\sum_jq_j/(z_i-z_j)" /> over the particles of the leaf and of its (up to <M t="8" />) neighbours, excluding the particle itself.
+
+The order matters: all M2M steps must be finished before the first M2L (a box's multipole expansion needs its children's), and the L2L shift from a parent must be added before the leaf is evaluated. The levels <M t="0" /> and <M t="1" /> have no well-separated pairs, so the passes start at level <M t="2" />. The M2L sources must lie inside the domain (boxes at the edge have shorter lists), empty boxes have zero coefficients and are harmless, and the direct sum must exclude a particle's own term but include its neighbours (the lists do not contain neighbours). The M2L matrices <M t="T(d)" /> of Eq. (6) depend only on the offset <M t="d" /> between the box centres, which takes a few dozen values per level; you can precompute them.
+
+```text title="the passes in pseudocode"
+sort particles into leaf boxes
+for every leaf (ix, iy):                      # upward pass
+    M[L][ix, iy] = P2M(particles of the leaf, centre of the leaf)
+for l = L-1 down to 2:
+    for every box (ix, iy) at level l:
+        M[l][ix, iy] = sum over the 4 children of M2M(child, d = child centre - box centre)
+for l = 2 up to L:                            # downward pass
+    for every box (ix, iy) at level l:
+        Loc[l][ix, iy] = 0
+        if l > 2: Loc[l][ix, iy] += L2L(Loc[l-1][parent], s = box centre - parent centre)
+        for (jx, jy) in interaction_list(ix, iy, l):
+            Loc[l][ix, iy] += M2L(M[l][jx, jy], d = centre(ix, iy) - centre(jx, jy))
+for every leaf (ix, iy) and every particle i in it:
+    f[i] = L2P(Loc[L][ix, iy], z[i] - centre)
+         + sum over particles j in the leaf and its neighbours, j != i, of q[j] / (z[i] - z[j])
+```
+
+The passes of the uniform-tree FMM in pseudocode (nothing here is Python; the operators are those of the section on the expansions).
+
+```python title="s4_leaf_sort.py"
+import numpy as np
+
+rng = np.random.default_rng(0)
+z = rng.random(1000) + 1j * rng.random(1000)   # particles in the unit square
+levels = 3
+n = 2**levels
+ix = np.clip((z.real * n).astype(int), 0, n - 1)
+iy = np.clip((z.imag * n).astype(int), 0, n - 1)
+flat = ix * n + iy
+order = np.argsort(flat, kind="stable")        # particles sorted by leaf box
+start = np.searchsorted(flat[order], np.arange(n * n + 1))
+def members(a, b):
+    return order[start[a * n + b]:start[a * n + b + 1]]     # particles of box (a, b)
+
+print(len(members(3, 4)), np.bincount(flat, minlength=n * n).reshape(n, n)[3, 4])   # same count twice
+```
+
+Sorting the particles into leaf boxes (2D).
+
+**From the field to a simulation.** The FMM returns the complex field <M t="f(z_i)" />; the acceleration of particle <M t="i" /> is <M t="a_i=-G\,\overline{f(z_i)}" />, i.e. <M t="(a_x,a_y)=-G\,(\mathrm{Re}f,-\mathrm{Im}f)" />, which plugs into the leapfrog of Lecture 2 like any other force routine. (Softening would be added in the direct sums of the near field.) The FMM as described does not compute the interaction of pairs symmetrically, so momentum is conserved only to the accuracy of the expansions; the mutual-interaction dual walk (in the section on clustered particles and 3D gravity) conserves it to rounding.
+
+**Choosing <M t="p" /> and <M t="L" />, and debugging.** Take <M t="p=8" />&ndash;<M t="12" /> and <M t="L" /> such that a leaf holds <M t="\sim10" />&ndash;<M t="50" /> particles (<M t="L\approx\log_4(N/25)" />). When your FMM disagrees with the direct sum: (i) test every operator on its own against a direct sum before assembling (that is what Homework 9.1 does); (ii) start with <M t="L=2" />, where there are no M2M and L2L steps, then <M t="L=3" />; (iii) make the far field wrong on purpose (skip the near field) and compare with a direct sum over the far particles only; (iv) check the sign of every shift against Figure 2; (v) check that the near field contains the neighbouring boxes and excludes the particle itself; (vi) check the corner, edge and interior lists (**12**, **18** and **27** boxes).
+
+## Cost and accuracy
+
+**Error against <M t="p" />.** For <M t="N=4000" /> uniformly distributed particles and <M t="L=4" /> (<M t="256" /> leaves), the error of <M t="f" /> relative to <M t="\sum_j|q_j/(z_i-z_j)|" /> (a scale that does not vanish where <M t="f" /> happens to cancel) is: <M t="p=2" />: median <M t="2\times10^{-3}" />, maximum <M t="10^{-2}" />; <M t="p=4" />: <M t="1\times10^{-4}" />, <M t="2\times10^{-3}" />; <M t="p=8" />: <M t="1.2\times10^{-6}" />, <M t="1.6\times10^{-5}" />; <M t="p=12" />: <M t="2\times10^{-8}" />, <M t="4\times10^{-7}" />; <M t="p=20" />: <M t="8\times10^{-12}" />, <M t="4\times10^{-10}" /> (Figure 5). The error falls geometrically with <M t="p" /> (about <M t="0.4" /> per term, inside the <M t="0.55" /> bound), so a few more terms buy many digits, unlike the tree, where accuracy comes from a smaller <M t="\theta" /> at a power-law growth in cost.
+
+<Figure
+	svg="L09/fmm_error"
+	n={5}
+	id="fig-l09-fmmerr"
+	widthPct={0.55}
+	alt="Error of the FMM field on a log vertical scale from 1e-12 to 1 against the number of terms p from 2 to 20. Three curves fall almost in straight lines: the median in blue from about 2e-3 at p equal to 2 down to about 8e-12, the 90th percentile in orange above it, and the maximum in green from 1e-2 down to about 4e-10; a dashed black line for 0.55 to the p lies above all three at large p."
+	caption="Error of the FMM field against the number of terms p (N=4000 uniform particles, L=4): median, 90th percentile and maximum over the particles, relative to Σ_j |q_j/(z_i−z_j)|. The dashed line is the bound 0.55^p (with an arbitrary prefactor)."
+/>
+
+**Cost.** With <M t="4^L" /> leaves and <M t="n=N/4^L" /> particles per leaf, the near field costs about <M t="9\,n\,N" /> pair interactions (a leaf and its <M t="8" /> neighbours), and the far field costs <M t="27\cdot4^L\,p^2" /> operations for the M2L (each a <M t="p\times p" /> product) plus <M t="O(Np)" /> for P2M and L2P. (The M2L count <M t="27\cdot4^L" /> is an upper bound: boxes at the domain edge have fewer list entries, at most <M t="18" /> along an edge (<M t="15" /> for the other parity of the box index) and <M t="12" /> at a corner, and the coarser levels add another third.) Increasing <M t="L" /> moves work from the near to the far field (Figure 6); the total is smallest when the two are comparable, which for <M t="p\approx8" /> is a broad minimum at roughly <M t="10" />&ndash;<M t="50" /> particles per leaf (see the operation-count listing below); the run time of a Python implementation is flat over a range of <M t="L" /> around it. Keep <M t="n" /> constant as <M t="N" /> grows, i.e. <M t="L\approx\log_4(N/n)" />: the total is then **proportional to <M t="N" />**.
+
+```python title="s5_opcount.py"
+import numpy as np
+
+N, p = 100_000, 8
+for L in range(3, 9):
+    boxes = 4**L
+    per_box = N / boxes
+    near = 9 * per_box * N                     # each particle meets ~9 boxes of ~per_box particles
+    far = 27 * boxes * p**2 + 2 * N * p        # M2L (27 per box, p^2 each) + P2M and L2P
+    print(L, f"{near:.2e} {far:.2e} {near + far:.2e}")     # the total is smallest at L = 6 (24 particles per leaf)
+```
+
+The near-field and far-field operation counts against the number of levels (<M t="N=10^5" />, <M t="p=8" />).
+
+<Figure
+	svg="L09/cost_levels"
+	n={6}
+	id="fig-l09-costlevels"
+	widthPct={0.95}
+	alt="Two panels against the number of levels from 2 to 7. Left, log vertical scale: near-field pair interactions in red falling steeply from about 2.5e7 to about 4e4; far-field operations in blue rising from about 1.4e5 to about 3.7e7; and the total in black, which is lowest, about 2.6e6, at levels 4 and 5. Right, linear vertical scale: the run time of the reference implementation, small (about 0.04 to 0.16 s) up to level 5 and rising to about 1.5 s at level 7, with its lowest value at level 4."
+	caption="Cost against the number of levels for N=8000, p=8. Left: near-field pair interactions (falling as 4^−L) and far-field operations (rising as 4^L); the operation count is smallest at L=4–5 (31 and 8 particles per leaf) and the run time at L=4. Right: run time of the reference implementation."
+/>
+
+<Figure
+	svg="L09/scaling"
+	n={7}
+	id="fig-l09-scaling"
+	widthPct={0.95}
+	alt="Two log-log panels against N from 500 to 64000. Left: operation counts. Direct summation in red rises as N squared, from 2.5e5 to 4e9; Barnes-Hut at theta 0.5 in orange and the FMM with p equal to 8 in blue both rise nearly in proportion to N, the FMM curve lying slightly above the Barnes-Hut one, reaching about 1.9e7 at N equal to 64000. Right: run times. The direct sum in red rises steeply to about 9 s at N equal to 32000; Barnes-Hut in orange is the slowest at small N, about 14 s at N equal to 16000; the FMM in blue is the flattest, under 1 s even at N equal to 64000, and crosses below the direct sum near N equal to 1000."
+	caption="Scaling with N (uniform particles, p=8, L≈log₄(N/25) rounded). Left: operation counts (direct: N(N−1) pair interactions; Barnes–Hut: particle and cell interactions at θ=0.5; FMM: near-field pairs + p² × M2L + 2Np); the FMM count grows as N^1.07. Right: run times of the reference implementations: direct sum with NumPy, Barnes–Hut with a pure-Python walk, FMM with Python loops over boxes and NumPy on particles, so the time comparison is not like for like. The FMM overtakes the direct sum near N=1000 and reaches N=6.4×10⁴ in under a second. The BH operation count is below the FMM count at every N, but at θ=0.5 its median error is a few hundred times larger than that of the FMM at p=8 (Figure 8)."
+/>
+
+**FMM against Barnes&ndash;Hut.** Figure 8 compares accuracy per operation on the same <M t="4000" /> particles. The Barnes&ndash;Hut error decreases slowly with the number of interactions (a power law in <M t="\theta" />); the FMM error falls by orders of magnitude for a modest increase in <M t="p" />. For a median error of about <M t="10^{-3}" /> the tree is at least as cheap (BH at <M t="\theta=0.9" />: <M t="2\times10^{-3}" /> for <M t="48" /> operations per particle; FMM at <M t="p=2" />: <M t="2\times10^{-3}" /> for <M t="140" />); the FMM wins clearly below <M t="\approx3\times10^{-4}" /> (median), where the tree would need many hundreds of interactions per particle (BH <M t="\theta=0.3" />: <M t="1.4\times10^{-4}" /> for <M t="271" />; FMM <M t="p=8" />: <M t="1.2\times10^{-6}" /> for <M t="256" />). For gravity in simulations an accuracy of about <M t="10^{-3}" /> in the force is normally sufficient, so the practical advantage is smaller than the asymptotic one, and other factors decide: the FMM computes forces on all particles at once (it does not need per-particle tree walks), conserves momentum if implemented with symmetric interactions (see the section on clustered particles and 3D gravity below), and its cost is independent of the clustering only when the tree is adaptive.
+
+<Figure
+	svg="L09/accuracy_cost"
+	n={8}
+	id="fig-l09-acc"
+	widthPct={0.5}
+	alt="Relative error against operations per particle on log-log axes, from about 20 to 800 operations. Barnes-Hut in orange: a solid median curve falling slowly from about 8e-3 to 4e-5 and a dotted maximum curve above it. The FMM in blue: a solid median curve that starts at about 2e-3 near 140 operations and falls steeply to about 5e-11 near 720, and a dotted maximum curve above it. The blue curves cross below the orange ones at about 150 to 170 operations."
+	caption="Relative error (median: solid, maximum: dotted) against operations per particle for Barnes–Hut (θ=1.4…0.18) and the FMM (p=2…18, L=4), N=4000, uniform. FMM operations: near-field pairs + p² M2L + 2Np; BH: particle and cell interactions."
+/>
+
+## Clustered particles and 3D gravity
+
+**Clustering.** A *uniform* tree wastes work when particles are clustered: the leaves in a dense clump hold thousands of particles, and the near-field sum grows like <M t="n^2" /> for them, while most other leaves are empty (Figure 9). Adaptive FMMs (Carrier et al. 1988) refine only where the particles are, and use additional interaction lists for boxes at different levels. The tree of Lecture 4 (splitting cells until they hold at most a given number of particles) is the natural starting point.
+
+<Figure
+	svg="L09/clustered"
+	n={9}
+	id="fig-l09-clustered"
+	widthPct={0.95}
+	alt="Three panels. Left: 8000 black dots scattered evenly over the unit square. Middle: 8000 dots gathered in six tight round blobs, the rest of the square empty. Right: the number of near-field pairs on a log scale against the number of levels from 2 to 7; the blue curve for uniform particles falls steeply from about 2.5e7 to about 4e4, and the red curve for clustered particles lies above it, from about 3.7e7 to about 1e6, falling much more slowly."
+	caption="A uniform tree with clustered particles (N=8000). Left and middle: uniform and clustered sets. Right: the near-field pair count against the number of levels: for the clustered set it is about 15 times larger at L=5 and falls slowly, because the tight blobs stay within a few leaves."
+/>
+
+**From 2D to 3D.** The method is the same in 3D: octree, interaction lists of up to <M t="189" /> boxes, expansions of the potential <M t="1/|\vect r-\vect r_j|" /> in spherical harmonics (Greengard & Rokhlin, 3D) or in Cartesian Taylor series. With expansions of order <M t="p" /> (terms up to <M t="(r/R)^p" />; in our 2D code the number of terms is <M t="p" />), the M2L cost grows as <M t="p^4" /> for the naive spherical-harmonic matrix (<M t="p^3" /> with rotations, <M t="p^2" /> with plane-wave expansions). Astrophysical codes use low orders, <M t="p\approx2" />&ndash;<M t="4" /> (quadrupole to hexadecapole) because <M t="10^{-3}" /> force accuracy suffices; and Plummer-softened forces are treated exactly in the near field, with the expansions taken for the unsoftened far field.
+
+**The dual tree walk (Dehnen).** Instead of fixed interaction lists, one can traverse the tree recursively with a pair of cells <M t="(A,B)" />: *if* <M t="A" /> and <M t="B" /> are well separated (opening criterion on their sizes and distance), do the M2L (or a mutual direct interaction if both are small); *else* split the larger cell and recurse on the children. It needs no explicit lists, adapts to any tree, and, when interactions are computed symmetrically (<M t="A\to B" /> and <M t="B\to A" /> at once), conserves momentum to rounding error. This is the FMM of falcON and GADGET-4. In practice the tree is built from Morton (Z-order) keys, which sort the particles along a space-filling curve so that every cell is a contiguous range of the sorted array; Lecture 10 introduces them, and they would replace the <M t="(i_x,i_y)" /> sort of the leaf-sorting listing. We do not implement the dual walk here; the uniform quadtree contains all the essential ingredients (P2M, M2M, M2L, L2L, L2P and the near-field sum).
+
+**Periodic boxes.** For cosmological simulations the FMM can be combined with the Ewald sum of Lecture 5: the top-level interactions with all periodic images are replaced by an Ewald-type correction to the local expansion of the root.
+
+<Callout kind="homework" title="Homework 9: A 2D fast multipole method">
+Create `myOwnCode/L09/fmm2d.py` from `hw9_fmm_skeleton.py` in the hints zip; copy `hw9_run_experiments.py` next to it. Particles are complex numbers <M t="z=x+iy" /> in the unit square with masses <M t="q" />; your field is <M t="f(z)=\sum_j q_j/(z-z_j)" />. The homework is staged: pass the checks of each stage before you go on. Loops over boxes and over the <M t="27" /> list entries are fine; use NumPy for particles within a box. A convenient data layout: one complex array of shape <M t="(2^l,2^l,p)" /> per level for the multipole coefficients and one for the local coefficients, and the leaf assignment of the leaf-sorting listing. Conventions (the sign of every shift vector) are in the skeleton and in Figure 2.
+
+**9.1 Operators.** `p2m`, `m2p`, `m2m`, `m2l`, `l2l`, `l2p` for arrays of <M t="p" /> complex coefficients. Reproduce the table of the worked example by hand-checkable tests: <M t="c=(3,-1,3,-1)" />, M2P <M t="0.5824" />, M2M <M t="(3,-7,19,-55)" />, M2L <M t="L_0=0.2929" />, <M t="L_1=-0.02886" />. Physics checks: <M t="c_0" /> is the total mass and <M t="c_1=0" /> about the centre of mass; the M2P error respects the bound of Eq. (3); M2M reproduces P2M about the new centre to rounding error; L2L is exact for polynomials; M2L between two unit boxes at distance <M t="(3,1)" /> has relative error below <M t="10^{-3},10^{-6},10^{-9}" /> for <M t="p=6,12,18" /> (reference, random sources: <M t="10^{-4},2\times10^{-8},3\times10^{-12}" />; reproduce the right panel of Figure 3).
+
+**9.2 Interaction lists.** `interaction_list(ix, iy, level)`: an interior box has <M t="27" /> boxes in its list, the corner box <M t="(0,0)" /> has <M t="12" />; no list box is adjacent to the box; the parents of the box and of each list box are adjacent; near field plus the lists of all ancestors cover every leaf exactly once (write this test yourself first). Edge boxes have at most <M t="18" /> entries.
+
+**9.3 The FMM.** `fmm_field(z, q, p, levels, stats)` for <M t="L\ge2" /> (start with <M t="L=2" />, where there is no M2M and L2L, then general <M t="L" />). Checks: for <M t="700" /> random particles and <M t="p=12" /> the error relative to <M t="\sum_j|q_j/(z_i-z_j)|" /> is below <M t="2\times10^{-6}" /> (median) and <M t="5\times10^{-5}" /> (max) for <M t="L=2,3,4" /> (reference: <M t="\lesssim3\times10^{-8}" /> and <M t="10^{-6}" />); clustered particles, empty boxes and particles at box edges work; the field is linear in <M t="q" />; two particles give <M t="q_2/(z_1-z_2)" />; <M t="N=20\,000" /> with <M t="L=5" />, <M t="p=8" /> runs in under <M t="30" /> s (reference: under a second) with error <M t="\lesssim10^{-3}" /> (reference: about <M t="10^{-5}" />).
+
+**9.4 Experiments and Barnes&ndash;Hut.** `bh_field(z, q, theta, stats)`: the same field from your Lecture 4 tree (`build_tree`, `accept`) with monopoles <M t="q_{\rm node}/(z-z_{\rm com})" /> (reference at <M t="\theta=0.5" />: median <M t="\approx8\times10^{-4}" />, max <M t="\approx3\times10^{-3}" /> for <M t="800" /> particles). Then reproduce Figure 5, Figure 6 (find the best <M t="L" /> for your implementation) and the scaling of Figure 7 (your absolute times will differ; the slopes should be <M t="\approx1" /> for the FMM and <M t="\approx2" /> for the direct sum).
+
+*Optional:* (a) precompute the M2L matrices for all offsets and apply them with matrix products; (b) Figure 8 and Figure 9; (c) an adaptive tree (leaves split until they hold <M t="\le n_{\max}" /> particles) or a dual-tree walk; (d) the acceleration <M t="a=-G\overline{f}" /> and a leapfrog run of a 2D cluster.
+
+Plan for about 10&ndash;12 hours (9.1 about 3, 9.2 about 1, 9.3 about 4&ndash;5, 9.4 about 2&ndash;3). **Check yourself:** unzip the hints, `cd` into `gravity-from-scratch/`, then run `python course/codeHints/L09/check_hw9.py` (a few seconds for a fast implementation, longer for a slow one; it needs `myOwnCode/L04` and `myOwnCode/L09`). Only after your own attempt passes, open the reference solution. Lecture 10 refers to the FMM and dual-tree walk when it discusses production codes.
+</Callout>
+
+## Summary
+
+- The FMM evaluates the field of far cells once per target *cell* (a local expansion) rather than once per target particle, and translates expansions exactly between levels: <M t="O(N)" /> operations for a fixed accuracy.
+- In 2D with complex numbers: multipole coefficients <M t="c_k=\sum q(z_j-z_c)^k" />; M2M and L2L are binomial shifts (the parallel-axis theorem generalised); M2L is a <M t="p\times p" /> matrix that depends only on the centre offset.
+- The interaction list (children of the parent's neighbours that are not neighbours) has <M t="27" /> boxes in 2D and makes every pair of particles appear exactly once, in the near field or in one list.
+- The error falls geometrically, at most <M t="0.55^p" /> (observed <M t="\approx0.4^p" />) for the closest allowed boxes, so <M t="p\approx8" /> gives <M t="10^{-6}" /> (typical) with a uniform tree; the near-field and far-field costs balance at <M t="\sim10" />&ndash;<M t="50" /> particles per leaf.
+- Uniform trees suffer for clustered particles; astrophysical FMMs use adaptive trees, dual-tree walks, low orders and softened near fields.
+
+## Further reading
+
+- L. Greengard & V. Rokhlin, J. Comput. Phys. 73, 325 (1987): a fast algorithm for particle simulations; *A New Version of the Fast Multipole Method for the Laplace Equation in Three Dimensions*, Acta Numerica 6, 229 (1997).
+- J. Carrier, L. Greengard & V. Rokhlin, SIAM J. Sci. Stat. Comput. 9, 669 (1988): the adaptive FMM.
+- A. W. Appel, SIAM J. Sci. Stat. Comput. 6, 85 (1985): an efficient program for many-body simulation. H. Cheng, L. Greengard & V. Rokhlin, J. Comput. Phys. 155, 468 (1999): a fast adaptive multipole algorithm in three dimensions.
+- W. Dehnen, ApJ 536, L39 (2000): a very fast and momentum-conserving tree code; J. Comput. Phys. 179, 27 (2002): a hierarchical <M t="O(N)" /> force calculation algorithm; Comput. Astrophys. Cosmol. 1, 1 (2014): a fast multipole method for stellar dynamics.
+- R. Beatson & L. Greengard, *A short course on fast multipole methods* (lecture notes): an excellent introduction to the 2D complex-variable version used here.
+- V. Springel et al., MNRAS 506, 2871 (2021): GADGET-4, with an FMM.
+
+## Downloads
+
+<div class="nb-downloads">
+<a href="/downloads/nbody/L09-hints.zip">&#8681; Hints &amp; checker (L09-hints.zip)</a>
+<a href="/downloads/nbody/L09-solution.zip">&#8681; Reference solution (L09-solution.zip)</a>
+</div>
+
+Only open the solution after your own `fmm2d.py` passes every check &mdash; that's the point of the exercise.
