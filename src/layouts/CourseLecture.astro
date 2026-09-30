@@ -59,19 +59,17 @@ const lectureLabel = lecture === 0 ? "L00" : `L${String(lecture).padStart(2, "0"
 		</div>
 	</article>
 
-	<nav class="mt-16 flex flex-wrap justify-between gap-4 text-sm">
+	<nav class="mt-16 grid grid-cols-2 gap-4 text-sm">
 		{
-			prev ? (
-				<a class="cactus-link" href={`${courseHref}${prev.id}/`}>
+			prev && (
+				<a class="cactus-link col-start-1 justify-self-start text-left" href={`${courseHref}${prev.id}/`}>
 					&larr; L{String(prev.data.lecture).padStart(2, "0")} &middot; {prev.data.title}
 				</a>
-			) : (
-				<span />
 			)
 		}
 		{
 			next && (
-				<a class="cactus-link" href={`${courseHref}${next.id}/`}>
+				<a class="cactus-link col-start-2 justify-self-end text-right" href={`${courseHref}${next.id}/`}>
 					L{String(next.data.lecture).padStart(2, "0")} &middot; {next.data.title} &rarr;
 				</a>
 			)
