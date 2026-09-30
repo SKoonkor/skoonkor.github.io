@@ -1,0 +1,286 @@
+---
+title: "How production codes put it together"
+description: "Space-filling curves, individual time steps, multigrid and AMR, and a modern pipeline."
+lecture: 10
+goal: "Build trees and domain decompositions from Morton keys, integrate with individual power-of-two (block) time steps and see what they save and what they cost, and understand how multigrid, AMR and production pipelines such as GADGET-4 and AREPO combine the ingredients of Lectures 1–9."
+publishDate: "2026-09-30"
+tags: ["n-body", "gravity", "morton-keys", "domain-decomposition", "block-time-steps", "amr"]
+draft: false
+downloads:
+  hints: "/downloads/nbody/L10-hints.zip"
+  solutions: "/downloads/nbody/L10-solution.zip"
+---
+
+import M from "@/components/course/M.astro";
+import Callout from "@/components/course/Callout.astro";
+import Figure from "@/components/course/Figure.astro";
+
+<Callout kind="goals">
+- Build trees and domain decompositions from Morton (Z-order) keys: sorting the particles along a space-filling curve turns every tree cell into a contiguous range.
+- Choose individual power-of-two time steps for particles, integrate with them (block time steps) and see what they save and what they cost.
+- Explain how multigrid and adaptive mesh refinement solve Poisson's equation, and where they fit next to PM, TreePM and the FMM.
+- Describe how a production code (GADGET-4, AREPO, IllustrisTNG) combines the ingredients of Lectures 1&ndash;9 into a parallel simulation, and how zoom-in initial conditions work.
+</Callout>
+
+## From algorithms to codes
+
+Lectures 1&ndash;9 gave the ingredients of a gravity solver: softened forces, symplectic integrators, trees, multipoles, meshes, Ewald summation, force splitting and the FMM. A production code has to do five more things: (i) organise the data so that trees can be built, traversed and distributed over thousands of processors; (ii) advance particles with very different dynamical times without paying for the shortest one everywhere; (iii) handle a range of physical resolution far beyond what a uniform mesh gives; (iv) do the analysis (halo finding, merger trees) on the fly and store the results; (v) set up the initial conditions for the region of interest. This lecture covers the first two in detail, with a homework, and the others as an overview.
+
+<Callout kind="history" title="History">
+Individual time steps go back to Aarseth (1963); tree codes adopted them (Hernquist & Katz 1989). Warren & Salmon (1993) built a parallel &ldquo;hashed oct-tree&rdquo; code on Morton keys. GADGET-2 (Springel 2005) uses Peano&ndash;Hilbert keys for its domain decomposition and block time steps; GADGET-4 (Springel et al. 2021) adds FMM gravity; the moving-mesh code AREPO (Springel 2010) gave the IllustrisTNG simulations.
+</Callout>
+
+## Space-filling curves: keys, trees and domains
+
+### Morton keys
+
+Divide a cubic box into <M t="2^{b}\times2^{b}\times2^{b}" /> cells and give each particle its integer cell coordinates <M t="(i_x,i_y,i_z)" />, <M t="0\le i<2^{b}" />. The **Morton key** interleaves their bits: bit <M t="\beta" /> of <M t="i_x,i_y,i_z" /> goes to bit <M t="3\beta,3\beta+1,3\beta+2" /> of the key. The key is an integer of <M t="3b" /> bits, at most <M t="63" /> bits for <M t="b=21" />, which fits in a 64-bit integer. The listing below shows the idea in 2D (bit <M t="\beta" /> of <M t="x,y" /> goes to bits <M t="2\beta,2\beta+1" />).
+
+```python title="s1_interleave_2d.py"
+# Morton key in 2D: bit b of x goes to bit 2b, bit b of y to bit 2b + 1.
+def morton2d(x, y, bits):
+    key = 0
+    for b in range(bits):
+        key |= ((x >> b) & 1) << (2 * b)
+        key |= ((y >> b) & 1) << (2 * b + 1)
+    return key
+
+print([morton2d(x, y, 2) for y in range(4) for x in range(4)])   # [0, 1, 4, 5, 2, 3, 6, 7, 8, 9, 12, 13, 10, 11, 14, 15]
+print(bin(morton2d(3, 1, 2)), bin(3), bin(1))                    # 0b111: from the right the bits are x0 y0 x1 y1 = 1 1 1 0
+```
+
+Morton keys in 2D: interleaving bits.
+
+The key has a property that makes it useful for trees: **the top <M t="3\ell" /> bits of the key are the index of the octree cell at level <M t="\ell" />** that contains the particle (the root is level <M t="0" />). The cell of a particle at level <M t="\ell-1" /> (its parent) is obtained by dropping three more bits, `key >> 3`. If the particles are *sorted by key*, then all particles of an octree cell are contiguous in the array, at every level (Figure 1). A cell is a range <M t="[\text{start},\text{end})" /> of the sorted array, and a parent's range is the union of its children's. (Example in 2D: the key <M t="1101_2=13" /> has quadrant <M t="11_2=3" /> at level 1; in the sorted array of all 16 cells its quadrant is the range <M t="[12,16)" />.)
+
+<Figure
+	svg="L10/keys"
+	n={1}
+	id="fig-l10-keys"
+	widthPct={0.9}
+	alt="Left: a 4 by 4 grid of cells, each labelled with its 2D Morton key, from 0 in the lower left to 15 in the upper right; the four 2 by 2 quadrants are outlined in heavy lines, and the keys inside each quadrant run in a Z pattern (for the lower left quadrant 0, 1 in the bottom row and 2, 3 above). Right: the sorted array of the 16 keys as a row of boxes coloured in four groups of four (blue, orange, green, red), each group braced and labelled cell 0 to cell 3, with notes that a level-1 cell is the key shifted right by two bits, a range of 4 entries, that the level-2 cell is the key itself, and the example that 13, binary 1101, lies in quadrant 3."
+	caption="Morton keys in 2D. The keys of the 16 cells (left) run along a “Z” inside every quadrant; sorting by key puts the four cells of a quadrant next to each other, so each quadrant (level-1 cell) is a contiguous range of the sorted array. In 3D the same holds with 3 bits per level and octants."
+/>
+
+### A tree from a sorted array
+
+With sorted keys, the tree is implicit. The occupied cells at level <M t="\ell" /> are the distinct values of `key >> 3(b-ℓ)`; their ranges are found with `np.searchsorted` (first listing below) or from the positions where the prefix changes. Then the mass and centre of mass of *every* cell of a level follow from cumulative sums, without a loop over particles (second listing below): <M t="M_{\rm cell}=C[\text{end}]-C[\text{start}]" /> with <M t="C" /> the prefix sum of the masses, and similarly for <M t="\sum m\vect x" />. (For a single small cell in a huge set the cumulative-sum difference loses some precision, of order <M t="10^{-16}N M_{\rm tot}/M_{\rm cell}" /> relative; this is harmless at our sizes.) Compared to the recursive Python tree of Lecture 4 this is the way that trees are built in parallel: an <M t="O(N\log N)" /> sort (or a radix sort) followed by vectorised passes. The tree walk itself is unchanged. This sorted-key build is also what replaces the <M t="(i_x,i_y)" /> sort of the FMM in Lecture 9: the FMM of GADGET-4 walks a Morton-built tree with the dual-tree traversal described there.
+
+```python title="s2_prefix_cells.py"
+import numpy as np
+
+# The cells of the quadtree at level L are the groups of keys with the same prefix key >> 2(bits - L).
+rng = np.random.default_rng(0)
+bits = 4
+xy = rng.integers(0, 2**bits, size=(200, 2))
+keys = np.array([sum(((int(x) >> b) & 1) << (2 * b) | ((int(y) >> b) & 1) << (2 * b + 1) for b in range(bits)) for x, y in xy])
+keys.sort()
+level = 2
+prefix = keys >> (2 * (bits - level))
+first = np.searchsorted(prefix, np.unique(prefix))            # start of every occupied cell in the sorted array
+counts = np.diff(np.append(first, len(keys)))
+print(len(first), counts.sum())                               # occupied cells (<= 16), 200 particles in total
+```
+
+The occupied cells of a level from sorted keys.
+
+```python title="s3_cumsum_range.py"
+import numpy as np
+
+# The sum over any contiguous range [start, end) of a sorted array is a difference of two cumulative sums.
+m = np.random.default_rng(1).random(1000)
+cm = np.concatenate([[0.0], np.cumsum(m)])
+start, end = 100, 350
+print(cm[end] - cm[start], m[start:end].sum())               # equal to rounding error
+```
+
+Sums over contiguous ranges from a cumulative sum.
+
+Sorting also improves **memory locality**: particles that are close in space are close in memory, so a tree walk or a neighbour search touches few cache lines.
+
+### Domain decomposition
+
+To run on <M t="R" /> processors (MPI ranks), each rank must own a compact part of space with about the same *work*. Cut the sorted array into <M t="R" /> contiguous ranges of equal total work, where the work of a particle is the cost of its force evaluation (measured in the previous step, or the number of interactions). Each rank then owns a set of octree cells; the rest of the tree is imported from other ranks as needed. The quality of this decomposition depends on the compactness of the curve segments. The Morton curve jumps (the long diagonals of Figure 2), so with equal cuts a segment that straddles a jump owns disconnected pieces; the **Peano&ndash;Hilbert curve** is continuous, every segment is connected, and its surface (which determines the communication) is on average smaller. GADGET-2 and GADGET-4 use it; the price is a more complicated key computation. In our homework we use Morton keys and equal-work cuts; the listing below gives the 2D Hilbert curve for the optional comparison.
+
+```python title="s4_hilbert_2d.py"
+def hilbert_d2xy(n, d):
+    # cell (x, y) of the d-th step of the Peano-Hilbert curve on an n x n grid (n a power of two)
+    x = y = 0
+    t = d
+    s = 1
+    while s < n:
+        rx = 1 & (t // 2)
+        ry = 1 & (t ^ rx)
+        if ry == 0:                            # rotate the quadrant
+            if rx == 1:
+                x, y = s - 1 - x, s - 1 - y
+            x, y = y, x
+        x += s * rx
+        y += s * ry
+        t //= 4
+        s *= 2
+    return x, y
+
+path = [hilbert_d2xy(4, d) for d in range(16)]
+print(path[:6])                                # [(0, 0), (1, 0), (1, 1), (0, 1), (0, 2), (0, 3)]
+print(all(abs(a[0] - b[0]) + abs(a[1] - b[1]) == 1 for a, b in zip(path, path[1:])))   # True: consecutive cells touch
+```
+
+The Peano&ndash;Hilbert curve on an <M t="n\times n" /> grid: the <M t="d" />-th cell (optional comparison in the homework).
+
+<Figure
+	svg="L10/curves"
+	n={2}
+	id="fig-l10-curves"
+	widthPct={0.7}
+	alt="Two 8 by 8 grids side by side, each traversed by a black line through the cell centres from a green dot at the lower left to a red square at the end, and each coloured in three groups of about 21 cells (blue, orange, green). Left, Morton (Z-order): the line makes many small Z shapes joined by long diagonal jumps, and the orange group is split into two separate pieces. Right, Peano-Hilbert: the line is a continuous path that turns at right angles between neighbouring cells, and each of the three coloured groups is one connected region."
+	caption="Two space-filling curves through the cells of an 8×8 grid, cut into three parts of nearly equal size (colours = three ranks). The Morton curve (left) makes long jumps: the orange (middle) rank owns two disconnected pieces; the Peano–Hilbert curve (right) is continuous, so every part is connected (and on average has a smaller surface)."
+/>
+
+## Individual (block) time steps
+
+### Why individual time steps
+
+In a cosmological simulation the dynamical time of a particle, <M t="t_{\rm dyn}\sim(G\rho)^{-1/2}" />, spans several orders of magnitude: a particle in the core of a small halo needs a time step a factor <M t="\gtrsim100" /> smaller than a particle in a void. With one global step, the shortest step is paid by all <M t="N" /> particles. **Individual time steps** let each particle use its own step, so that the force is recomputed only for the particles that need it.
+
+### The step size and the power-of-two hierarchy
+
+A common choice is based on the acceleration: <M t="\Delta t_i=\eta\sqrt{\epsilon/|\vect a_i|}" />, with the softening length <M t="\epsilon" /> and a dimensionless accuracy parameter <M t="\eta" /> (GADGET uses <M t="\sqrt{2\eta_G\epsilon/|\vect a|}" />, equivalent to ours with <M t="\eta=\sqrt{2\eta_G}" />; in a cosmological box the step is also limited by <M t="\Delta\ln a" />, and for gas by the Courant condition). The time steps are then *rounded down to a power-of-two fraction of a maximum step*, <M t="\Delta t_i=\Delta t_{\max}/2^{k_i}" />, with <M t="k_i\in\{0,\dots,k_{\max}\}" />: this is the **time-step hierarchy**. Because all steps are powers of two of the same <M t="\Delta t_{\max}" />, the steps of different particles are commensurate: a particle at level <M t="k" /> has its steps end at multiples of <M t="\Delta t_{\max}/2^k" />, and at each such time all particles with *larger* (finer) <M t="k" /> are also at the end of a step, while the coarser ones are in the middle of theirs (unless the time is also a multiple of their step). At the multiples of <M t="\Delta t_{\max}" /> all levels end a step together: the system is *synchronised* (Figure 3).
+
+<Figure
+	svg="L10/blocks"
+	n={3}
+	id="fig-l10-blocks"
+	widthPct={0.8}
+	alt="Three horizontal timelines stacked vertically, all spanning system time 0 to 1 in units of the maximum step. Level 0 has ticks only at 0 and 1; level 1 has ticks at 0, 1/2 and 1; level 2 has ticks at 0, 1/4, 1/2, 3/4 and 1. Heavy dashed vertical lines mark times 0 and 1, a lighter dashed line marks 1/2 and dotted lines mark 1/4 and 3/4. Labels above the timelines say which levels are active at each tick: level 2 at 1/4 and 3/4, levels 1 and 2 at 1/2, and all levels at 1."
+	caption="The time-step hierarchy. A particle on level k ends a step at every multiple of Δt_max/2^k. At the multiples of Δt_max (heavy dashed lines) all levels are synchronised; at the other tick times only the finer levels are active, and only they get a new force evaluation. A particle may move to a finer level at any step end, but to a coarser level only when the time is a multiple of the coarser step, so that the hierarchy stays aligned."
+/>
+
+### The block leapfrog
+
+The scheme is the KDK leapfrog of Lecture 2 applied to every particle with its own step, with three ingredients (pseudocode in the listing below):
+
+- every particle carries the time <M t="t_i" /> of the start of its current step and its step <M t="\Delta t_i" />; its velocity is stored at the middle of its step, <M t="\vect v_i=\vect v(t_i)+\vect a_i\Delta t_i/2" />;
+- the next *system time* is <M t="t_{\rm new}=\min_i(t_i+\Delta t_i)" />; **all** particles are drifted to it with their stored velocities (the positions of the inactive particles are thereby *predicted*);
+- the particles whose step ends at <M t="t_{\rm new}" /> (the *active* ones) get a force evaluation at the new positions, the second half kick <M t="\vect v\leftarrow\vect v+\vect a\,\Delta t_i/2" />, a new step from their new acceleration, and the first half kick of the new step.
+
+The cost is one force evaluation per active particle per step: the number of evaluations, not the number of system steps, measures the work.
+
+Three details decide whether the scheme works. **(i) Predicted positions.** The inactive particles are in the middle of their steps; their stored velocity is the mid-step velocity, and they are drifted with it in a straight line (first-order extrapolation). Their velocities are not updated until their step ends. The force on an active particle is computed from these predicted positions. **(ii) Integer time.** Whether a particle is active is decided by the test <M t="t_i+\Delta t_i=t_{\rm new}" />; with floating-point times (<M t="0.05/2^k" /> is not exactly representable) this test can fail. Keep all times as integers, in units of the smallest step <M t="\Delta t_{\max}/2^{k_{\max}}" />. **(iii) Order of operations at the end of a step:** finish the old step (second half kick with the old <M t="\Delta t_i" />), *then* choose the new level from the new acceleration, *then* apply the first half kick of the new step with the new <M t="\Delta t_i" />. With all particles on level 0 this reduces exactly to the KDK leapfrog of Lecture 2 (this is a check in the homework).
+
+Why may the step grow only at multiples of the coarser step? A particle on level 2 (<M t="\Delta t_{\max}/4" />) that wants level 1 at <M t="t=\tfrac14\Delta t_{\max}" /> would end its next step at <M t="\tfrac34" />, a time when no level-1 particle is synchronised (level 1 ends at <M t="\tfrac12" /> and <M t="1" />); so it may move to level 1 only at <M t="t=\tfrac12" /> (or <M t="0" />, <M t="1" />), and to level 0 only at multiples of <M t="\Delta t_{\max}" />. Moving to a *finer* level is always allowed, because the finer grid of times contains the current time. Also allow the step to grow by at most one level at a time.
+
+```text title="the block KDK scheme in pseudocode"
+a = acceleration of all particles;  choose levels k_i;  v += a * dt_i / 2;  t_i = 0;  t = 0
+        # (times are integers in units of the smallest step; multiply time differences by the tick length for physical time)
+while t < t_end:
+    t_new = min_i (t_i + dt_i)
+    x += v * (t_new - t)                       # drift all particles
+    t = t_new
+    active = particles with t_i + dt_i == t_new
+    a[active] = acceleration on the active particles from all particles at their (predicted) positions
+    v[active] += a[active] * dt_i / 2          # finish the step
+    t_i[active] = t_new
+    if t < t_end:
+        choose new levels for the active particles from their new accelerations (finer: any time;
+            coarser: by one level, only if t_new is a multiple of the coarser step);  dt_i = new steps
+        v[active] += a[active] * dt_i / 2      # start the next step
+```
+
+The block KDK scheme in pseudocode.
+
+<Callout kind="pitfall">
+The block scheme is *not* symplectic and not time-symmetric: the step is chosen from the acceleration at the start of the step, and the force on an active particle uses predicted positions of the inactive ones. Energy and momentum are not conserved to rounding error, and an eccentric orbit shows it (Figure 4, right): for a single Kepler orbit (<M t="e=0.9" />) the block scheme reaches <M t="1.5\times10^{-5}" /> with <M t="8\times10^3" /> force evaluations (<M t="\eta=0.05" />), but a fixed-step leapfrog with <M t="1.3\times10^4" /> evaluations reaches <M t="3\times10^{-8}" />, while the block scheme needs <M t="1.6\times10^4" /> evaluations for <M t="4\times10^{-6}" /> (<M t="\eta=0.025" />), more than <M t="100" /> times worse: for high accuracy the fixed step is far better, because a fixed step conserves a nearby (shadow) Hamiltonian (Lecture 2). Time steps that depend on the state break this. Codes therefore limit how fast steps change (at most a factor 2 per step), and some use time-symmetrised criteria (Hut et al. 1995; Quinn et al. 1997).
+</Callout>
+
+<Figure
+	svg="L10/kepler_block"
+	n={4}
+	id="fig-l10-kepler"
+	widthPct={0.85}
+	alt="Two panels. Left: time step on a log scale against distance r from the star, from 0.1 to 1.9. For each of two accuracy parameters, eta 0.25 in blue and eta 0.05 in orange, a solid staircase of power-of-two steps rises from small values at small r to large values at large r, following a dotted smooth curve of the criterion just above it; the eta 0.25 steps are about five times larger than the eta 0.05 steps. Right: relative energy error after 10 orbits against the number of force evaluations, on log-log axes. The block-step curve in red falls unevenly from errors near 1 at about 1000 evaluations to about 6e-7 at about 3e4 evaluations; the fixed-step curve in blue is worse at small cost but falls steeply, crossing below the red curve near 1e4 evaluations and reaching about 3e-10 at 5e4 evaluations."
+	caption="Block steps for an eccentric orbit (e=0.9, a=1, pericentre 0.1=2ε, so the orbit is strongly softened; energy is conserved for the softened potential; Δt_max=0.25, 10 orbits). Left: the step (solid: power-of-two level; dotted: the criterion η√(ε/|a|)) against the distance to the star for η=0.25 and 0.05: steps are small at pericentre and large at apocentre. Right: relative energy error against the number of force evaluations for block steps (varying η) and a fixed step (varying Δt). The block scheme is ahead for errors above ∼10⁻⁵ (≲8×10³ evaluations), but a fixed step is far better at high accuracy. The block curve is not monotonic because the step is rounded to a power of two."
+/>
+
+### When it pays: a wide range of time scales
+
+The Kepler orbit has a single time scale that varies along the orbit; block steps do not help there. Individual steps save work when a few particles need short steps and most do not. A test: a tight binary (two unit masses, separation <M t="0.03" />) with <M t="30" /> light particles orbiting the binary at distances <M t="2" />&ndash;<M t="6" />, <M t="\epsilon=0.003" />, integrated to <M t="t=2" /> (Figure 5). The binary needs a step <M t="\sim4\times10^{-4}" />; the swarm needs a step <M t="\sim0.03" />, <M t="80" /> times larger. A fixed step small enough for the binary costs <M t="1.6\times10^5" /> force evaluations for a binary-separation error of <M t="1.7\times10^{-4}" />; the block scheme at <M t="\eta=0.4" /> reaches <M t="1.6\times10^{-4}" /> with <M t="1.2\times10^4" />: **<M t="13" /> times fewer** force evaluations, at the price of larger errors for the swarm (median <M t="1.3\times10^{-5}" /> against <M t="10^{-8}" />, still small). In a cosmological run the ratio of time scales between the core of a halo and the field is <M t="10^{3}" />&ndash;<M t="10^{5}" />, and the saving is correspondingly larger.
+
+<Figure
+	svg="L10/binary_swarm"
+	n={5}
+	id="fig-l10-binary"
+	widthPct={0.5}
+	alt="Position error at t equal to 2 on a log scale against the number of force evaluations, on log-log axes from about 6000 to 320000. Block steps in red lie at 6e3 to 5e4 evaluations: the binary separation error (solid) falls from about 6e-4 to 5e-6 and the swarm median error (dotted) from about 1.5e-5 to 8e-7. Fixed steps in blue lie at 4e4 to 3.2e5 evaluations: the binary separation error (solid) falls from about 3e-3 to 3e-5, and the swarm median error (dotted) is much lower, from about 2e-7 to 3e-9. At a similar binary error near 1.6e-4 the red curve costs about 12 thousand evaluations and the blue curve about 160 thousand."
+	caption="Position error at t=2 against the number of force evaluations for the binary + swarm system: block steps (red, varying η) and a fixed step (blue, varying Δt). Solid: error of the binary separation; dotted: median error of the swarm particles (reference: fixed step 5×10⁻⁵)."
+/>
+
+### In a tree code
+
+A force evaluation for the active particles only needs the tree; the tree itself must be current. In practice the tree is rebuilt when the active fraction is large, and otherwise updated by moving the changed cells (GADGET). With TreePM, the mesh force changes slowly and can be recomputed only at the synchronisation times of the longest steps; the short-range tree force is computed at the step of each particle, which is what makes the short-range tree of Lecture 8 cheap when few particles are active. The FMM of Lecture 9 is less well suited to a small active set, because its passes work on all cells; production FMM codes restrict the work to the parts of the tree that contain active particles.
+
+## Multigrid and adaptive mesh refinement
+
+The methods of this course solve Poisson's equation with particles and expansions (tree, FMM) or with FFTs on a uniform mesh (PM). A different family solves <M t="\nabla^2\Phi=4\pi G\rho" /> on a mesh by **relaxation**, and can use meshes whose resolution follows the density.
+
+**Multigrid.** Iterating a local stencil (Jacobi or Gauss&ndash;Seidel) reduces the error components with wavelengths comparable to the grid spacing quickly, but the long-wavelength components very slowly. Multigrid uses a hierarchy of grids: smooth on the fine grid, restrict the residual <M t="r=4\pi G\rho-\nabla^2\Phi" /> to a grid with twice the spacing, solve for the correction there (recursively), interpolate it back and correct <M t="\Phi" />, smooth again (one *V-cycle*). Each cycle costs <M t="O(N_{\rm grid})" /> and reduces the error by a fixed factor, so the solution is reached in <M t="O(N_{\rm grid})" /> operations, like the FMM and without an FFT (which is global and hard to combine with local refinement).
+
+**AMR.** Adaptive mesh refinement codes (ART: Kravtsov et al. 1997; RAMSES: Teyssier 2002) refine cells where the density exceeds a threshold, giving a hierarchy of nested grids with the resolution following the matter; the Poisson equation is solved by multigrid or conjugate-gradient iterations on the levels, with the coarse solution supplying boundary conditions. Particles are assigned with CIC on the level of the cell they are in, and the time steps are again individual per level. AMR codes are the standard for cosmological hydrodynamics on a grid. In comparison: TreePM codes have a fixed force resolution set by the softening and no mesh artefacts in the short-range force; AMR codes have a resolution that adapts, but the force resolution is limited by the cell size, and the mesh&ndash;particle coupling needs care to conserve momentum. **Moving-mesh** codes (AREPO) use a Voronoi mesh that moves with the gas and gravity is again TreePM.
+
+## A modern production pipeline
+
+Figure 6 shows how the pieces fit together in a code such as GADGET-4 or AREPO. The particle data are distributed by a space-filling-curve decomposition; each step builds the tree, computes the long-range force on a mesh (with FFTs distributed over the ranks; it may be updated less often than the short-range force) and the short-range force with the tree for the active particles, applies block time steps, and, when requested, writes snapshots and runs halo finding on the fly (FoF as in Lecture 7, followed by SUBFIND for substructure; Springel et al. 2001). The largest published gravity-only runs have <M t="\sim10^{10}" />&ndash;<M t="10^{12}" /> particles (the Millennium simulation, 2005: <M t="2160^3\approx10^{10}" />; recent ones <M t="10^{12}" /> and more); a hydrodynamical run such as TNG50 has <M t="\sim2\times10^{10}" /> resolution elements in a <M t="35\,h^{-1}" />Mpc box.
+
+<Figure
+	svg="L10/pipeline"
+	n={6}
+	id="fig-l10-pipeline"
+	widthPct={0.7}
+	alt="Flow chart of boxes and arrows. An orange box, initial conditions (Lecture 7; zoom: below), points down to a blue box, domain decomposition (Peano-Hilbert or Morton). From the decomposition one arrow goes down to tree build (from sorted keys) and one goes right to long-range force, mesh (Lectures 6 and 8). Tree build points right to short-range force, tree or FMM (Lectures 4, 8, 9), active particles only, and long-range force also points down to it. Short-range force points down to block time steps, KDK (Lectures 2 and 10), which points left to an orange box, snapshots and on-the-fly FoF and SUBFIND. A dashed arrow from block time steps runs under the whole chart and back up to the domain decomposition box, labelled next step: re-balance the domains."
+	caption="One step of a production gravity code. The dashed arrow closes the loop: work measured in the step defines the domain decomposition of the next."
+/>
+
+**Zoom-in simulations.** To resolve one halo (or one galaxy) at high resolution without paying for the whole box, one starts from a low-resolution box, finds the particles that end up in the region of interest, traces them back to the initial conditions (their *Lagrangian region*) and re-generates the initial conditions with many more, lighter particles there, embedded in coarser particles of increasing mass outside (Katz & White 1993). The multi-mass particles interact through the same gravity solver; the softening is set per mass species. Codes such as MUSIC (Hahn & Abel 2011) generate such initial conditions with a Zel'dovich (Lecture 7) or second-order (2LPT, not covered here) displacement on nested grids.
+
+**What else a real code has.** Force accuracy monitoring (comparing to a direct sum on a random subset), a relative opening criterion (Lecture 5), periodic boundaries with Ewald or the mesh (Lectures 5&ndash;6), softening chosen per particle species and redshift (comoving at high redshift, then fixed physical), restart files, and on the systems of interest a hybrid of MPI and threads.
+
+**Where to go next.** You have now built, from scratch, every ingredient of a modern gravity solver: softened forces, symplectic integrators, vectorised NumPy code, Barnes&ndash;Hut and multipole trees, a particle&ndash;mesh solver, a cosmological box with initial conditions and halo finding, force-split hybrids, an FMM, and now sorted-key trees and block time steps. Natural next steps: profile your code and speed up the inner loops (Numba, C or Fortran; the algorithms stay the same); run a real cosmological box and compare <M t="P(k)" /> and the halo mass function with a public code (GADGET-4, Pkdgrav3, Enzo, RAMSES); add hydrodynamics (SPH or a moving mesh, left out here); and read the papers below: the code papers of GADGET-2/4 and AREPO; the reviews of Dehnen & Read (2011) on N-body simulations and of Vogelsberger et al. (2020) which motivated this course.
+
+<Callout kind="homework" title="Homework 10: Keys, decomposition and block time steps">
+Create `myOwnCode/L10/production.py` from `hw10_production_skeleton.py` in the hints zip; copy `hw10_run_experiments.py` next to it. NumPy only; no Python loops over particles in 10.1&ndash;10.3 (loops over the bits, levels or ranks are fine).
+
+**10.1 Morton keys.** `morton_keys(pos, box, bits)`: cell coordinates <M t="\lfloor x/L\cdot2^b\rfloor" /> (wrapped into the box), bits interleaved as in the Morton-keys section above, a `uint64` array. Checks: <M t="b=1" />: <M t="(0.6,0.1,0.1)\to1" />, <M t="(0.1,0.6,0.1)\to2" />, <M t="(0.1,0.1,0.6)\to4" />, <M t="(0.9,0.9,0.9)\to7" />; <M t="b=2" />: <M t="(0.75,0,0)\to9" />, <M t="(0.5,0.25,0)\to10" />; equal to a bit-by-bit definition for <M t="b=10" /> and <M t="b=21" />; <M t="10^6" /> particles in about a second (limit <M t="2.5" /> s; reference <M t="0.1" />&ndash;<M t="0.3" /> s).
+
+**10.2 The tree from sorted keys.** `level_ranges(keys_sorted, bits, level)` &rarr; prefixes, start, end of the occupied cells at that level, and `range_moments(pos_sorted, mass_sorted, start, end)` &rarr; mass and centre of mass with cumulative sums (the two listings in the section "A tree from a sorted array"). Checks: contiguous non-empty ranges covering <M t="[0,N)" />, a cell's keys share its prefix, moments equal the brute-force sums, and a parent's moments combine from its children (mass adds; centres of mass combine mass-weighted).
+
+**10.3 Domain decomposition.** `decompose(weights, nranks)` &rarr; nranks+1 boundaries so that every rank's total weight is within one particle's weight of the mean (also for heavy-tailed weights). Plot the ranks for a 2D particle set cut along the Morton curve (2D keys as in the first listing; Figure 2, left). Optional: repeat with the Peano&ndash;Hilbert curve (the Hilbert listing above) and compare the number of cell faces on the boundaries of the domains.
+
+**10.4 Block time steps.** `direct_acc(pos, mass, idx, G, eps)` (the acceleration on the particles `idx` only, from all), `timestep_levels`, and `evolve_block`. Checks: the level is the largest power-of-two fraction of <M t="\Delta t_{\max}" /> not above <M t="\eta\sqrt{\epsilon/|\vect a|}" />; with every particle on level 0 the result equals fixed-step KDK and uses <M t="N(\text{steps}+1)" /> force evaluations; the eccentric orbit of Figure 4 (<M t="e=0.9" />, <M t="\eta=0.05" />: energy error <M t="\approx1.5\times10^{-5}" />, about <M t="8\times10^3" /> evaluations; the checker allows <M t="2\times10^{-3}" /> and <M t="1.7\times10^{4}" />); the binary + swarm system (<M t="\eta=0.4" />: binary separation error <M t="\approx2\times10^{-4}" />, swarm median error <M t="\approx10^{-5}" />, about <M t="1.2\times10^4" /> evaluations against <M t="1.6\times10^5" /> for an equally accurate fixed step). The checker calls `evolve_block` with <M t="k_{\max}=12" />, <M t="\Delta t_{\max}=0.25" /> and <M t="t_{\rm end}=63" /> (ten orbits) for the Kepler orbit, and with <M t="\Delta t_{\max}=0.05" />, <M t="\epsilon=0.003" /> and <M t="t_{\rm end}=2" /> for the binary + swarm. Reproduce Figures 4 and 5.
+
+*Optional:* (a) Peano&ndash;Hilbert keys (the Hilbert listing) and the compactness of the domains; (b) use your Lecture 8 TreePM with an active-particle subset (the idea mentioned in Lecture 8); (c) a time-symmetric step criterion (average the accelerations at the start and end of the step) and its effect on the Kepler energy error; (d) **capstone:** run your Lecture 8 TreePM in a cosmological box, analyse it with your Lecture 7 tools (<M t="P(k)" />, FoF mass function) and check the forces against a direct sum on a random subset; there is no checker, keep a short log of what you did and learned. It ties Lectures 7 and 8 together and is the natural last exercise of the course.
+
+The direct sum is used in `evolve_block` so that the block scheme can be checked cleanly (Lecture 2 said the tree version would be an optional exercise: it is optional (b)). The test systems are built by `kepler_setup` and `binary_swarm` of `hw10_run_experiments.py`. Plan for about 6&ndash;8 hours (10.4 takes about half; the figures are extra). **Check yourself:** unzip the hints, `cd` into `gravity-from-scratch/`, then run `python course/codeHints/L10/check_hw10.py` (a few seconds; it needs `myOwnCode/L10`). Only after your own attempt passes, open the reference solution.
+</Callout>
+
+## Summary
+
+- Sorting particles by Morton (or Peano&ndash;Hilbert) key makes every tree cell a contiguous range: trees are built with a sort and vectorised range sums, memory access is local, and a domain decomposition is a set of cuts through the sorted array with equal work.
+- Individual power-of-two time steps let each particle pay only for its own time scale; the block KDK scheme drifts everybody, kicks the active particles and costs one force evaluation per active particle. It saves an order of magnitude when the time scales are very different, but it is not symplectic (a single eccentric orbit is better served by a fixed step).
+- Multigrid solves Poisson's equation on a mesh hierarchy in <M t="O(N_{\rm grid})" />; AMR adapts the mesh to the density. A production code combines a space-filling-curve decomposition, a tree, a mesh, block steps and on-the-fly analysis; zoom-in simulations refine the resolution in a Lagrangian region.
+
+## Further reading
+
+- M. S. Warren & J. K. Salmon, *A parallel hashed oct-tree N-body algorithm*, Supercomputing '93 (1993): Morton keys in a parallel tree code.
+- V. Springel, MNRAS 364, 1105 (2005) and V. Springel et al., MNRAS 506, 2871 (2021): GADGET-2 and GADGET-4; V. Springel, MNRAS 401, 791 (2010): AREPO.
+- T. Quinn, N. Katz, J. Stadel & G. Lake, *Time stepping N-body simulations*, astro-ph/9710043 (1997); P. Hut, J. Makino & S. McMillan, ApJ 443, L93 (1995): time-symmetric steps.
+- A. Kravtsov, A. Klypin & A. Khokhlov, ApJS 111, 73 (1997) (ART); R. Teyssier, A&A 385, 337 (2002) (RAMSES); A. Brandt, Math. Comp. 31, 333 (1977) (multigrid).
+- V. Springel et al., MNRAS 328, 726 (2001): SUBFIND. O. Hahn & T. Abel, MNRAS 415, 2101 (2011): MUSIC. W. Dehnen & J. Read, Eur. Phys. J. Plus 126, 55 (2011): N-body simulations. M. Vogelsberger et al., Nature Reviews Physics 2, 42 (2020): the review behind this course.
+
+## Downloads
+
+<div class="nb-downloads">
+<a href="/downloads/nbody/L10-hints.zip">&#8681; Hints &amp; checker (L10-hints.zip)</a>
+<a href="/downloads/nbody/L10-solution.zip">&#8681; Reference solution (L10-solution.zip)</a>
+</div>
+
+Only open the solution after your own `production.py` passes every check &mdash; that's the point of the exercise.
