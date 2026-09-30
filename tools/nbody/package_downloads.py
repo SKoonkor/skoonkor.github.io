@@ -76,6 +76,11 @@ def build_hints(src: Path, lecture: str, staging: Path) -> Path:
 	checker_name = f"check_hw{hw_n}.py"
 	checker_text = (hints_dst / checker_name).read_text(encoding="utf-8")
 	flags = re.findall(r'add_argument\("(--\S+)"', checker_text)
+	if not flags:
+		# checkers that build their flags in a loop: for name in ("l03", "l04"): ap.add_argument(f"--{name}", ...)
+		loop = re.search(r'for (\w+) in \(([^)]*)\):\s*\n\s*\w+\.add_argument\(f"--\{\1\}"', checker_text)
+		if loop:
+			flags = [f"--{n}" for n in re.findall(r'"([^"]+)"', loop.group(2))]
 	if flags:
 		override_line = f"   (pass folders explicitly with {' '.join(f'{f} DIR' for f in flags)})\n"
 	else:

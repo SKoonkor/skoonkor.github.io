@@ -1,0 +1,325 @@
+---
+title: "Multipoles and better trees"
+description: "Quadrupole moments, opening criteria, and the Ewald sum for periodic boxes."
+lecture: 5
+goal: "Expand the field of a group of particles in multipoles, add the softened quadrupole term to the tree force via the parallel-axis theorem, compare geometric, offset and relative opening criteria, and understand how the Ewald sum handles periodic boxes."
+publishDate: "2026-09-30"
+tags: ["n-body", "gravity", "multipole", "quadrupole", "opening-criteria", "ewald"]
+draft: false
+downloads:
+  hints: "/downloads/nbody/L05-hints.zip"
+  solutions: "/downloads/nbody/L05-solution.zip"
+---
+
+import M from "@/components/course/M.astro";
+import Callout from "@/components/course/Callout.astro";
+import Figure from "@/components/course/Figure.astro";
+
+<Callout kind="goals">
+- Expand the gravitational field of a group of particles in multipoles and see why the dipole vanishes about the centre of mass.
+- Compute the quadrupole (second-moment) tensor of every tree cell with the parallel-axis theorem.
+- Add the quadrupole term (softened) to the tree force and measure the gain in accuracy.
+- Compare three opening criteria: geometric, offset, and relative.
+- Understand why periodic boxes need the Ewald sum, and how it splits <M t="1/r" /> in two.
+</Callout>
+
+## Beyond the point mass
+
+In Lecture 4 a distant cell acted as a single point mass at its centre of mass. That is the first term of an expansion. If we keep the next non-vanishing term we can use *larger* <M t="\theta" /> (fewer interactions) at the same accuracy, or the same <M t="\theta" /> at much higher accuracy. This lecture derives that term, adds it to your tree, and then compares different rules for deciding when a cell is "far enough". Finally it treats the periodic box that cosmological simulations use.
+
+## The multipole expansion
+
+Let a group of particles <M t="j" /> (masses <M t="m_j" />, positions <M t="\vect r_j" />) have total mass <M t="M" /> and centre of mass <M t="\vect R" />, and write <M t="\vect u_j=\vect r_j-\vect R" /> for the offsets (*not* to be confused with the cell side <M t="s" /> of Lecture 4, which returns in the section on opening criteria), so that <M t="\sum_jm_j\vect u_j=\vect 0" />. A field point <M t="\vect x" /> far from the group has <M t="\vect d=\vect x-\vect R" />, <M t="d=|\vect d|\gg|\vect u_j|" />.
+
+<Figure
+	svg="L05/multgeom"
+	n={1}
+	id="fig-l05-multgeom"
+	widthPct={0.529}
+	alt="A small cluster of blue particles inside a dashed circle, with the centre of mass R marked by a red square, an offset arrow u_j to one particle, and a long arrow d from R to a distant field point x marked by a star."
+	caption="Geometry of the expansion. The group (blue) is small compared with its distance d to the field point. Each particle sits at u_j from the centre of mass R (red); the group has size s."
+/>
+
+The expansion is a Taylor series in the small ratio <M t="u/d" />: write <M t="|\vect d-\vect u|^{-1}=d^{-1}\big(1-2\,\vect u\!\cdot\!\vect d/d^2+u^2/d^2\big)^{-1/2}" /> and expand <M t="(1+x)^{-1/2}=1-\tfrac12x+\tfrac38x^2-\dots" /> to second order (or use Legendre polynomials). The result, for each particle, is
+
+<M d tag="1" id="eq-l05-expansion" t="\frac{1}{|\vect d-\vect u|}=\frac1d+\frac{\vect u\cdot\vect d}{d^3}+\frac{3(\vect u\cdot\vect d)^2-u^2d^2}{2d^5}+\Oh{\frac{u^3}{d^4}} ." />
+
+Multiplying by <M t="-Gm_j" /> and summing over <M t="j" />:
+
+<M d tag="2" id="eq-l05-phi" t="\Phi(\vect x)=-G\left[\frac{M}{d}+\frac{\vect d\cdot\sum_jm_j\vect u_j}{d^3}+\frac{1}{2d^5}\sum_jm_j\big(3(\vect u_j\cdot\vect d)^2-u_j^2d^2\big)+\dots\right]." />
+
+The three terms are the **monopole**, **dipole** and **quadrupole** (names for the orders <M t="u^0" />, <M t="u^1" />, <M t="u^2" /> of the expansion in <M t="u/d" />; the next one, <M t="u^3" />, is the **octupole**; together they are called *multipoles*). The dipole is <M t="\sum_jm_j\vect u_j=\vect0" /> *because <M t="\vect R" /> is the centre of mass*, so it vanishes. The quadrupole term can be written with the **second-moment tensor**
+
+<M d tag="3" id="eq-l05-I" t="I_{ab}=\sum_jm_j\,u_{j,a}\,u_{j,b},\qquad \mathrm{tr}\,I=\sum_jm_ju_j^2," />
+
+a symmetric <M t="3\times3" /> matrix: <M t="\sum_jm_j(3(\vect u_j\cdot\vect d)^2-u_j^2d^2)=3\,\vect d\!\cdot\! I\!\cdot\!\vect d-\mathrm{tr}I\,d^2" />. (The combination <M t="Q=3I-\mathrm{tr}I\,\mathbb 1" /> is the *traceless* quadrupole tensor often quoted in textbooks; the plain second moment <M t="I" /> carries the same information and is easier to add up.) So
+
+<M d tag="4" id="eq-l05-phiquad" t="\Phi(\vect x)\approx-G\left[\frac{M}{d}+\frac{3\,\vect d\cdot I\cdot\vect d-\mathrm{tr}I\;d^2}{2d^5}\right]." />
+
+```python title="s1_second_moment.py"
+import numpy as np
+
+m = np.array([1.0, 2.0, 1.0])                       # a small group (3D)
+x = np.array([[0., 0, 0], [1, 0, 0], [0, 1, 0]])
+M = m.sum()
+com = (m[:, None] * x).sum(axis=0) / M              # centre of mass
+s = x - com                                         # offsets from the centre of mass
+I = (m[:, None, None] * s[:, :, None] * s[:, None, :]).sum(axis=0)   # sum m s s^T
+print(np.round(com, 3))                             # [0.5  0.25 0.  ]
+print(np.round(I, 4), np.trace(I))                  # symmetric, trace 1.75
+```
+
+**The acceleration.** With <M t="\vect d_c=\vect R-\vect r_i" /> pointing from the particle <M t="i" /> to the group (the convention of Lecture 4), and including Plummer softening by replacing <M t="d^2\to D^2=d^2+\epsilon^2" /> in the denominators (this is exactly the expansion of the softened kernel <M t="1/\sqrt{|\vect d-\vect u|^2+\epsilon^2}" />), differentiating gives (derivation below)
+
+<M d tag="5" id="eq-l05-quadacc" t="\vect a=G\left[\frac{M\,\vect d_c}{D^3}-\frac{3\,\mathrm{tr}I\;\vect d_c+6\,I\vect d_c}{2D^5}+\frac{15\,(\vect d_c\cdot I\cdot\vect d_c)\,\vect d_c}{2D^7}\right]." />
+
+The first term is the monopole force of Lecture 4. The other two are the quadrupole correction.
+
+**Where Eq. (5) comes from.** Start from the softened potential of the group, obtained exactly as above but with the kernel <M t="-1/\sqrt{|\vect d-\vect u|^2+\epsilon^2}" />; expanding to second order in <M t="\vect u" /> gives the same terms with <M t="d^2" /> replaced by <M t="D^2=d^2+\epsilon^2" /> in the denominators:
+
+<M d t="\Phi=-G\left[\frac MD+\frac{3\,\vect d\cdot I\cdot\vect d}{2D^5}-\frac{\mathrm{tr}I}{2D^3}\right]." />
+
+Here <M t="\vect d=\vect x-\vect R" /> points from the group to the field point. The acceleration is <M t="\vect a=-\nabla_{\vect x}\Phi" />, using <M t="\nabla D^{-n}=-n\,\vect d\,D^{-n-2}" />, <M t="\nabla(\vect d\cdot I\cdot\vect d)=2I\vect d" />, and the fact that <M t="\mathrm{tr}I" /> does not depend on <M t="\vect x" />. Term by term (with the overall sign of <M t="\Phi" /> included):
+
+<M d t="\text{monopole: }-\frac{GM\,\vect d}{D^3},\qquad \text{$I\vect d$ term: }+\frac{3G\,I\vect d}{D^5}-\frac{15G\,(\vect d\!\cdot\! I\!\cdot\!\vect d)\,\vect d}{2D^7},\qquad \text{trace term: }+\frac{3G\,\mathrm{tr}I\,\vect d}{2D^5}." />
+
+Collect them (the trace term has the opposite sign to the <M t="I\vect d" /> term because <M t="\Phi" /> contains <M t="-\mathrm{tr}I/2D^3" />) and switch to <M t="\vect d_c=-\vect d" />, the vector from the particle to the group (only the terms odd in <M t="\vect d" /> change sign): this is Eq. (5). The sign flip from <M t="\vect d" /> to <M t="\vect d_c" /> is the classic place to make a mistake: after implementing it, check that the force of a single far-away group points *towards* the group.
+
+**A worked example (softened).** Two unit masses at <M t="x=\pm0.5" /> on the <M t="x" /> axis: <M t="M=2" />, <M t="\vect R=0" />, <M t="I=\mathrm{diag}(0.5,0,0)" />, <M t="\mathrm{tr}I=0.5" />. Field point <M t="(3,0,0)" />, <M t="\epsilon=0.3" />, <M t="G=1" />, so <M t="\vect d_c=(-3,0,0)" /> and <M t="D^2=9.09" />. Direct sum of the two softened pulls: <M t="a_x=-0.23735" />. Monopole only: <M t="-0.21893" /> (error <M t="1.8\times10^{-2}" />). With the quadrupole terms of Eq. (5): <M t="-0.23655" /> (error <M t="8.0\times10^{-4}" />, <M t="23\times" /> smaller). Use this as a first check of your own `quad_acceleration`.
+
+A useful habit when you derive or implement such formulas: *test them against a direct sum*.
+
+```python title="s3_far_field_check.py"
+import numpy as np
+
+rng = np.random.default_rng(0)
+x = rng.normal(0, 0.2, (6, 3))                      # a group of six particles ...
+m = rng.random(6) + 0.5
+M, com = m.sum(), (m[:, None] * x).sum(axis=0) / m.sum()
+
+def direct(p):                                      # exact pull of the group on a point p
+    d = x - p
+    return (m[:, None] * d / (d**2).sum(axis=1)[:, None] ** 1.5).sum(axis=0)
+
+def monopole(p):                                    # the whole group as one mass at its COM
+    d = com - p
+    return M * d / (d @ d) ** 1.5
+
+for dist in (2.0, 4.0, 8.0):
+    p = com + np.array([dist, 0.0, 0.0])
+    print(dist, np.linalg.norm(monopole(p) - direct(p)))   # ~16x per doubling
+```
+
+Add the quadrupole to this listing yourself in Homework 5.2.
+
+<Figure
+	svg="L05/expansion_error"
+	n={2}
+	id="fig-l05-experr"
+	widthPct={0.62}
+	alt="Log-log plot of the error of the acceleration against distance d to a group of six particles, from 1.5 to 16. The monopole-only curve falls with slope minus 4 and the monopole plus quadrupole curve falls with slope minus 5, well below it."
+	caption="Error of the acceleration of a group of six particles (size ~0.2) against the distance d to it, measured against direct summation. Monopole only: the error falls as d^-4 (the neglected quadrupole). With the quadrupole: d^-5 (the neglected octupole), and it is far smaller. At d=4: 1.7×10^-3 against 2.5×10^-4."
+/>
+
+<Callout kind="idea">
+Each extra multipole order buys one more power of <M t="s/d" /> in accuracy. The monopole force error is relative <M t="\Oh{(s/d)^2}" /> (the quadrupole), so absolute <M t="d^{-4}" />; keeping the quadrupole leaves relative <M t="\Oh{(s/d)^3}" />, absolute <M t="d^{-5}" />. In a tree, <M t="s/d<\theta" />, so the error of a quadrupole interaction is smaller than that of a monopole interaction by a factor <M t="\sim s/d\lesssim\theta" />. The measured gain in the total force is larger (about <M t="4\times" /> at <M t="\theta=0.5" />, with the error falling like <M t="\theta^4" /> against <M t="\theta^{2.6}" />); a plausible interpretation is that the errors of the many cells contributing to a force have partly random signs and partly cancel, which we did not test separately.
+</Callout>
+
+## Quadrupoles for every cell: the parallel-axis theorem
+
+Each tree cell needs its tensor <M t="I" />. For a leaf, sum over its particles, Eq. (3). For an internal cell, do *not* loop over all its particles again: build it from its children. Let child <M t="c" /> have mass <M t="M_c" />, centre of mass <M t="\vect R_c" /> and tensor <M t="I_c" /> (about <M t="\vect R_c" />), and let <M t="\vect\delta_c=\vect R_c-\vect R" /> be its offset from the parent's centre of mass. A particle of child <M t="c" /> has offset <M t="\vect u=\vect u'+\vect\delta_c" /> from the parent's centre of mass, where <M t="\vect u'" /> is its offset from <M t="\vect R_c" />. Then <M t="\sum_{j\in c}m_ju_au_b=I_{c,ab}+M_c\delta_{c,a}\delta_{c,b}" /> because the cross terms contain <M t="\sum_{j\in c}m_j\vect u'_j=\vect 0" />. Summing over children:
+
+<M d tag="6" id="eq-l05-parallel" t="I_{ab}=\sum_c\Big(I_{c,ab}+M_c\,\delta_{c,a}\delta_{c,b}\Big),\qquad\vect\delta_c=\vect R_c-\vect R ." />
+
+This is the **parallel-axis theorem**, and it costs <M t="\Oh{1}" /> per child, so the whole tree takes <M t="\Oh{N}" /> extra work, done bottom-up (post-order: children first).
+
+<Figure
+	svg="L05/parallel"
+	n={3}
+	id="fig-l05-parallel"
+	widthPct={0.636}
+	alt="A horizontal line with two groups of particles. Child A, in blue on the left, has mass M_A, centre of mass R_A and tensor I_A. Child B, in red on the right, has M_B, R_B and I_B. A grey square in the middle marks the parent centre of mass R, with arrows for the offsets delta_A and delta_B. Below, the parent formula: M equals M_A plus M_B and I equals the sum of I_c plus M_c delta_c squared."
+	caption="The parallel-axis theorem in one dimension. Each child contributes its own spread I_c about its centre of mass plus the term M_c δ_c² that accounts for the child's centre of mass being displaced from the parent's."
+/>
+
+**A worked example (one dimension).** Child A: unit masses at <M t="x=\pm0.5" />, so <M t="M_A=2" />, <M t="R_A=0" />, <M t="I_A=\sum m(x-R_A)^2=0.5" />. Child B: masses <M t="1" /> at <M t="x=3" /> and <M t="2" /> at <M t="x=6" />, so <M t="M_B=3" />, <M t="R_B=(3+12)/3=5" />, <M t="I_B=1\cdot(3-5)^2+2\cdot(6-5)^2=6" />. Parent: <M t="M=5" />, <M t="R=(2\cdot0+3\cdot5)/5=3" />, so <M t="\delta_A=-3" />, <M t="\delta_B=+2" />. Eq. (6):
+
+<M d t="I=\underbrace{(0.5+2\cdot9)}_{A}+\underbrace{(6+3\cdot4)}_{B}=36.5 ." />
+
+Directly, from the four particles about <M t="R=3" /> (offsets <M t="-3.5,-2.5,0,3" />): <M t="I=12.25+6.25+0+2\cdot9=36.5" />. &#10003; Shifting the expansion centre of a group from a child's centre of mass to the parent's is called an **M2M translation** (multipole to multipole); the Fast Multipole Method of Lecture 9 generalises exactly this step to all orders, and adds a translation from a group's multipole to a *local* expansion at the target.
+
+```python title="s2_parallel_axis.py"
+import numpy as np
+
+def moments(m, x):
+    """Mass, centre of mass and second-moment tensor of a group."""
+    M = m.sum()
+    com = (m[:, None] * x).sum(axis=0) / M
+    s = x - com
+    return M, com, (m[:, None, None] * s[:, :, None] * s[:, None, :]).sum(axis=0)
+
+rng = np.random.default_rng(0)
+m, x = rng.random(6) + 0.5, rng.random((6, 3))
+A, B = moments(m[:3], x[:3]), moments(m[3:], x[3:])          # two "children"
+M, com, I = moments(m, x)                                    # the "parent", directly
+I_from_children = sum(I_c + M_c * np.outer(c - com, c - com) for M_c, c, I_c in (A, B))
+print(np.abs(I - I_from_children).max() < 1e-12)             # True: parallel-axis theorem
+```
+
+Writing the recursion for a whole tree is Homework 5.1.
+
+## The tree walk with quadrupoles
+
+Nothing changes in the walk except what happens when a cell is accepted: instead of the point-mass force, use Eq. (5). The number of interactions is identical (same criterion, same tree), but each cell interaction costs a few more arithmetic operations. Store <M t="I" /> in the cell record (the `quad` field prepared in Lecture 4), computed once per tree build. Softening enters through <M t="D^2=d^2+\epsilon^2" /> in every term. In your walk the accepted branch becomes: choose the criterion (`accept_geometric`, `accept_offset` or `accept_relative`, the last one using the magnitude `acc_old[i]` of the particle's previous acceleration); if a cell that does not contain the particle is accepted, add `quad_acceleration(d, node.mass, node.quad, G, eps)` if `use_quad`, else the monopole force of Lecture 4 (your walk already calls a separate acceptance function: the Lecture 4 hook).
+
+<Figure
+	svg="L05/error_mono_vs_quad"
+	n={4}
+	id="fig-l05-monoquad"
+	widthPct={0.95}
+	alt="Two log-log panels of force error against opening angle theta from 0.3 to 1, for the monopole tree (blue) and the quadrupole tree (red). Left: median error, with a dotted line of slope 4 following the red curve. Right: 99th percentile. The red curve lies below the blue in both."
+	caption="Force error of a Plummer sphere (N=1000, ε=0.05) against direct summation, for the monopole tree and the quadrupole tree with the geometric criterion. Left: median; right: 99th percentile. The quadrupole error falls as θ⁴ at small θ (dotted), the monopole error as roughly θ^2.6."
+/>
+
+| <M t="\theta" /> | interactions per particle | median error, monopole | median error, + quadrupole | 99th percentile, monopole | 99th percentile, + quadrupole |
+|---:|---:|---:|---:|---:|---:|
+| 0.3 | 586 | <M t="8.4\times10^{-4}" /> | <M t="9.4\times10^{-5}" /> | <M t="3.0\times10^{-3}" /> | <M t="2.6\times10^{-4}" /> |
+| 0.5 | 366 | <M t="3.2\times10^{-3}" /> | <M t="7.6\times10^{-4}" /> | <M t="1.8\times10^{-2}" /> | <M t="2.8\times10^{-3}" /> |
+| 0.7 | 242 | <M t="7.9\times10^{-3}" /> | <M t="2.6\times10^{-3}" /> | <M t="5.1\times10^{-2}" /> | <M t="1.4\times10^{-2}" /> |
+| 1.0 | 151 | <M t="1.9\times10^{-2}" /> | <M t="1.0\times10^{-2}" /> | <M t="1.3\times10^{-1}" /> | <M t="5.8\times10^{-2}" /> |
+
+(One sample; other samples vary by <M t="\pm15\%" /> in the median and <M t="\pm35\%" /> in the 99th percentile.) At <M t="\theta=0.5" /> the quadrupole tree is <M t="4\times" /> more accurate in the median and <M t="6\times" /> in the tail for the *same* number of interactions. Equivalently, the quadrupole tree with <M t="\theta=0.7" /> is about as accurate as the monopole tree with <M t="\theta=0.5" /> but does <M t="1.5\times" /> fewer interactions.
+
+**What does it cost?** In pure Python the quadrupole interaction is more expensive: our <M t="N=1000" />, <M t="\theta=0.5" /> walk takes about <M t="1.7\times" /> longer than the monopole walk (typically <M t="2.7" /> s against <M t="1.6" /> s), so at fixed accuracy Python gains little. In compiled code the extra arithmetic is small compared with the memory access needed to fetch the cell, so quadrupoles are usually a win there. Many tree codes use them (Hernquist 1987, PKDGRAV, GADGET-4); GADGET-2 itself uses monopoles only, and relies on a better opening criterion (below) instead. Homework 5.6 asks you to measure this.
+
+## Opening criteria
+
+So far "far enough" meant the geometric rule <M t="s/d<\theta" />. It has two weaknesses: it treats all cells at the same <M t="s/d" /> alike whatever the force scale, and it ignores where the centre of mass sits inside the cell. Three criteria are in common use. Write <M t="s" /> for the cell's side, <M t="d" /> for the distance from the particle to the cell's centre of mass, <M t="\delta=|\vect R-\vect c|" /> for the offset of the centre of mass from the geometric centre <M t="\vect c" /> of the cell.
+
+1. **Geometric** (Barnes&ndash;Hut): accept if <M t="s/d<\theta" />.
+2. **Offset** (a common refinement; see also the error-bounded criteria of Salmon & Warren 1994): accept if <M t="d>s/\theta+\delta" />. If the centre of mass sits on the *far* side of the cell (as seen from the particle), the body of the cell extends towards the particle and its nearest particles are closer than <M t="d" /> suggests; the offset criterion is stricter for such cells. It is a uniform conservative margin: it subtracts <M t="\delta" /> whatever the direction.
+3. **Relative** (GADGET-2, Springel 2005): accept if <M t="\displaystyle\frac{GM\,s^2}{d^4}\le\alpha\,|\vect a_{\rm old}|" />, where <M t="\vect a_{\rm old}" /> is the particle's acceleration from the previous step (or from a first cheap pass). The left side estimates the size of the neglected quadrupole force, <M t="\frac{GM}{d^2}\big(\frac sd\big)^2" />; the criterion demands that it be a fraction <M t="\alpha" /> of the particle's own total acceleration. Typical <M t="\alpha=0.005" />.
+
+**Why the relative criterion?** A fixed angle <M t="\theta" /> treats every particle alike. But a given absolute force error matters little to a particle that feels a strong force (large <M t="|\vect a|" />) and a lot to one that feels a weak force (small <M t="|\vect a|" />, for example near the centre of a cluster where the pulls almost cancel, or far outside it). The relative criterion asks instead for the same tolerance <M t="\alpha" /> of *the particle's own acceleration*. It uses the previous force calculation: after each step you store <M t="|\vect a_i|" /> for every particle and use it for the next step (on the first step, compute it once with a cheap geometric pass). A slightly stale <M t="\vect a_{\rm old}" /> is harmless, since it only sets a tolerance; if <M t="|\vect a_{\rm old}|" /> is tiny the criterion becomes strict and opens many cells, which is the safe direction. The estimate <M t="GMs^2/d^4" /> is the size of the neglected quadrupole term of a monopole tree; with quadrupoles the neglected term is the octupole, so the same criterion is conservative there.
+
+<Figure
+	svg="L05/criteria"
+	n={5}
+	id="fig-l05-criteria"
+	widthPct={0.714}
+	alt="A star marking a particle at the left and a square cell of side s to its right, with its geometric centre c in grey and its centre of mass in red, displaced by delta. Two dashed circles are centred on the centre of mass: a blue one of radius s over theta and a larger green one of radius s over theta plus delta. The particle lies between the two circles."
+	caption="Geometric versus offset criterion for a cell of side s whose centre of mass (red) is displaced by δ from the cell centre (grey). The geometric criterion accepts the cell for any particle outside the blue dashed circle of radius s/θ about the centre of mass; the offset criterion needs the larger green circle, radius s/θ+δ. The particle (star) lies between the circles: the geometric criterion accepts the cell, the offset criterion does not."
+/>
+
+```python title="s4_criteria_toy.py"
+import numpy as np
+
+half, com, center = 0.5, np.array([2.25, 0.0]), np.array([1.95, 0.0])   # side 1
+p = np.zeros(2)                                     # the particle
+theta, alpha, G, M, a_old = 0.5, 0.005, 1.0, 2.0, 1.0
+d = np.linalg.norm(com - p)                         # distance to the COM = 2.25
+s = 2 * half                                        # cell side
+delta = np.linalg.norm(com - center)                # COM offset from the cell centre
+print(s / d < theta)                                # geometric: 0.44 < 0.5 True
+print(d > s / theta + delta)                        # offset: 2.25 > 2.3 False
+print(G * M * s**2 <= alpha * a_old * d**4)         # relative: 2 <= 0.13 False
+```
+
+<Callout kind="pitfall">
+Keep the rule that a cell containing the particle is never accepted, whatever the criterion. With the offset criterion be careful at <M t="\theta=0" />: <M t="s/\theta" /> diverges, and the correct answer is "never accept". For the relative criterion you need <M t="|\vect a_{\rm old}|" />: on the first step there is none, so start from a cheap geometric pass (or fall back to the geometric criterion), and keep the acceleration of the previous step afterwards.
+</Callout>
+
+<Figure
+	svg="L05/pareto"
+	n={6}
+	id="fig-l05-pareto"
+	widthPct={0.95}
+	alt="Two log-log panels of force error against interactions per particle, from about 100 to 700. Left: median error. Right: maximum error. Four curves: monopole geometric (blue), quadrupole geometric (red), quadrupole offset (green) and quadrupole relative (purple). The red, green and purple curves lie below the blue; the purple relative curve is lowest, especially in the maximum-error panel."
+	caption="Accuracy against cost for the Plummer sphere (N=1000). Left: median relative force error; right: maximum. Each curve varies θ (or α for the relative criterion). Quadrupoles (red) beat monopoles (blue) at every cost. The offset criterion (green) opens more cells and ends up on nearly the same curve as the geometric one. The relative criterion (purple) is best here, especially for the maximum error."
+/>
+
+Figure 6 is the honest summary. On this smooth cluster: quadrupoles help a lot; the offset criterion is not better than the geometric one at equal cost (its purpose is to avoid rare bad cases, at some cost); the relative criterion gives <M t="\sim4" />&ndash;<M t="6\times" /> smaller maximum error (a single worst particle, so it varies from sample to sample) at <M t="\sim290" /> interactions per particle than the geometric criterion at the same cost. On clustered distributions (two Gaussian clumps in a sparse background, <M t="\epsilon=0.01" />) the relative criterion again gives a smaller median error at moderate cost (typically a factor <M t="2" />&ndash;<M t="3" />), but its tail is less controlled when <M t="\alpha" /> is loose (at <M t="\alpha=0.02" /> we saw individual errors of tens of percent). So **no criterion wins everywhere**: the ranking depends on the distribution and on which error, median or worst case, you care about. The relative criterion is popular in cosmology because it targets what dynamics needs, an error bounded relative to the particle's own acceleration, rather than a fixed opening angle.
+
+**Tree walks with a cutoff.** Lecture 8 needs a tree that only computes the *short-range* part of the force, with a maximum interaction distance <M t="r_{\rm cut}" />. The walk then skips every cell whose nearest point to the particle is farther than <M t="r_{\rm cut}" /> (measured to the cell's box, not to its centre of mass). Nothing else changes.
+
+## Periodic boundaries and the Ewald sum
+
+Cosmological simulations model a small, representative cube of the Universe with **periodic boundary conditions**: a particle leaving one face re-enters at the opposite face, and every particle also feels all the periodic copies (images) of every other one. The force on a particle is then a sum over an infinite lattice of images, <M t="\sum_{\vect n\in\mathbb Z^3}m_j(\vect r_j-\vect r_i+\vect nL)/|\dots|^3" />. Two problems arise. Keeping only the nearest image (the *minimum-image* convention) is a poor approximation: compared with the full periodic force (Ewald, below; measured with the reference solution) the nearest-image Newtonian force is off by about <M t="0.4\%" /> at a separation <M t="r\approx0.1L" />, <M t="10" />&ndash;<M t="17\%" /> (depending on direction) at <M t="r\approx0.3L" />, and by tens of percent or more near the edge of the box. At small <M t="r" /> the difference is almost entirely the uniform background that periodic simulations subtract. And the full sum converges only conditionally (its value depends on the order of summation), because <M t="1/r^2" /> decays too slowly compared with the growth of the number of images.
+
+**The Ewald method (1921).** Here <M t="\mathrm{erf}(x)=\frac{2}{\sqrt\pi}\int_0^xe^{-t^2}dt" /> is the error function and <M t="\mathrm{erfc}=1-\mathrm{erf}" />. Split the kernel into a short-range and a smooth part,
+
+<M d tag="7" id="eq-l05-split" t="\frac1r=\underbrace{\frac{\mathrm{erfc}(\alpha r)}{r}}_{\text{short range}}+\underbrace{\frac{\mathrm{erf}(\alpha r)}{r}}_{\text{smooth}} ." />
+
+The first part decays like a Gaussian, so only the few nearest images matter (*real-space* sum). The second is the potential of a smooth (Gaussian-blurred) mass distribution, so its Fourier series over the periodic box, with wave vectors <M t="\vect k=2\pi\vect m/L" /> (<M t="\vect m" /> a triple of integers), converges after a few low modes (*reciprocal-space* sum; the Poisson equation is algebraic in Fourier space, which is why this works). The conditional convergence of the naive image sum is an artefact of summing shells in a fixed order; the periodic Universe has zero mean density, which the background term restores. You do not derive the result below: you only evaluate it in Homework 5.7. Adding a uniform negative background so that the total density has zero mean (this removes the divergent <M t="\vect k=0" /> term) makes the sum well defined, and the potential of a unit mass at the origin of a cube of side <M t="L" /> is
+
+<M d tag="8" id="eq-l05-ewald" t="\phi(\vect r)=\sum_{\vect n}\frac{\mathrm{erfc}(\alpha|\vect r+\vect nL|)}{|\vect r+\vect nL|}+\frac{1}{\pi L}\sum_{\vect m\ne\vect0}\frac{e^{-\pi^2m^2/(\alpha L)^2}}{m^2}\cos\frac{2\pi\,\vect m\cdot\vect r}{L}-\frac{\pi}{\alpha^2L^3}," />
+
+with the gravitational potential energy <M t="-Gm\,\phi" /> and acceleration <M t="\vect a=G\,m\,\nabla\phi" />. The parameter <M t="\alpha" /> is arbitrary: the *result* does not depend on it, only the convergence speed does. A good choice is <M t="\alpha\approx2/L" />, for which two image shells and <M t="|\vect m|\le5" /> give an accuracy of about <M t="10^{-12}" />. Near the origin, <M t="\phi\to1/r-2.8373/L" />: the images and the background add a constant.
+
+<Figure
+	svg="L05/ewald_split"
+	n={7}
+	id="fig-l05-ewaldsplit"
+	widthPct={0.95}
+	alt="Left: the potential of a unit mass against r over L. The dashed 1 over r curve is the sum of a red erfc(alpha r) over r curve that falls to zero by about 0.8, and a blue erf(alpha r) over r curve that is smooth and flat near the origin. Right: on a log scale, the Fourier transform 4 pi over k squared (dashed) falls slowly with wave number, while the smooth part's transform, with a Gaussian factor, falls exponentially."
+	caption="The Ewald split for α=2/L. Left: 1/r (dashed) is the sum of erfc(αr)/r (red: short range, needs only nearby images) and erf(αr)/r (blue: smooth). Right: in Fourier space the smooth part's transform, 4π e^(−k²/4α²)/k², falls off exponentially compared with that of 1/r, 4π/k² (dashed), so a few modes suffice."
+/>
+
+```python title="s5_ewald_split.py"
+from math import erf, erfc
+
+alpha, r = 2.0, 0.37
+short = erfc(alpha * r) / r          # decays like a Gaussian: needs only nearby images
+smooth = erf(alpha * r) / r          # smooth everywhere: easy in Fourier space
+print(short + smooth - 1 / r)        # 0.0: the two parts add up to the Newtonian 1/r
+```
+
+Evaluating Eq. (8) for every pair is far too slow (about <M t="10^{-4}" /> s per pair in Python). Production tree codes therefore *tabulate* the Ewald correction (the difference between the periodic force and the Newtonian force of the nearest image) once on a grid over half of the box (Hernquist, Bouchet & Suto 1991), and interpolate. The table covers one octant of the box (coordinates from <M t="0" /> to <M t="L/2" />), because the force has the symmetries of the cube. The tree walk itself needs only a small change: use the nearest image of each cell and add the tabulated correction. Fourier-based solvers (Lecture 6) get periodicity for free: a periodic particle&ndash;mesh solver is essentially the reciprocal-space sum of the Ewald method over the grid's modes, with no image sum. In Lecture 8 the same erfc split reappears as a Gaussian split of the force, <M t="\mathrm{erfc}(r/2r_s)" /> for the short-range (tree) part, that is <M t="\alpha=1/(2r_s)" />, with the mesh handling the smooth part (Fourier factor <M t="e^{-k^2r_s^2}" />).
+
+## Homework 5
+
+<Callout kind="homework" title="Homework 5: Quadrupoles, opening criteria, Ewald">
+Create `myOwnCode/L05/multipole.py` by copying `hw5_multipole_skeleton.py` from the hints zip; copy `hw5_run_experiments.py` next to it. It builds on *your* Lecture 4 tree (`myOwnCode/L04/tree.py`, with the `accept` and `quad` hooks) and Lecture 3 direct sum, so finish those first. The force functions work in 3D.
+
+**5.1 Second moments.** `compute_quadrupoles(root, pos, mass)` sets `node.quad` <M t="=I" /> (Eq. (3)) for *every* node: leaves directly, internal nodes from their children with Eq. (6) (post-order). Check by hand first: masses <M t="1,2,1" /> at <M t="(0,0,0),(1,0,0),(0,1,0)" /> have centre of mass <M t="(0.5,0.25,0)" />, <M t="I=\begin{pmatrix}1&-0.5&0\\-0.5&0.75&0\\0&0&0\end{pmatrix}" /> and <M t="\mathrm{tr}\,I=1.75" />. Also verify your tree's root <M t="I" /> against a direct computation over all particles.
+
+**5.2 Quadrupole force.** `quad_acceleration(dvec, M, I, G, eps)`, Eq. (5) (use `I @ dvec` and `dvec @ I @ dvec`). Experiment: the six particles of the far-field listing above (`default_rng(0)`, Gaussian offsets of size <M t="0.2" />), field point at distance <M t="d=2,\dots,16" /> along <M t="(1,0.3,-0.5)" />: plot the error of monopole and of monopole+quadrupole against <M t="d" /> (Figure 2). Reference: at <M t="d=4" /> about <M t="1.7\times10^{-3}" /> and <M t="2.5\times10^{-4}" /> (for the group of the checker; another group differs by a factor <M t="\sim2" />); the error falls by <M t="\approx16" /> and <M t="\approx32" /> when <M t="d" /> doubles. *Optional:* repeat with <M t="\epsilon=0.3" />, and check the softened worked example of the text.
+
+**5.3 Criteria.** `accept_geometric`, `accept_offset`, `accept_relative` as small functions (`dd` is the squared distance to the centre of mass; use `node.half`, `node.com`, `node.center`, `node.mass`; the offset rule must return `False` at <M t="\theta=0" />). Hand check with the toy of the listing above: geometric `True`, offset `False`, relative `False`.
+
+**5.4 The tree.** `tree_acceleration_multipole(pos, mass, G, eps, theta, criterion, alpha, acc_old, use_quad, root, stats)`: your Lecture 4 walk with a choice of criterion and quadrupole interactions (as in Lecture 4, add every interaction to `stats["interactions"]` when `stats` is a dict). With `use_quad=False` and the geometric criterion it must equal your Lecture 4 walk; at <M t="\theta=0" /> it must equal direct summation. Reproduce the table of this lecture (your Lecture 3 `plummer_sphere`, <M t="N=1000" />, <M t="\epsilon=0.05" />; another sample is within about a factor <M t="1.5" /> in the median). The quadrupole median error should fall like <M t="\theta^4" /> between <M t="0.3" /> and <M t="0.5" />.
+
+**5.5 Compare criteria.** For the geometric, offset and relative criteria (with quadrupoles): plot median and maximum error against interactions per particle (Figure 6). For the relative criterion first compute <M t="\vect a_{\rm old}" /> with a monopole geometric <M t="\theta=0.5" /> pass; scan <M t="\alpha=0.02,0.005,0.001,0.0003" /> (reference: <M t="191,290,469,627" /> interactions per particle, quadrupole median errors <M t="3.5\times10^{-3}" />, <M t="8.7\times10^{-4}" />, <M t="1.5\times10^{-4}" />, <M t="3.8\times10^{-5}" />). Which criterion is best? (This takes many walks of a few seconds each: expect several minutes of run time.) *Optional:* repeat for a clustered distribution (two Gaussian clumps plus a background) and see whether the answer changes.
+
+**5.6 Cost.** Time the monopole and quadrupole walks at <M t="\theta=0.5" /> (reference: quadrupole <M t="\approx1.7\times" /> slower in pure Python) and explain why compiled codes see a smaller penalty.
+
+**5.7 Ewald (optional).** `ewald_potential(r, L, alpha, n_real, n_k)` and `ewald_acceleration`, Eq. (8) and its gradient. Checks: independence of <M t="\alpha" /> (try <M t="1.5/L" />, <M t="2/L" />, <M t="3/L" /> with <M t="3" /> image shells and <M t="|\vect m|\le8" />; agreement to <M t="10^{-8}" />), <M t="\phi-1/r\to-2.8373/L" /> as <M t="r\to0" />, <M t="\vect a(-\vect r)=-\vect a(\vect r)" />, zero force at <M t="(L/2,0,0)" />, <M t="(L/2,L/2,0)" /> and <M t="(L/2,L/2,L/2)" />, and periodicity.
+
+Plan for about 7&ndash;9 hours (5.7 is an extra 2&ndash;3 hours; 5.6 is short; the optional parts of 5.2 and 5.5 are extra). **Check yourself:** unzip the hints, `cd` into `gravity-from-scratch/`, then run `python course/codeHints/L05/check_hw5.py` (it uses `myOwnCode/L03`, `L04` and `L05`; about 7 seconds; 16 required checks and 4 optional Ewald checks). The checker does not judge your plots. Only after your own attempt passes, open the reference solution and compare. Later lectures reuse your `multipole.py`, so finish it before Lecture 6.
+</Callout>
+
+## Summary
+
+- About the centre of mass the dipole vanishes; the next term is the quadrupole, described by the second-moment tensor <M t="I=\sum m\,\vect u\vect u^{\rm T}" />. It gives an extra power of <M t="s/d" /> in accuracy (absolute error <M t="d^{-5}" /> instead of <M t="d^{-4}" />).
+- <M t="I" /> of every cell is built bottom-up with the parallel-axis theorem in <M t="\Oh{N}" /> total work. Softening enters through <M t="D^2=d^2+\epsilon^2" />.
+- Quadrupoles make the tree error fall like <M t="\theta^4" />; at <M t="\theta=0.5" /> they cut the median error by <M t="\sim4\times" /> at equal interaction count.
+- Opening criteria trade differently on different distributions; the relative (force-scale) criterion of GADGET-2 targets an error that is a fixed fraction of the particle's own acceleration.
+- Periodic boxes need the Ewald sum: split <M t="1/r" /> into a short-range real-space part and a smooth Fourier part; the result is independent of the splitting parameter.
+
+## Further reading
+
+- L. Hernquist, Astrophys. J. Suppl. 64, 715 (1987): tree codes with quadrupoles.
+- L. Hernquist, F. R. Bouchet & Y. Suto, Astrophys. J. Suppl. 75, 231 (1991): Ewald summation for gravity in periodic boxes.
+- J. K. Salmon & M. S. Warren, J. Comput. Phys. 111, 136 (1994): error bounds and opening criteria for tree codes.
+- V. Springel, MNRAS 364, 1105 (2005): the relative opening criterion, Eq. (18), and the Ewald table.
+- J. D. Jackson, *Classical Electrodynamics*: multipole expansions.
+- P. P. Ewald, Ann. Phys. 369, 253 (1921).
+
+## Downloads
+
+<div class="nb-downloads">
+<a href="/downloads/nbody/L05-hints.zip">&#8681; Hints &amp; checker (L05-hints.zip)</a>
+<a href="/downloads/nbody/L05-solution.zip">&#8681; Reference solution (L05-solution.zip)</a>
+</div>
+
+Only open the solution after your own `multipole.py` passes every check &mdash; that's the point of the exercise.
