@@ -29,7 +29,7 @@ const { description, goal, lecture, title } = entry.data;
 const lectureLabel = lecture === 0 ? "L00" : `L${String(lecture).padStart(2, "0")}`;
 ---
 
-<PageLayout meta={{ title: `${lectureLabel} — ${title}`, description }}>
+<PageLayout bands="static" meta={{ title: `${lectureLabel} — ${title}`, description }}>
 	<PageTitle title={`${lectureLabel} — ${title}`} />
 
 	<article data-pagefind-body>

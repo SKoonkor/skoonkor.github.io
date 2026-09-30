@@ -30,12 +30,17 @@ interface Props {
 	 * fewer; the proxy atlas covers the gaps at reduced resolution.
 	 */
 	frameWindow?: number | undefined;
+	/**
+	 * "live" (default): scroll-driven, z = 6 -> 0. "static": the z = 0 frame drawn once
+	 * and left alone. Travels to the script as a data attribute, like `frameWindow`.
+	 */
+	mode?: "live" | "static";
 }
 
-const { frameWindow } = Astro.props;
+const { frameWindow, mode = "live" } = Astro.props;
 ---
 
-<div class="cw" aria-hidden="true" data-cw-window={frameWindow}>
+<div class="cw" aria-hidden="true" data-cw-window={frameWindow} data-cw-mode={mode}>
 	<canvas class="cw-band cw-band--left" data-cw-left></canvas>
 	<canvas class="cw-band cw-band--right" data-cw-right></canvas>
 	<div class="cw-readout cw-readout--scale" data-cw-scale>

@@ -18,9 +18,12 @@ interface Props {
 	 *   "light" a 4-frame window, ~16 MB, for a page that spends its own memory
 	 *           budget on imagery -- the structure-growth demo holds two windows
 	 *           of 512x512 bitmaps of its own
+	 *   "static" one frozen frame at z = 0 (drawn once, no scroll coupling, one 31 KB
+	 *           frame decoded): the margin texture without the animation, for reading
+	 *           pages where a moving background is a distraction and a CPU cost
 	 *   false   not mounted at all
 	 */
-	bands?: boolean | "light";
+	bands?: boolean | "light" | "static";
 }
 
 const {
@@ -29,6 +32,7 @@ const {
 } = Astro.props;
 
 const bandWindow = bands === "light" ? 4 : undefined;
+const bandMode = bands === "static" ? "static" : "live";
 ---
 
 <html class="scroll-smooth" lang={siteConfig.lang}>
@@ -39,7 +43,7 @@ const bandWindow = bands === "light" ? 4 : undefined;
 	<body
 		class="bg-global-bg text-global-text site-column mx-auto flex min-h-screen flex-col px-4 pt-16 font-mono text-sm font-normal antialiased sm:px-8"
 	>
-		{bands && <CosmicBands frameWindow={bandWindow} />}
+		{bands && <CosmicBands frameWindow={bandWindow} mode={bandMode} />}
 		<SkipLink />
 		<Header />
 		<main id="main">

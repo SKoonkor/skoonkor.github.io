@@ -367,8 +367,11 @@ export async function initCosmicBands(): Promise<void> {
 		}
 	}
 
+	/** Static mode sets this so nothing (a late decode, pageshow) can start the rAF loop. */
+	let frozen = false;
+
 	function schedule() {
-		if (running) return;
+		if (running || frozen) return;
 		running = true;
 		requestAnimationFrame(tick);
 	}
@@ -408,6 +411,35 @@ export async function initCosmicBands(): Promise<void> {
 	document.addEventListener("visibilitychange", onVisibility);
 	// scrollY is restored *after* listeners re-attach on a back-navigation.
 	window.addEventListener("pageshow", schedule);
+
+	if (container?.dataset.cwMode === "static") {
+		// One frozen frame at the present day (z = 0): no scroll listener, no rAF loop,
+		// no proxy atlas, and only the last of the 90 frames is ever fetched or decoded.
+		window.removeEventListener("scroll", schedule);
+		document.removeEventListener("visibilitychange", onVisibility);
+		window.removeEventListener("pageshow", schedule);
+		frozen = true;
+		const last = N - 1;
+		await ensureSharp(last);
+		current = target = last;
+		render(last);
+		// A resize clears the canvas backing store, so redraw once per resize burst.
+		window.removeEventListener("resize", onResize);
+		let staticRaf = 0;
+		window.addEventListener(
+			"resize",
+			() => {
+				if (staticRaf) return;
+				staticRaf = requestAnimationFrame(() => {
+					staticRaf = 0;
+					if (!window.matchMedia(`(min-width: ${MIN_WIDTH}px)`).matches) return;
+					render(last);
+				});
+			},
+			{ passive: true },
+		);
+		return;
+	}
 
 	await loadProxy();
 	reconcileWindow(current, 1);
