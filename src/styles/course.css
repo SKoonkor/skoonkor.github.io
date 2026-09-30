@@ -108,13 +108,17 @@
    plots, recoloured so black ink is currentColor -- see Figure.astro) sit directly on the
    page exactly like the PDF. `--nb-fig-w`, set inline per figure, is the fraction of the
    prose column width the LaTeX source itself used, so a figure that was 55% of \textwidth
-   in the PDF is 55% of the column here too, not stretched to fill it. */
+   in the PDF is 55% of the column here too, not stretched to fill it.
+
+   The width constraint sits on the <svg> itself, not on .nb-figure: a caption is prose, not
+   part of the picture, and reads badly wrapped to the same narrow measure as a small figure
+   (the 23%-wide hexagon, for instance, used to wrap its caption into a near-vertical strip
+   of text). .nb-figure and .nb-figure__canvas stay full width and just centre the narrower
+   SVG inside themselves; the caption gets its own fixed, independent measure instead. */
 
 .nb-figure {
 	margin-block: 1.75em;
-	width: var(--nb-fig-w, 100%);
-	max-width: 100%;
-	margin-inline: auto;
+	width: 100%;
 }
 
 	.nb-figure__canvas {
@@ -123,12 +127,16 @@
 	}
 
 	.nb-figure__canvas svg {
-		width: 100%;
+		width: var(--nb-fig-w, 100%);
+		max-width: 100%;
 		height: auto;
 		color: var(--color-global-text);
 	}
 
 	.nb-figure figcaption {
+		width: 80%;
+		max-width: 80%;
+		margin-inline: auto;
 		margin-top: 0.6em;
 		font-size: 0.82rem;
 		line-height: 1.6;
