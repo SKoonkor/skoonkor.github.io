@@ -124,6 +124,13 @@
 	.nb-figure__canvas {
 		display: flex;
 		justify-content: center;
+		/* Figures are the heaviest thing on a lecture page (thousands of SVG elements). Skip styling,
+		   layout and painting of those that are off-screen; the browser renders each just before it
+		   scrolls into view. The canvas keeps its exact height while skipped: it is the svg's own
+		   aspect ratio (--nb-fig-ar, read from the viewBox) over the fraction of the column the svg
+		   fills (--nb-fig-f), so nothing shifts when a figure is rendered. */
+		content-visibility: auto;
+		aspect-ratio: calc(var(--nb-fig-ar) / var(--nb-fig-f, 1));
 	}
 
 	.nb-figure__canvas svg {
@@ -147,6 +154,19 @@
 		font-weight: 700;
 		color: var(--color-global-text);
 	}
+
+/* Not done, on purpose: skipping KaTeX's invisible MathML copy (`.katex-mathml`, half of all KaTeX elements)
+   with content-visibility. It saved ~10% more, but Chrome then dropped every math node from the
+   accessibility tree (measured: 3004 -> 0 math roles on L05), i.e. equations vanish for screen readers. */
+/* Off-screen figures are skipped (content-visibility on .nb-figure__canvas above). Equations, callouts
+   and paragraphs are deliberately NOT: their heights are unknown until rendered, so skipping them makes
+   anchor links land a few hundred pixels off (measured), and paint containment would clip KaTeX that
+   overflows its line box. Figures have an exact height from the svg's viewBox, so nothing can shift. */
+@media print {
+	.nb-figure__canvas {
+		content-visibility: visible;
+	}
+}
 
 /* ---- Course index / lecture list ---- */
 

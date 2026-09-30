@@ -12,6 +12,31 @@ import PageTitle from "@/components/PageTitle.astro";
 import TOC from "@/components/course/TOC.astro";
 import PageLayout from "@/layouts/Base.astro";
 import "katex/dist/katex.min.css";
+// The KaTeX fonts a lecture uses. katex.min.css declares them font-display: block, so a formula stays
+// invisible until its font arrives; and the browser only discovers which fonts it needs after the
+// first layout, which came in staggered waves. Preloading fetches them alongside the HTML.
+// Every lecture uses the six core faces; the rest are used by some lectures only (measured by loading
+// each page and listing document.fonts, 2026-09-30), and preloading an unused font wastes a fetch and
+// draws a console warning. This is a hint, not a contract: a font missing from the list is simply
+// fetched late, as before. Lectures not listed yet get the extras that are most likely (AMS, bold).
+import katexMain from "katex/dist/fonts/KaTeX_Main-Regular.woff2?url";
+import katexMainBold from "katex/dist/fonts/KaTeX_Main-Bold.woff2?url";
+import katexMath from "katex/dist/fonts/KaTeX_Math-Italic.woff2?url";
+import katexMathBold from "katex/dist/fonts/KaTeX_Math-BoldItalic.woff2?url";
+import katexSize1 from "katex/dist/fonts/KaTeX_Size1-Regular.woff2?url";
+import katexSize2 from "katex/dist/fonts/KaTeX_Size2-Regular.woff2?url";
+import katexSize3 from "katex/dist/fonts/KaTeX_Size3-Regular.woff2?url";
+import katexSize4 from "katex/dist/fonts/KaTeX_Size4-Regular.woff2?url";
+import katexCal from "katex/dist/fonts/KaTeX_Caligraphic-Regular.woff2?url";
+import katexAms from "katex/dist/fonts/KaTeX_AMS-Regular.woff2?url";
+const extraFonts: Record<number, string[]> = {
+	0: [],
+	1: [katexAms, katexMainBold],
+	2: [katexSize3],
+	3: [katexAms],
+	4: [katexAms],
+	5: [katexAms, katexMainBold, katexSize3, katexSize4],
+};
 import "@/styles/course.css";
 
 interface Props {
@@ -27,9 +52,14 @@ const { entry, courseTitle, courseHref, prev, next, headings } = Astro.props;
 const { description, goal, lecture, title } = entry.data;
 
 const lectureLabel = lecture === 0 ? "L00" : `L${String(lecture).padStart(2, "0")}`;
+const katexFonts = [
+	katexMain, katexMath, katexMathBold, katexSize1, katexSize2, katexCal,
+	...(extraFonts[lecture] ?? [katexAms, katexMainBold]),
+];
 ---
 
 <PageLayout bands="static" meta={{ title: `${lectureLabel} — ${title}`, description }}>
+	{katexFonts.map((href) => <link slot="head" rel="preload" as="font" type="font/woff2" href={href} crossorigin />)}
 	<PageTitle title={`${lectureLabel} — ${title}`} />
 
 	<article data-pagefind-body>

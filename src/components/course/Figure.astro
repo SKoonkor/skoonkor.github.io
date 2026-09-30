@@ -41,9 +41,16 @@ const inlineSvg =
 	(() => {
 		throw new Error(`Figure: no SVG at src/assets/courses/nbody/${svg}.svg`);
 	})();
+
+// Read the drawing's aspect ratio from its own viewBox: with it the canvas below has its exact final height
+// before the browser has laid the SVG out, which is what lets it skip rendering off-screen figures
+// (content-visibility, see course.css) without the page jumping when they scroll into view.
+const viewBox = inlineSvg.match(/viewBox="[\d.\-]+ [\d.\-]+ ([\d.]+) ([\d.]+)"/);
+const aspect = viewBox ? Number(viewBox[1]) / Number(viewBox[2]) : 0;
+
 ---
 
-<figure class="nb-figure" id={id} style={`--nb-fig-w: ${Math.round(widthPct * 100)}%`}>
+<figure class="nb-figure" id={id} style={`--nb-fig-w: ${Math.round(widthPct * 100)}%; --nb-fig-f: ${Math.round(widthPct * 100) / 100}; --nb-fig-ar: ${aspect || "auto"}`}>
 	<div class="nb-figure__canvas" aria-label={alt} set:html={inlineSvg} />
 	<figcaption><span class="nb-figure__n">Figure {n}.</span> {caption}</figcaption>
 </figure>

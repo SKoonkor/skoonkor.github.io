@@ -39,6 +39,7 @@ const bandMode = bands === "static" ? "static" : "live";
 	<head>
 		<BaseHead articleDate={articleDate} description={description} ogImage={ogImage} title={title} />
 		<ThemeProvider />
+		<slot name="head" />
 	</head>
 	<body
 		class="bg-global-bg text-global-text site-column mx-auto flex min-h-screen flex-col px-4 pt-16 font-mono text-sm font-normal antialiased sm:px-8"
@@ -55,7 +56,10 @@ const bandMode = bands === "static" ? "static" : "live";
 				"prefetch": [
 					{
 						"where": {
-							"href_matches": "/*"
+							"and": [
+								{ "href_matches": "/*" },
+								{ "not": { "href_matches": "/downloads/*" } }
+							]
 						},
 						"eagerness": "immediate"
 					}
@@ -63,7 +67,10 @@ const bandMode = bands === "static" ? "static" : "live";
 				"prerender": [
 					{
 						"where": {
-							"href_matches": "/*"
+							"and": [
+								{ "href_matches": "/*" },
+								{ "not": { "href_matches": "/downloads/*" } }
+							]
 						},
 						"eagerness": "moderate"
 					}
