@@ -1,0 +1,295 @@
+---
+title: "Vectorising with NumPy, and the Plummer sphere"
+description: "Broadcasting, memory and chunking, sampling an equilibrium star cluster, and a cold collapse."
+lecture: 3
+goal: "Explain why Python loops are slow, use broadcasting to compute all pairwise forces at once while handling the diagonal and the memory cost, sample a Plummer sphere by inverse-transform and rejection sampling, and test equilibrium with the virial ratio and Lagrangian radii, including a cold collapse."
+publishDate: "2026-09-30"
+tags: ["n-body", "gravity", "numpy", "vectorisation", "plummer-sphere"]
+draft: false
+downloads:
+  hints: "/downloads/nbody/L03-hints.zip"
+  solutions: "/downloads/nbody/L03-solution.zip"
+---
+
+import M from "@/components/course/M.astro";
+import Callout from "@/components/course/Callout.astro";
+import Figure from "@/components/course/Figure.astro";
+
+<Callout kind="goals">
+- Explain why Python loops are slow and what "vectorising" means.
+- Use broadcasting to compute all pair separations at once, and handle the diagonal correctly.
+- Estimate the memory of an <M t="(N,N,3)" /> array and reduce it by chunking.
+- Sample a realistic initial condition: the Plummer sphere (inverse-transform and rejection sampling).
+- Test that a sample is in equilibrium (virial ratio, Lagrangian radii) and see what happens when it is not (cold collapse).
+</Callout>
+
+## Why loops are slow
+
+In Lecture 1 the three nested `for` loops cost a couple of microseconds *per pair*, mostly because the Python interpreter has to look up types, allocate small objects and dispatch every operation one at a time. NumPy avoids this overhead by running loops in compiled code, on arrays stored contiguously in memory, with one interpreter call per *array operation*. Writing the algorithm as operations on whole arrays instead of single numbers is called **vectorising**.
+
+Vectorising does not change the algorithm: direct summation still does <M t="N^2" /> pair evaluations. It shrinks the cost of each one by a large constant factor (about <M t="40" />&ndash;<M t="60\times" /> here), and it also changes the price you pay in *memory*. Both effects will matter when you meet trees and meshes.
+
+## Broadcasting
+
+NumPy combines arrays of different shapes by **broadcasting**: compare the shapes from the right; axes of equal length match, and an axis of length <M t="1" /> is stretched to fit the other. A one-dimensional toy example: subtract every position from every other.
+
+```python title="s1_broadcast_toy.py"
+import numpy as np
+
+x = np.array([0.0, 1.0, 3.0])        # three particles on a line
+dx = x[None, :] - x[:, None]         # shapes (1,3) - (3,1) -> (3,3)
+print(dx)                            # dx[i, j] = x[j] - x[i]
+# [[ 0.  1.  3.]
+#  [-1.  0.  2.]
+#  [-3. -2.  0.]]
+print(dx.sum(axis=1))                # sum over j for every i: [ 4.  1. -5.]
+```
+
+Here `x[None, :]` has shape <M t="(1,3)" /> and `x[:, None]` has shape <M t="(3,1)" />; the difference has shape <M t="(3,3)" /> with entry <M t="[i,j]=x_j-x_i" />. Row <M t="i" /> of this table holds everything particle <M t="i" /> needs; summing along `axis=1` adds over <M t="j" />.
+
+For particles in three dimensions the same idea gives an <M t="(N,N,3)" /> array of separation vectors:
+
+```python title="s2_shapes.py"
+import numpy as np
+
+N = 4
+pos = np.random.default_rng(0).random((N, 3))
+d = pos[None, :, :] - pos[:, None, :]      # (1,N,3) - (N,1,3) -> (N,N,3)
+r2 = (d**2).sum(axis=2)                    # sum over x, y, z -> (N,N)
+print(d.shape, r2.shape)                   # (4, 4, 3) (4, 4)
+print(d[1, 2] - (pos[2] - pos[1]))         # [0. 0. 0.]: d[i, j] = r_j - r_i
+```
+
+<Figure
+	svg="L03/table"
+	n={1}
+	id="fig-l03-table"
+	widthPct={0.68}
+	alt="A 6x6 grid of cells representing the (N,N) table of pairwise separations, with row i=2 highlighted and an arrow showing the sum over j."
+	caption="The (N,N) table of separations for N=6 (each cell holds three numbers). One row gives everything particle i needs; summing along the row (axis=1) adds up the contributions of all j."
+/>
+
+From here the force is the loop of Lecture 1 in array form: compute the softened squared distance <M t="r^2=|\vect d|^2+\epsilon^2" />, turn it into the weights <M t="m_j/(r^2)^{3/2}" />, multiply the separation vectors by the weights, sum over <M t="j" />, and multiply by <M t="G" />. The only new skill is combining arrays of different shapes. The rule for multiplying an <M t="(N,N)" /> table by an <M t="(N,N,3)" /> table is the same as before: shapes are aligned from the *right*, so add an axis at the *end* of the table; a per-particle array such as `mass` has shape <M t="(N,)" />, and `mass[None, :]` has shape <M t="(1,N)" /> and scales column <M t="j" /> by <M t="m_j" />.
+
+```python title="s5_weights_shapes.py"
+import numpy as np
+
+w = np.arange(6.0).reshape(3, 2)           # an (N, M) table of numbers
+d = np.ones((3, 2, 3))                     # an (N, M, 3) table of 3-vectors
+print((w[:, :, None] * d).shape)           # (3, 2, 3): add an axis at the END of w
+print((w[:, :, None] * d).sum(axis=1).shape)  # (3, 3): sum over the middle axis
+m = np.array([1.0, 2.0])                   # one number per column (shape (M,))
+print((m[None, :] * w).shape)              # (3, 2): scales column j
+```
+
+Assembling this is Homework 3.1. There is one trap.
+
+<Callout kind="pitfall">
+On the diagonal <M t="i=j" /> the separation is zero, so with <M t="\epsilon=0" /> the weight is <M t="0/0" /> or <M t="1/0" />, giving `inf` or `nan`, and one `nan` in a sum ruins the whole row. Handle the diagonal *explicitly, before the division*: give the diagonal of <M t="r^2" /> a safe value, then remove the self term. (Multiplying a `nan` by zero afterwards does not help: it is still `nan`.) Make sure the self-force is exactly zero. Do not rely on <M t="\epsilon>0" />: your code must work for <M t="\epsilon=0" /> too.
+</Callout>
+
+```python title="s3_diagonal_trap.py"
+import numpy as np
+
+r2 = np.array([[0.0, 1.0], [1.0, 0.0]])    # squared distances of two particles
+with np.errstate(divide="ignore"):
+    print(1.0 / r2**1.5)                   # [[inf 1.] [1. inf]]
+```
+
+The potential energy of Lecture 1, <M t="U=-\sum_{i<j}Gm_im_j/\sqrt{r_{ij}^2+\epsilon^2}" />, vectorises the same way (the diagonal has the same <M t="1/0" /> trap at <M t="\epsilon=0" />). Summing over the whole <M t="(N,N)" /> table counts every pair twice: either halve the sum or use only the upper triangle (for example with `np.triu_indices`).
+
+## Memory and chunking
+
+The price of vectorising is memory. An <M t="(N,N,3)" /> array of 64-bit floats takes <M t="24N^2" /> bytes, and the expression <M t="\vect d^2" />, the weights times <M t="\vect d" />, and so on each create *another* temporary array of similar size.
+
+| <M t="N" /> | one <M t="(N,N,3)" /> array | typical peak (about <M t="2.7\times" />) |
+|---:|---:|---:|
+| <M t="10^3" /> | 24 MB | 64 MB |
+| <M t="2\times10^3" /> | 96 MB | 256 MB |
+| <M t="10^4" /> | 2.4 GB | 6.4 GB |
+| <M t="10^5" /> | 240 GB | impossible |
+
+The peak at <M t="N=2000" /> was measured for a straightforward broadcast implementation (Python's `tracemalloc` module reports the peak memory allocated by NumPy); the other rows scale it by <M t="N^2" />. The fix is **chunking**: process the particles <M t="i" /> in blocks of, say, <M t="B=100" />, so that the temporary arrays have shape <M t="(B,N,3)" /> instead of <M t="(N,N,3)" />. The result is identical, the peak memory drops by roughly <M t="N/B" />, and the speed is almost unchanged as long as <M t="B" /> is large enough to keep NumPy busy. For <M t="N=2000" /> and <M t="B=100" /> the peak fell from <M t="256" /> to <M t="14.5" /> MB (a factor <M t="18" />).
+
+<Callout kind="pitfall">
+When you process rows <M t="i_0,\dots,i_1-1" />, the diagonal entries of the block are the cells <M t="(i_0+k,\ i_0+k)" />, *not* <M t="(k,k)" />. Forgetting the offset is the most common chunking bug: it passes for the first block and silently gives wrong forces for all others. In code, the block is `pos[i0:i1, None, :]` against `pos[None, :, :]`; the diagonal cells of the block are offset by the block start. Zero the diagonal weights in the block just as in 3.1. Test with a chunk size that does not divide <M t="N" />.
+</Callout>
+
+## How much faster?
+
+<Figure
+	svg="L03/timing_np"
+	n={2}
+	id="fig-l03-timing"
+	widthPct={0.62}
+	alt="Log-log plot of time per force evaluation against N, comparing pure-Python loops and NumPy broadcasting, both with slope 2."
+	caption="Time for one force evaluation against N: pure-Python loops (Lecture 1) versus NumPy broadcasting (your numbers will differ). Both scale as N^2 at large N (at very small N fixed overheads flatten the curves); NumPy is about 40-60x faster at the N shown."
+/>
+
+Both curves have slope <M t="2" /> on the log&ndash;log plot: vectorising is a constant-factor speed-up, not a better algorithm. With <M t="N=1000" /> a force evaluation takes about <M t="35" /> ms, so <M t="10^4" /> steps take six minutes. To go beyond <M t="N\sim10^4" /> you need the algorithms of the next lectures. Constant factors can be squeezed further: `float32` halves the memory (at the price of noisier energy checks), `np.einsum` can fuse several array operations, and compiled code (Numba, C or Cython) removes the temporary arrays altogether. We stay with plain NumPy: the point is to understand the algorithm.
+
+## An equilibrium test object: the Plummer sphere
+
+Simulations need initial conditions. One of the simplest realistic ones is a spherical cluster in *equilibrium*, the **Plummer sphere**. It is also useful as a test: if your force and integrator are right, an equilibrium model should stay put.
+
+<Callout kind="history" title="History">
+H. C. Plummer (1911) introduced this density profile to fit the star counts of globular clusters. The same functional form gives the softened force of Lecture 1: the force that a Plummer sphere of scale length <M t="\epsilon" /> exerts on a point mass is <M t="Gm\,r/(r^2+\epsilon^2)^{3/2}" />. In this sense a softened particle acts on other particles as if it were smeared into a tiny Plummer sphere.
+</Callout>
+
+### The model
+
+For total mass <M t="M" /> and scale length <M t="a" />,
+
+<M d tag="1" id="eq-l03-plummer" t="\begin{gathered}\rho(r)=\frac{3M}{4\pi a^3}\Big(1+\frac{r^2}{a^2}\Big)^{-5/2},\\[4pt] M(<r)=M\,\frac{r^3}{(r^2+a^2)^{3/2}},\\[4pt] \Phi(r)=-\frac{GM}{\sqrt{r^2+a^2}} .\end{gathered}" />
+
+The density is flat near the centre and falls as <M t="r^{-5}" /> outside. Half of the mass lies inside <M t="r_{1/2}=a/\sqrt{2^{2/3}-1}\approx1.305\,a" />. The model is in equilibrium (with the isotropic distribution function <M t="f(E)\propto(-E)^{7/2}" />, which is why the velocity recipe below has the form it has; you do not need it beyond that) and satisfies the virial theorem <M t="2K+U=0" />, with <M t="K" /> and <M t="U" /> the kinetic and potential energy of Lecture 1; its total energy is <M t="E=-3\pi GM^2/(64a)" />. (In <M t="N" />-body units, <M t="G=M=1" /> and <M t="E=-1/4" />, this means <M t="a=3\pi/16\approx0.59" />; in this lecture we simply take <M t="a=1" />.)
+
+### Sampling positions: inverse transform
+
+Draw a uniform random number <M t="u" /> strictly inside <M t="(0,1)" /> (at <M t="u=1" /> the radius would be infinite) and interpret it as the *mass fraction* <M t="M(<r)/M" />. Solving Eq. (1) for <M t="r" /> gives
+
+<M d tag="2" id="eq-l03-invtransform" t="r=\frac{a}{\sqrt{u^{-2/3}-1}} ." />
+
+This is **inverse-transform sampling**: to draw from a distribution with cumulative function <M t="F" />, draw <M t="u" /> uniformly and return <M t="F^{-1}(u)" />. The direction is uniform on the sphere: take <M t="\cos\theta" /> uniform in <M t="[-1,1]" /> and <M t="\phi" /> uniform in <M t="[0,2\pi)" />, then <M t="(x,y,z)=r\,(\sin\theta\cos\phi,\ \sin\theta\sin\phi,\ \cos\theta)" />. (Choosing <M t="\theta" /> itself uniformly would crowd particles at the poles.)
+
+### Sampling velocities: rejection sampling
+
+For the isotropic model, the speed of a particle at radius <M t="r" /> is a fraction <M t="q" /> of the local escape speed <M t="v_{\rm esc}=\sqrt{2|\Phi(r)|}=\sqrt{2GM}\,(r^2+a^2)^{-1/4}" />, and <M t="q" /> has the distribution
+
+<M d tag="3" id="eq-l03-gq" t="g(q)\propto q^2(1-q^2)^{7/2},\qquad 0\le q\le1 ." />
+
+This cannot be inverted in closed form, so use **rejection sampling**: draw <M t="x" /> uniformly in <M t="[0,1]" /> and <M t="y" /> uniformly in <M t="[0,0.1]" /> (the maximum of <M t="g" /> is below <M t="0.1" />), and accept <M t="q=x" /> if <M t="y<x^2(1-x^2)^{7/2}" />. (The curve <M t="g" /> is unnormalised, which is fine: only its shape matters.) Repeat until you have <M t="N" /> accepted values. The velocity is <M t="q\,v_{\rm esc}" /> times a random direction (as above). Give every particle the mass <M t="M/N" />. Finally, subtract the mass-weighted mean position and velocity so that the cluster's centre of mass is at rest at the origin.
+
+```python title="s4_sampling_toys.py"
+import numpy as np
+
+rng = np.random.default_rng(1)
+n = 100000
+
+# Inverse-transform sampling: want p(x) = 2x on [0, 1].
+# Its cumulative distribution is F(x) = x**2, so x = sqrt(u) for uniform u.
+x = np.sqrt(rng.random(n))
+print(x.mean())                      # about 2/3
+
+# Rejection sampling: want p(x) proportional to x (1 - x) on [0, 1] (peak 1/4).
+x = rng.random(n)
+y = 0.25 * rng.random(n)
+keep = x[y < x * (1 - x)]            # keep points under the curve
+print(keep.mean(), len(keep) / n)    # about 0.5; about 2/3 kept
+```
+
+<Callout kind="idea">
+Both techniques answer "how do I draw random numbers from a distribution I only know as a formula?". Inverse transform is exact and needs the cumulative function; rejection sampling needs only the density and a bound, but wastes some draws. Cosmological initial conditions (Lecture 7) use Gaussian random fields, drawn with yet another variant of the same ideas.
+</Callout>
+
+<Figure
+	svg="L03/sampling"
+	n={3}
+	id="fig-l03-sampling"
+	widthPct={0.95}
+	alt="Two panels: left, inverse-transform sampling reading a mass fraction off the M(<r)/M curve; right, rejection sampling of q=v/v_esc, with accepted points below the curve in green and rejected points above it in grey."
+	caption="The two sampling techniques for the Plummer sphere. Left: inverse transform. A uniform random number u is read on the vertical axis as a mass fraction, and the radius is read off the curve M(<r)/M. Right: rejection sampling for q=v/v_esc. Points are drawn uniformly in the box (height 0.1) and kept (green) if they fall under the curve."
+/>
+
+<Figure
+	svg="L03/plummer"
+	n={4}
+	id="fig-l03-plummer"
+	widthPct={0.95}
+	alt="Two panels: left, 3000 sampled Plummer-sphere particles projected on the x-y plane; right, the density profile of a 2x10^5-particle sample as dots against the analytic curve in red."
+	caption="A sampled Plummer sphere (a=1). Left: 3000 particles projected on the x-y plane (a few outliers at large r are expected: the tail is long). Right: density profile of a 2x10^5-particle sample (dots) against the analytic profile (red)."
+/>
+
+### How to check a sample
+
+Never trust a sampler without tests. Cheap and strong tests: the total mass and centre of mass; the fraction of particles inside <M t="r=a" /> (analytic <M t="2^{-3/2}=0.354" />); the half-mass radius (<M t="1.305\,a" />); every speed below <M t="v_{\rm esc}" />; and the **virial ratio** <M t="2K/|U|" />, which must be <M t="1" /> for equilibrium. For a sample with <M t="N=4000" /> the virial ratio scatters by about <M t="\pm0.01" /> (one standard deviation), and for <M t="N=500" /> by about <M t="\pm0.03" />; so test against a band of a few standard deviations, not one.
+
+## Does the sphere stay in equilibrium?
+
+Evolve the sample with leapfrog. In Lecture 2 the stepper called your loop force; now the force is a *function you pass in*, with the signature `force(pos, mass, G, eps)` <M t="\to" /> accelerations <M t="(N,3)" />, so the same stepper can use the fast NumPy force (and, in Lecture 6, a mesh force with the same signature). The natural time unit is the dynamical time <M t="\sqrt{a^3/GM}" />, which is <M t="1" /> here; a particle at radius <M t="\sim a" /> crosses the cluster in a few of them. Track the **Lagrangian radii**: the radii (about the centre of mass) enclosing fixed fractions of the total mass, e.g. 10%, 50%, 90%. They are robust, cheap measures of a cluster's structure. For the Plummer model, the radius enclosing a mass fraction <M t="f" /> is <M t="a/\sqrt{f^{-2/3}-1}" />.
+
+<Figure
+	svg="L03/equilibrium"
+	n={5}
+	id="fig-l03-equilibrium"
+	widthPct={1.0}
+	alt="Two panels: left, Lagrangian radii enclosing 10, 25, 50, 75, 90 percent of the mass over ten dynamical times, with dotted analytic values; right, the virial ratio 2K over |U| over the same time span."
+	caption="N=500 Plummer sphere, eps=0.05, dt=0.01, ten dynamical times sqrt(a^3/GM). Left: Lagrangian radii enclosing 10, 25, 50, 75, 90% of the mass (dotted: analytic values). Right: virial ratio 2K/|U|. The relative energy error stays at about 4x10^-6 for this sample. Another random sample would look similar but not identical."
+/>
+
+The outer radii wander by 5&ndash;10% and the inner ones (10%, 25%) by up to about 20%, depending on the sample; none shows a trend. The virial ratio wanders between about 0.95 and 1.05. This is mostly finite-<M t="N" /> fluctuation (the sample-to-sample scatter of <M t="2K/|U|" /> is <M t="\pm0.03" /> at <M t="N=500" />) and slow breathing of the cluster. There is also a tiny systematic effect: softening makes <M t="|U|" /> slightly smaller than the Newtonian value, raising the ratio by about <M t="0.004" />. Do not look for a 5% systematic effect. Because <M t="N=500" /> is small, real (two-body) relaxation also changes the inner radii a little over ten dynamical times.
+
+### Collisionless or collisional?
+
+Real dark matter is collisionless: particles never scatter individually. A simulation with a finite number of particles approximates this only if the particles do not exchange energy through close encounters over the run time. The **relaxation time** (Binney & Tremaine, Sec. 1.2), the time over which encounters change a particle's velocity by of order itself, is roughly (this is an estimate, not an exact formula)
+
+<M d tag="4" id="eq-l03-trelax" t="t_{\rm relax}\approx\frac{0.1\,N}{\ln N}\,t_{\rm cross}." />
+
+where <M t="t_{\rm cross}\sim\sqrt{R^3/GM}" /> is the time to cross the system (<M t="R" /> a typical radius, for example <M t="a" />). For <M t="N=10^3" /> that is only about 14 crossing times; for <M t="N=10^4" /> about 110; for <M t="N=10^6" /> about <M t="7\times10^3" />. This is why cosmological simulations need very many particles and softening: both keep <M t="t_{\rm relax}" /> much longer than the simulated time.
+
+## Cold collapse
+
+Now the opposite of equilibrium. Take a uniform sphere (radius <M t="R" />, mass <M t="M" />) with *zero* velocities: sample <M t="r=R\,u^{1/3}" /> and isotropic directions (why the cube root? Hint: apply the inverse-transform idea of the previous section to <M t="M(<r)\propto r^3" />). Its energy is <M t="E=-3GM^2/(5R)" /> and <M t="2K/|U|=0" />. Gravity pulls everything inwards, and (for an exactly uniform sphere) all shells reach the centre at the same time, the **free-fall time**
+
+<M d tag="5" id="eq-l03-tff" t="t_{\rm ff}=\frac{\pi}{2}\sqrt{\frac{R^3}{2GM}} ," />
+
+which is <M t="1.11" /> for <M t="G=M=R=1" />. A sampled sphere is only approximately uniform, so its collapse is not exactly simultaneous and the minimum radius comes a little later (at <M t="t\approx 1.1\text{--}1.2" />). What follows is a violent, non-linear process.
+
+<Figure
+	svg="L03/cold_collapse"
+	n={6}
+	id="fig-l03-collapse"
+	widthPct={1.0}
+	alt="Three panels tracking a cold collapse: half-mass radius, virial ratio 2K over |U|, and relative energy error, all against time, for two time steps, with a dashed line marking the free-fall time."
+	caption="Cold collapse of a uniform sphere (N=500, eps=0.05; red: dt=0.01, blue: dt=0.002; dashed line: t_ff). Left: the half-mass radius shrinks to about 0.07-0.10 at t~1.1-1.2 (near t_ff=1.11; it varies between random samples) and the system re-expands. Middle: 2K/|U| rises to about 1.7 and then settles at 1.1-1.15. Right: the energy error jumps at the collapse, to roughly 1-5% for dt=0.01 and 0.04-0.2% for dt=0.002, depending on the sample."
+/>
+
+Three lessons. (i) The collapse is pinpointed by <M t="t_{\rm ff}" />. (ii) The system does not stay collapsed: it bounces, exchanges energy, and settles into a roughly virialised state with <M t="2K/|U|" /> close to (here slightly above) <M t="1" /> (*violent relaxation*); this is a small model of how halos form. (iii) A fixed time step is wrong for the collapse: the density (and hence the acceleration) rockets up at the bounce, so the energy error spikes. This is exactly the situation for which Lecture 2 introduced a step that shrinks with <M t="|\vect a|" /> (Choosing the time step there); you can try it as an optional extension.
+
+## Homework 3
+
+<Callout kind="homework" title="Homework 3: vectorised force, Plummer sphere, collapse">
+Create `myOwnCode/L03/vectorised.py` by copying `hw3_vectorised_skeleton.py` from the hints zip. Copy `hw3_run_experiments.py` next to it. The checker compares your NumPy results with your own Lecture 1 loop code (`myOwnCode/L01/direct.py`), so finish Homework 1 first. Homework 3.1 and 3.2 are the same maths as Homework 1, so you already have the reference answers. **Rule:** no Python loops over particles in the force and energy functions of 3.1&ndash;3.2 (loops over chunks in 3.3 are fine); this is on your honour.
+
+**3.1 Acceleration.** `acceleration_np(pos, mass, G, eps)` <M t="\to(N,3)" /> using broadcasting. It must agree with your loop version to <M t="10^{-10}" /> (use 64-bit floats: `float32` would not pass), work for <M t="\epsilon=0" /> (no `nan`), leave the inputs unchanged, and satisfy <M t="\sum m_i\vect a_i=0" />.
+
+**3.2 Energies.** `kinetic_energy_np`, `potential_energy_np` (each pair once, softened), `total_energy_np`. Hand checks: one particle of mass <M t="2" /> with velocity <M t="(1,2,2)" /> has <M t="K=9" />; masses <M t="1,2,3" /> at <M t="x=0,1,3" /> (on a line) have <M t="U=-6" /> (with <M t="G=1" />, <M t="\epsilon=0" />); two unit masses at distance <M t="2" /> with <M t="\epsilon=1.5" /> have <M t="U=-1/\sqrt{4+2.25}=-0.4" />. Use <M t="U=-\sum_{i<j}Gm_im_j/\sqrt{r_{ij}^2+\epsilon^2}" />.
+
+**3.3 Chunking.** `acceleration_chunked(pos, mass, G, eps, chunk)`: same result as 3.1, for any chunk size (test <M t="1" />, <M t="7" />, <M t="N" />, <M t=">N" />), and no <M t="(N,N,3)" /> array. Measure the peak memory with `tracemalloc` for <M t="N=2000" />: the full version needs about 256 MB, chunk 100 about 15 MB.
+
+**3.4 Timing.** Time your loop and NumPy forces for <M t="N=25,\dots,400" /> and plot them (log&ndash;log). Expect a speed-up of tens of times if your Lecture 1 loops are the plain kind (the checker only requires a few times) and slope <M t="2" /> for both. This is a short task: about ten minutes.
+
+**3.5 Plummer sphere.** `plummer_sphere(N, a, seed, G, M)` <M t="\to" /> `pos, vel, mass` with the centre of mass at rest at the origin, reproducible from `seed`. Also `uniform_sphere(N, R, seed, M)`. Each particle has mass <M t="M/N" />. Reference values: half-mass radius <M t="1.30" /> for <M t="N=20000" /> (analytic <M t="1.305" />); <M t="2K/|U|=1.00\pm0.03" /> at <M t="N=4000" /> (unsoftened <M t="U" />); total energy <M t="\approx-0.147" /> (<M t="=-3\pi/64" />). Test <M t="\langle|z|/r\rangle\approx0.5" /> for your directions. Plot your sample like Figure 4.
+
+**3.6 Tools.** `lagrangian_radii(pos, mass, fractions)` and `evolve_kdk(pos, vel, mass, dt, n_steps, G, eps, force)`, your Lecture 2 KDK stepper with the force passed in as an argument. It returns `(pos, vel)` at the end of the `n_steps` steps (to record a history, call it repeatedly with a small `n_steps`). It must not modify its inputs, and forward&ndash;flip&ndash;forward must return to the start. `lagrangian_radii` returns, for each fraction, the radius of the smallest set of particles (ordered by radius) holding at least that mass fraction.
+
+**3.7 Equilibrium.** Evolve a Plummer sphere with <M t="N=500" />, <M t="a=1" />, <M t="\epsilon=0.05" />, <M t="\Delta t=0.01" /> up to <M t="t=10" />. Plot the Lagrangian radii and <M t="2K/|U|" /> every <M t="0.25" /> (Figure 5). This is 1000 steps and takes about ten seconds. Reference: relative energy error <M t="\lesssim3\times10^{-5}" />; half-mass radius within about 10&ndash;20% of its initial value (it depends on the sample); <M t="2K/|U|" /> between about 0.95 and 1.05. Explain the small departure from <M t="1" /> (see the text: how much of it is noise, how much systematic?).
+
+**3.8 Cold collapse.** <M t="N=500" /> uniform sphere, <M t="R=M=1" />, <M t="\epsilon=0.05" />, to <M t="t=6" /> with <M t="\Delta t=0.01" /> and <M t="\Delta t=0.002" />. Reference (these vary a little from sample to sample): minimum half-mass radius 0.065&ndash;0.09 at <M t="t\approx1.1" />&ndash;1.2 (free fall: 1.11); <M t="2K/|U|" /> peaks at about 1.7 and settles at 1.1&ndash;1.15; maximum energy error about 2&ndash;5% for <M t="\Delta t=0.01" /> and 0.1&ndash;0.2% for <M t="\Delta t=0.002" />. *Optional:* repeat with the adaptive step of Lecture 2 (the criterion uses <M t="\epsilon" /> as a length scale, as in Homework 2.6) and compare the energy error at equal cost.
+
+Plan for about 5&ndash;6 hours in total. **Check yourself:** unzip the hints, `cd` into `gravity-from-scratch/`, then run `python course/codeHints/L03/check_hw3.py` (about 6 seconds; the statistical tests use generous tolerances, but re-run once if a check fails narrowly). The checker does not judge your plots or explanations. Only after your own attempt passes, open the reference solution and compare. Later lectures reuse your `vectorised.py`, so finish it before Lecture 4.
+</Callout>
+
+## Summary
+
+- Vectorising removes interpreter overhead (about 40&ndash;60x here) but not the <M t="N^2" /> cost, and costs <M t="\Oh{N^2}" /> memory unless you chunk.
+- Broadcasting builds all pair separations as an <M t="(N,N,3)" /> array; the diagonal needs explicit handling.
+- Inverse-transform and rejection sampling generate initial conditions from analytic distributions; test every sampler.
+- Equilibrium tests: virial ratio and Lagrangian radii. A cold collapse tests the opposite regime and shows why time steps must adapt.
+- Enough particles and softening keep the system collisionless over the run.
+
+## Further reading
+
+- H. C. Plummer, MNRAS 71, 460 (1911).
+- S. J. Aarseth, M. Hénon & R. Wielen, A&A 37, 183 (1974): the sampling recipe for the Plummer sphere.
+- J. Binney & S. Tremaine, *Galactic Dynamics*, 2nd ed.: Sec. 1.2 (relaxation time) and Ch. 2 (potential theory, Plummer model).
+- C. R. Harris et al., *Array programming with NumPy*, Nature 585, 357 (2020), and the NumPy documentation on broadcasting.
+
+## Downloads
+
+<div class="nb-downloads">
+<a href="/downloads/nbody/L03-hints.zip">&#8681; Hints &amp; checker (L03-hints.zip)</a>
+<a href="/downloads/nbody/L03-solution.zip">&#8681; Reference solution (L03-solution.zip)</a>
+</div>
+
+Only open the solution after your own `vectorised.py` passes every check &mdash; that's the point of the exercise.
