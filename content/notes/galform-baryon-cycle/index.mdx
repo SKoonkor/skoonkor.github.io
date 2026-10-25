@@ -1,0 +1,117 @@
+---
+title: "Baryon cycle (GALFORM)"
+description: "How GALFORM tracks the gas and stars of a galaxy with a handful of rate equations: star formation, recycling, supernova ejection, the reservoir and the hot halo."
+publishDate: "2026-10-25"
+tags: ["galform", "baryon cycle", "semi-analytic"]
+---
+
+import "katex/dist/katex.min.css";
+import "@/styles/course.css";
+import M from "@/components/course/M.astro";
+import Callout from "@/components/course/Callout.astro";
+import Figure from "@/components/course/Figure.astro";
+
+## Main ideas
+
+- We want to track the baryons (star and gas) of a galaxy.
+- Feedback processes moves gas out of the star-forming cold phase of the ISM.
+- GALFORM (Lacey+16) solves a handful of equations for tracking this cycle
+
+## Updates on that model
+
+- Stellar-evolution theory has changed a lot
+- Key changes
+	- Not every star above ~ 8 solar masses explodes as a supernova
+	- success is a non-monotonic function of the ZAMS mass, with "islands" of explodability and of failure
+	- The most massive stars have the highest metal yields, and are disproportionately those that fail.
+
+## My learning goals
+
+Applying the new supernova theory to the GALFORM model, both power-law (e.g., [Lacey+16](https://arxiv.org/abs/1509.08473), [Hou+16](https://arxiv.org/abs/1512.01547)) and physically motivated feedback (e.g. Lagos+13) schemes.
+
+<Callout kind="idea">
+```
+IMF x explodability(m, Z) --> (Energy, Momentum, Metals) / unit mass formed
+```
+
+Explodability enters feedback through integrals over IMF
+</Callout>
+
+1. We will apply this to the SN feedback with the existing power-law first
+2. Then apply it to the physically motivated replacement
+
+## The GALFORM baryon cycle
+
+> see [Cole+00](https://arxiv.org/abs/astro-ph/0007281) for the original paper.
+
+Semi-analytic way:
+
+> "The fuck is a galaxy?"
+>
+> Well...
+>
+> It's gas moving from one place to another place, sometimes it get heated up. But after some time it cools down. Might be waiting to form star if can cool enough, might also end up in the central black hole, or might get reheated and yeeted out of the galaxy if happens to be surrounding stars that explode, and, if the halo cools quasi-hydrostatically and its central SMBH is massive enough, the SMBH can also prevent this hot gas from cooling.
+>
+> So, we want to track all these using some formalism.
+
+Let's put the name tags on the masses
+
+- <M t="M_{\rm cold}" /> be the cold disc gas (<span style={{ color: "#2b7fd6" }}>cold ISM</span>)
+- <M t="M_\ast" /> the <span style={{ color: "#e08a3c" }}>stellar mass</span>
+- <M t="M_{\rm res}" /> the gas ejected from the galaxy and held in <span style={{ color: "#d6407f" }}>reservoir</span>
+- <M t="M_{\rm hot}" /> the <span style={{ color: "#c0392b" }}>hot halo</span> gas, mostly from accretion as the halo grow and gas returns from the reservoir, some comes from mergers
+
+> One thing to keep in mind: with no mergers, the flow of the amount of gas should be conserved
+>
+> <M d tag="Checker" t="\boxed{\dot M_{\rm hot} + \dot M_{\rm cold} + \dot M_\ast + \dot M_{\rm res} = 0}" />
+>
+> NOTE: This holds only with no accretion, no mergers and no black-hole accretion and no superwind (halo-loss) ejection, which this summary leaves out (see Eq 5 for hot halo accretion).
+
+Now follow the gas:
+
+- 1) The gas in cold galactic disc can form stars via star formation that happens at the rate <M t="\psi" />.
+	- This rate is controlled by how much cold gas (<M t="M_{\rm cold}" />) the galaxy currently has ready to form stars and how fast it can form (<M t="\tau_\ast" />, depending on the type of the galaxy e.g. disc galaxies or starbursts, so need to be careful not to only use <M t="V_c" />). The rate can be written as
+
+<M d id="eq-l00-sfr" tag="1" t="\psi = \frac{M_{\rm cold}}{\tau_\ast(V_c)}." />
+
+- 2) Since the cold gas turns into stars, the total stellar mass will change over time (for now we only start with nothing but cold gas turns into stars). This stellar mass changing at the rate of
+
+<M d id="eq-l00-star0" tag="*" t="\dot M_{\ast} = \psi." />
+
+- 3) However, the stars do not live forever. When they die, they give back some mass to the ISM. We call this "mass recycling" (GALFORM treats the return as instantaneous: the instantaneous recycling approximation, IRA). Hence the total rate of change of the stellar mass in Equation (\*) has to deduct the fraction of recycled gas as below
+
+<M d id="eq-l00-star" tag="2" t="\textcolor{#e08a3c}{\dot M_{\ast} = (1 - R)\psi}." />
+
+- However, the results from dead stars are also left with remnant in the form of white dwarfs, neutron stars or black holes. These won't count toward the recycled mass. They stay in <M t="M_\ast" />.
+
+<Figure svg="galform/L00/cycle-1" n={1} id="fig-l00-cycle-1" widthPct={0.95} alt="Two boxes: cold disc gas on the left and stars (including remnants) on the right, joined by a solid arrow psi from cold gas to stars and a dashed arrow R psi back." caption="Steps 1 to 3. Cold gas forms stars at the rate ψ; the dashed arrow is the fraction R that is recycled back to the cold gas when stars die. Remnants stay in M*." />
+
+- 4) And when a star dies, it doesn't only recycle material back to ISM. The extreme energy from the SN explosion can also kick the cold gas out of the galaxy. The amount of cold gas that was ejected is proportional to the SFR (with a factor called "mass-loading factor, <M t="\beta" />")
+
+<M d id="eq-l00-res0" tag="**" t="\dot M_{\rm res} = \beta \psi." />
+
+<Figure svg="galform/L00/cycle-2" n={2} id="fig-l00-cycle-2" widthPct={0.95} alt="The previous diagram with a new ejected-reservoir box at the upper right, joined to the cold gas box by a green curved arrow beta psi." caption="Step 4. Supernovae eject cold gas into the reservoir at the rate βψ (green)." />
+
+- 5) Once the gas is held in the reservoir, it doesn't stay there forever. The gas can return to the hot halo (not the galaxy) after some time. The rate of the return is defined as
+
+<M d id="eq-l00-ret" tag="3" t="\dot M_{\rm ret} = \alpha_{\rm ret}\frac{M_{\rm res}}{\tau_{\rm dyn, halo}}," />
+
+where the timescale of the return depends on the halo dynamical time <M t="\tau_{\rm dyn, halo} = r_{\rm vir}/V_{\rm vir}" />, which is effectively independent of halo mass (at fixed redshift; in GALFORM it can grow by up to a factor of <M t="2^{1/3}\simeq 1.26" /> between halo-formation events because <M t="V_{\rm vir}" /> is frozen while the halo mass grows by up to a factor of 2, so <M t="r_{\rm vir}\propto M^{1/3}" />). This means that mass returns on the same timescale in a dwarf and in a cluster when considering the same cosmic epoch (aka redshift).
+
+- 6) Hence, similarly to the stellar mass, the change of the total reservoir mass over time must take the return rate of the gas into account as well. The Equation (\*\*) then becomes
+
+<M d id="eq-l00-res" tag="4" t="\textcolor{#d6407f}{\dot M_{\rm res} = \beta \psi - \dot M_{\rm ret}}." />
+
+<Figure svg="galform/L00/cycle-3" n={3} id="fig-l00-cycle-3" widthPct={0.95} alt="The previous diagram with a new hot-halo box at the upper left and an arrow from the reservoir to the hot halo labelled alpha_ret M_res over tau_dyn." caption="Steps 5 and 6. The reservoir gives gas back to the hot halo (not to the galaxy) at the rate Ṁ_ret." />
+
+- 7) For the hot gas that is in the hot halo, it can also cool down and reach the cold disc with the rate <M t="\dot M_{\rm cool}" /> (see [Gas cooling](/explore/notes/galform-gas-cooling/) for more details about the gas cooling). The rate of change of the hot halo gas mass can be then written as
+
+<M d id="eq-l00-hot" tag="5" t="\textcolor{#c0392b}{\dot M_{\rm hot} = -\dot M_{\rm cool} + \dot M_{\rm ret}}\ \textcolor{grey}{\text{[+ extra hot gas}^\dagger\text{]}}," />
+
+where <span style={{ color: "grey" }}>extra hot gas</span><sup>†</sup> comes mostly from accretion as the halo grows. Some of them comes from mergers.
+
+- Finally the last component of the galaxy we haven't derived is the cold disc gas mass. We have derived all the rates of change for other components, meaning that we only count what goes out and comes into the cold gas disc. Hence, the rate of change for <M t="M_{\rm cold}" /> is accounting for the gas that cools in from the hot halo, the gas that forms stars, returns via recycling, and gas that was kicked out by SNe. This gives
+
+<M d id="eq-l00-cold" tag="6" t="\textcolor{#2b7fd6}{\dot M_{\rm cold} = \dot M_{\rm cool} - (1 - R + \beta)\psi.}" />
+
+<Figure svg="galform/L00/cycle-4" n={4} id="fig-l00-cycle-4" widthPct={0.95} alt="The complete baryon cycle: hot halo, ejected reservoir, cold disc gas and stars, joined by the cooling, ejection, return, star-formation and recycling arrows, with a dashed halo-growth box feeding the hot halo." caption="Step 7, the complete cycle. Gas cools from the hot halo onto the disc, forms stars, is recycled or ejected into the reservoir, and returns to the hot halo. The dashed box is the extra hot gas of Eq. (5)." />

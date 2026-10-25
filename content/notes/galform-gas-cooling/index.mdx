@@ -1,0 +1,160 @@
+---
+title: "Gas cooling (GALFORM)"
+description: "How fast hot halo gas cools onto the galaxy disc in GALFORM: the local cooling time, the cooling and free-fall radii, the infall radius, and the AGN switch."
+publishDate: "2026-10-25"
+tags: ["galform", "gas cooling", "semi-analytic"]
+---
+
+import "katex/dist/katex.min.css";
+import "@/styles/course.css";
+import M from "@/components/course/M.astro";
+import Callout from "@/components/course/Callout.astro";
+import Figure from "@/components/course/Figure.astro";
+import cieCooling from "@/assets/courses/galform/L00b/cie-cooling.png";
+
+Semi-analytic way:
+
+> "How fast can gas cool in a galaxy"
+
+Answers:
+
+It depends on
+
+- how much thermal energy the gas has (The higher the slower)
+- how dense (the denser, the faster)
+- how metal-rich the gas is (the more metals, the faster; mostly for <M t="10^5 \lesssim T \lesssim 10^7" /> K)
+
+To get to the answer of how fast, let's break it down in each comprehensive step. For more "great" details, see [Bosch+2024](https://campuspress.yale.edu/vdbosch/astro610_lectures/) <mark>GOATED</mark>
+
+## Step 1: Hot gas in halo
+
+When a halo forms, gas that isn't already in a galaxy gets shock-heated to the virial temperature.
+
+<M d id="eq-l00b-tvir" tag="1" t="T_{\rm vir} \propto V^2_{\rm vir}," />
+
+and it sits in a density profile, <M t="\rho_{\rm hot}(r)" />, usually a cored isothermal sphere.
+
+<M d id="eq-l00b-rho" tag="2" t="\rho_{\rm hot}(r) \propto \frac{1}{r^2 + r_{\rm core}^2}." />
+
+<Figure svg="galform/L00b/cool-1" n={1} id="fig-l00b-cool-1" widthPct={0.8} alt="A circle for the halo with concentric shading that gets denser towards the centre, labelled rho_hot(r), and the virial temperature." caption="Step 1. Hot gas fills the halo at T_vir, denser towards the centre." />
+
+## Step 2: The local cooling time
+
+At radius <M t="r" /> in the profile <M t="\rho_{\rm hot}(r)" />, the local cooling time, <M t="t_{\rm cool}(r)" />, is the thermal energy (<M t="\epsilon" />) of the gas divided by the rate at which it is radiated (<M t="\mathcal{C}" />).
+
+<M d id="eq-l00b-tcool0" tag="3" t="t_{\rm cool} \equiv \frac{\rho \epsilon}{\mathcal{C}} = \frac{\rho \epsilon}{n^2 \ \Lambda(T, Z_{\rm hot})}," />
+
+where the thermal energy of an ideal mono-atomic gas is defined by
+
+<M d id="eq-l00b-eps" tag="4" t="\epsilon = \frac{1}{\gamma - 1}\frac{k_B T}{\mu m_p}," />
+
+where <M t="\gamma = 5/3" />. And the cooling function depends on the temperature <M t="T" /> and the metallicity of the hot gas <M t="Z_{\rm hot}" />, which is written as <M t="\Lambda(T, Z_{\rm hot})" />. Here <M t="n" /> is the total particle number density and <M t="\Lambda" /> is normalised per <M t="n^2" />, <M t="\mathcal{C} = n^2\,\Lambda" /> (written as <M t="\rho^2\Lambda" /> in Cole+00 and Lacey+16; the factor <M t="\mu m_p" /> turns <M t="\rho" /> into <M t="n" />). The final form of the local cooling time is then
+
+<M d id="eq-l00b-tcool" tag="5" t="\boxed{t_{\rm cool}(r) = \frac{3}{2}\frac{\mu m_p k_B T}{\rho_{\rm hot}(r) \Lambda(T, Z_{\rm hot})}}." />
+
+<Figure svg="galform/L00b/cool-2" n={2} id="fig-l00b-cool-2" widthPct={0.8} alt="The halo diagram with one thin gas shell marked at radius r and labelled with its local cooling time t_cool(r)." caption="Step 2. Every shell of gas at radius r has its own cooling time, set by its density and temperature." />
+
+<details class="nb-deriv">
+<summary>Definitions of <M t="n" />, <M t="n_{\rm H}" /> and <M t="\mu" /> (click to open)</summary>
+
+**1. Two number densities.** The total particle density (electrons + ions) is <M t="n = \rho/(\mu m_p)" />, and the hydrogen density (hydrogen nuclei only) is
+
+<M d t="n_{\rm H} = \frac{X\rho}{m_{\rm H}}." />
+
+**2. Count the particles.** For fully ionised gas with hydrogen mass fraction <M t="X=0.75" /> and helium <M t="Y=0.25" />, count particles per <M t="m_p" /> of mass: hydrogen ions <M t="X" />, helium nuclei <M t="Y/4" />, electrons <M t="X + Y/2" />. So
+
+<M d t="\frac{n\,m_p}{\rho} = 2X + \frac{3Y}{4} = 1.6875 \;\Rightarrow\; \mu = \frac{1}{1.6875} \simeq 0.59, \qquad \frac{n_{\rm H}}{n} = \frac{X}{1.6875} = \frac{4}{9}." />
+
+</details>
+
+<details class="nb-deriv">
+<summary>Derivation of Eq. (5) (click to open)</summary>
+
+**1. Thermal energy per volume.** With <M t="\epsilon = \frac{3}{2}\frac{k_B T}{\mu m_p}" /> from Eq. (4) and <M t="n = \rho/(\mu m_p)" />,
+
+<M d t="\rho\,\epsilon = \frac{3}{2}\, n k_B T." />
+
+**2. Radiated power per volume.** Cooling comes from two-body collisions, so it scales as density squared. With <M t="\Lambda" /> normalised per <M t="n^2" />,
+
+<M d t="\mathcal{C} = n^2\,\Lambda." />
+
+**3. Combine.**
+
+<M d t="t_{\rm cool} = \frac{\rho\epsilon}{\mathcal{C}} = \frac{\frac{3}{2}\, n k_B T}{n^2\,\Lambda} = \frac{3}{2}\frac{k_B T}{n\,\Lambda} = \frac{3}{2}\,\frac{\mu m_p k_B T}{\rho\,\Lambda}." />
+
+Putting in numbers,
+
+<M d t="t_{\rm cool} \simeq 6.6 \times 10^8\,{\rm yr} \left(\frac{T}{10^6\,{\rm K}}\right)\left(\frac{n}{10^{-3}\,{\rm cm}^{-3}}\right)^{-1}\left(\frac{\Lambda(T, Z_{\rm hot})}{10^{-23}\,{\rm erg\,s^{-1}\,cm^3}}\right)^{-1}." />
+
+</details>
+
+<details class="nb-deriv">
+<summary>Which <M t="\Lambda" /> does GALFORM use? (click to open)</summary>
+
+**1. The tables are per hydrogen density.** GALFORM reads the [Sutherland & Dopita (1993)](https://ui.adsabs.harvard.edu/abs/1993ApJS...88..253S) tables, which are normalised to unit hydrogen density: each table gives <M t="\Lambda_{\rm tab}" /> at <M t="n_{\rm H}=1\,{\rm cm^{-3}}" /> together with the electron and total ion densities (<M t="n_e" />, <M t="n_t" />, in units of <M t="n_{\rm H}" />). So the table convention is <M t="\mathcal{C} = n_{\rm H}^2\Lambda_{\rm tab}" />, not <M t="n^2\Lambda" />.
+
+**2. Convert between the two.** Matching <M t="n^2\Lambda = n_{\rm H}^2\Lambda_{\rm tab}" /> gives
+
+<M d t="\Lambda = \left(\frac{n_{\rm H}}{n}\right)^2\Lambda_{\rm tab} = \frac{16}{81}\,\Lambda_{\rm tab} \simeq 0.2\,\Lambda_{\rm tab}." />
+
+Putting the table value <M t="\Lambda_{\rm tab}" /> straight into Eq. (5) makes <M t="t_{\rm cool}" /> too short by <M t="81/16 \simeq 5" />. Keeping <M t="\Lambda_{\rm tab}" /> instead, the same derivation gives the longer form
+
+<M d t="t_{\rm cool} = \frac{3}{2}\frac{n k_B T}{n_{\rm H}^2\,\Lambda_{\rm tab}} = \frac{3}{2}\cdot\frac{81}{16}\,\frac{k_B T}{n\,\Lambda_{\rm tab}} = \frac{243}{32}\,\frac{\mu m_p k_B T}{\rho\,\Lambda_{\rm tab}}." />
+
+**3. What the code does.** When it loads a table, GALFORM builds <M t="t_{\rm cool} = \frac{3}{2}(n_e+n_t)k_BT/\Lambda_{\rm tab}" /> at <M t="n_{\rm H}=1" /> and later divides by <M t="n_{\rm H}" />. This is the long form, but with the true ionisation state of the table instead of the fully-ionised ratio <M t="4/9" />. The routines that set the cooling radius then turn this tabulated time at the mean halo density back into an effective <M t="\Lambda" /> by inverting exactly the short form, Eq. (5), with the primordial <M t="\mu" />, and use the loss rate <M t="\rho^2\Lambda" />. So the short form is the one GALFORM works with when it finds <M t="r_{\rm cool}" />, and it is what Cole+00 (Eq. 4.3) and Lacey+16 (Eq. 3) write down.
+
+</details>
+
+The cooling function we are using in galaxy formation models is considered <mark>Collisional Ionization Equilibrium</mark>: the CIE cooling function.
+
+<Figure img={cieCooling} n={3} id="fig-l00b-cie" widthPct={0.8} alt="Cooling function Lambda in units of 1e-23 erg cm^3 per second against temperature from 1e4 to 1e8 kelvin, for metallicities from zero to solar. Peaks from hydrogen near 2e4 K and helium near 1e5 K are marked, and the high-temperature tail rises as T to the one half." caption="The CIE cooling function Λ(T) for several metallicities, with the H and He peaks and the Λ ∝ T^½ tail marked. Plot from Sutherland & Dopita (1993, ApJS 88, 253), as shown in van den Bosch's ASTR 610 lecture 15." />
+
+The CIE we are using is basically just a tabulated cooling function taken from the plot above.
+
+## Step 3: Two radii
+
+1. Cooling radius; <M t="r_{\rm cool}" />
+
+   <M t="r_{\rm cool}" /> is where the value of the cooling time <M t="t_{\rm cool}(r)" /> equals to the time available for cooling. In GALFORM, that time is basically the age of the halo (the time since the halo last formed).
+
+2. Free-fall radius; <M t="r_{\rm ff}" />
+
+   <M t="r_{\rm ff}" /> is where the free-fall time equals to the halo age. Gas that cools has to fall in and it <mark>cannot</mark> arrive faster than free fall.
+
+The definition of the free-fall time is
+
+<M d t="t_{\rm ff} = \left(\frac{3\pi}{32G\rho}\right)^{1/2}" />
+
+which is the uniform-sphere estimate, with <M t="\rho" /> the mean total (mostly dark-matter) mass density inside <M t="r" />. GALFORM does not evaluate this formula: it integrates the infall from rest in the halo mass profile (SIS or NFW), so <M t="r_{\rm ff}" /> comes from the dark-matter profile, not from the hot-gas density. The two agree to about 10%.
+
+<Figure svg="galform/L00b/cool-3" n={4} id="fig-l00b-cool-3" widthPct={0.8} alt="The halo diagram with two dashed circles added, the cooling radius r_cool and the free-fall radius r_ff." caption="Step 3. Two radii: where the cooling time equals the halo age, and where the free-fall time does." />
+
+## Step 4: The infall radius
+
+<M d id="eq-l00b-rinfall" tag="6" t="r_{\rm infall} = {\rm min}(r_{\rm cool}, r_{\rm ff})." />
+
+Everything inside <M t="r_{\rm infall}" /> has cooled and reached the disc, which will be the fuel for star formation or get reheated up by the feedback processes.
+
+<Figure svg="galform/L00b/cool-4" n={5} id="fig-l00b-cool-4" widthPct={0.8} alt="The halo diagram with the region inside the smaller of the two radii shaded, labelled r_infall." caption="Step 4. Everything inside r_infall = min(r_cool, r_ff) has cooled and reached the disc." />
+
+## <span style={{ color: "#e08a3c" }}>Step 5: The rate</span>
+
+The mass cooled in one step is the hot-gas mass between <M t="r_{\rm infall}" /> at the start and at the end of the step.
+
+Hence this is the rate of the mass cooling used in the DEs in [L00](/explore/notes/galform-baryon-cycle/),
+
+<M d id="eq-l00b-mcool" tag="7" t="\dot M_{\rm cool} = 4\pi r_{\rm infall}^2 \rho_{\rm hot}(r_{\rm infall}) \frac{{\rm d} r_{\rm infall}}{{\rm d} t}." />
+
+In GALFORM, we define <M t="\dot M_{\rm cool} = \Delta M_{\rm cool}/\Delta t" /> (the mass cooled in the step, `mcools` in the code) and hold it constant while solving the DEs for <M t="M_\ast" />, <M t="M_{\rm cold}" />, <M t="M_{\rm hot}" />, and <M t="M_{\rm res}" /> over the step.
+
+<Figure svg="galform/L00b/cool-5" n={6} id="fig-l00b-cool-5" widthPct={0.8} alt="The halo diagram with a disc at the centre, an orange ring marking the shell between r_infall at the start and end of the step, and four arrows carrying its gas onto the disc; the M_cool dot formula is in the side annotation." caption="Step 5. The shell between r_infall at the start and the end of the step (orange ring) is the gas that cools onto the disc in that step." />
+
+## Step 6: AGN feedback <span style={{ color: "grey" }}>(extra)</span>
+
+In massive halos, the gas cools slowly in a hot atmosphere (<M t="r_{\rm cool} < r_{\rm ff}" />; precisely, GALFORM tests whether <M t="r_{\rm ff}(\alpha_{\rm cool}\, t_{\rm avail}) > r_{\rm cool}" />, with the parameter <M t="\alpha_{\rm cool}" />). If the BH's heating power <M t="\epsilon_{\rm SMBH} L_{\rm Edd}(M_{\rm BH})" /> (a fraction of its Eddington luminosity) exceeds the cooling luminosity <M t="L_{\rm cool}" /> of the hot gas, GALFORM switches the cooling OFF. They suppress <M t="\dot M_{\rm cool}" /> rather than reheating and ejecting cold gas.
+
+<Figure svg="galform/L00b/cool-6" n={7} id="fig-l00b-cool-6" widthPct={0.8} alt="The halo diagram with a black hole at the centre of the disc heating the halo, and the cooling arrow crossed out." caption="Step 6. If the black hole's heating power exceeds the cooling luminosity, the cooling flow is switched off." />
+
+## <span style={{ color: "#2e8b57" }}>Final: rate of change in the hot halo mass</span>
+
+<M d id="eq-l00b-hot" tag="8" t="\dot M_{\rm hot} = -\dot M_{\rm cool} + \dot M_{\rm ret} \ \text{+ [new gas accreted as the halo grows and through mergers]}." />

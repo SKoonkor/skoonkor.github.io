@@ -1,0 +1,39 @@
+% Baryon-cycle figure, four frames. Build one frame with:  pdflatex '\def\fr{2}\input{cycle}'
+% Every frame shares one bounding box and one set of box positions, so a frame only ever ADDS things.
+\input{common}
+\ifdefined\fr\else\def\fr{4}\fi
+\begin{document}
+\begin{tikzpicture}[>={Stealth[length=2.6mm,width=2mm]},
+  box/.style={draw,rounded corners=2.5mm,align=center,minimum height=16mm,minimum width=54mm,font=\small,line width=0.8pt},
+  cold/.style={box,draw=cblue,fill=cblue!18},
+  star/.style={box,draw=corange,fill=corange!25},
+  res/.style={box,draw=cpink,fill=cpink!18},
+  hot/.style={box,draw=cred,fill=cred!20},
+  halo/.style={box,draw=black!50,fill=black!8,dashed},
+  flow/.style={->,thick},
+  lab/.style={font=\footnotesize,inner sep=1.5pt}]
+  \useasboundingbox (-3.2,-1.5) rectangle (11.6,7.2);
+  % ---- steps 1-3: cold gas and stars ----
+  \node[cold] (cold) at (0,0)   {$M_{\rm cold}$: \textbf{cold disc gas}\ifnum\fr>3\\[2.5mm]$\dot M_{\rm cold}=\dot M_{\rm cool}-(1-R+\beta)\psi$\fi};
+  \node[star] (star) at (8.4,0) {$M_\ast$: \textbf{stars (incl.\ remnants)}\\[2.5mm]$\dot M_\ast=(1-R)\psi$};
+  \draw[flow] ($(cold.east)+(0,0.25)$) -- ($(star.west)+(0,0.25)$) node[lab,midway,above=1mm] {$\psi = M_{\rm cold}/\tau_\ast$};
+  \draw[flow,dashed] ($(star.west)+(0,-0.35)$) -- ($(cold.east)+(0,-0.35)$) node[lab,midway,below=1mm] {$R\,\psi$ (recycled gas)};
+  % ---- step 4: supernova ejection into the reservoir ----
+  \ifnum\fr>1
+    \node[res] (res) at (8.4,3.4) {$M_{\rm res}$: \textbf{ejected reservoir}\\[2.5mm]
+      \ifnum\fr>2 $\dot M_{\rm res}=\beta\psi-\dot M_{\rm ret}$\else $\dot M_{\rm res}=\beta\psi$\fi};
+    \draw[->,thick,cgreen] ($(cold.north)+(1.6,0)$) to[bend left=22] node[lab,midway,sloped,text=cgreen,above=-0.5mm] {$\beta\psi$} ($(res.south)+(-1.6,0)$);
+  \fi
+  % ---- steps 5-6: the reservoir returns gas to the hot halo ----
+  \ifnum\fr>2
+    \node[hot] (hot) at (0,3.4) {$M_{\rm hot}$: \textbf{hot halo gas}\ifnum\fr>3\\[2.5mm]$\dot M_{\rm hot}=-\dot M_{\rm cool}+\dot M_{\rm ret}\,[+\dot M_{\rm in}]$\fi};
+    \draw[flow] ($(res.west)+(0,-0.15)$) -- ($(hot.east)+(0,-0.15)$) node[lab,midway,above=1.5mm] {$\dot M_{\rm ret}=\alpha_{\rm ret}M_{\rm res}/\tau_{\rm dyn}$};
+  \fi
+  % ---- step 7: cooling, and the cold-gas equation closes the cycle ----
+  \ifnum\fr>3
+    \draw[flow] ($(hot.south)+(-1.2,0)$) -- ($(cold.north)+(-1.2,0)$) node[lab,midway,left=1mm] {$\dot M_{\rm cool}$};
+    \node[halo] (grow) at (0,6.5) {\textbf{halo growth:}\\[1mm]accretion + merger transfers};
+    \draw[->,thick,black!50,dashed] ($(grow.south)+(0,0)$) -- ($(hot.north)+(0,0)$) node[lab,midway,right=1mm,text=black!60] {$\dot M_{\rm in}$: accreted + transferred gas};
+  \fi
+\end{tikzpicture}
+\end{document}

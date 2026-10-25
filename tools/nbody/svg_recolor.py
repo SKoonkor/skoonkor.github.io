@@ -3,7 +3,8 @@
 Usage: python3 svg_recolor.py <in.svg> <out.svg> <id-prefix> [--plot]
 
 - black ink -> currentColor; mid grays -> currentColor at reduced opacity
-- LaTeX accent colours -> the site's fixed accent hex (blue #2b7fd6, red #c0392b, green #2e8b57)
+- LaTeX accent colours -> the site's fixed accent hex (blue #2b7fd6, red #c0392b, green #2e8b57,
+  orange #e08a3c, pink #d6407f)
 - pale tinted fills (blue!8, cheavy!20, green!12 ...) -> the accent at low opacity, so they blend
   into whatever background is behind the figure
 - every id (and href/url() reference to it) gets "<prefix>-", so several SVGs can be inlined on one page
@@ -14,6 +15,7 @@ import re
 import sys
 
 BLUE, RED, GREEN, ORANGE = "#2b7fd6", "#c0392b", "#2e8b57", "#e08a3c"
+PINK = "#d6407f"  # GALFORM notes: the ejected reservoir
 
 
 def pct(s):
@@ -35,6 +37,9 @@ def classify(rgb):
         q = (g - b) / max(1e-9, r - b)
         if q > 0.25:
             base, hue = ORANGE, (0.88, 0.54, 0.24)
+        elif b > g and (b - g) / max(1e-9, r - g) > 0.3:
+            # red-dominant with blue above green: magenta/pink, not the brick red
+            base, hue = PINK, (0.84, 0.25, 0.50)
         else:
             base, hue = RED, (0.75, 0.22, 0.17)
     elif g >= r and g > b:

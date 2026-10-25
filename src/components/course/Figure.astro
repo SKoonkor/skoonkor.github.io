@@ -1,4 +1,5 @@
 ---
+import { Image } from "astro:assets";
 /**
  * A lecture figure: an inlined, theme-aware SVG and its caption.
  *
@@ -16,8 +17,13 @@
  * figure-to-text size ratio the same as the PDF instead of every figure filling the column.
  */
 interface Props {
-	/** SVG slug: renders src/assets/courses/nbody/<slug>.svg inline. */
-	svg: string;
+	/**
+	 * SVG slug: renders src/assets/courses/nbody/<slug>.svg inline. A slug starting "galform/"
+	 * is read from src/assets/courses/galform/ instead; or pass `img` for a raster figure.
+	 */
+	svg?: string;
+	/** A raster figure (e.g. a screenshot of a published plot), used instead of `svg`. */
+	img?: ImageMetadata;
 	alt: string;
 	caption: string;
 	/** Figure number within the lecture: 3 renders as "Figure 3." */
@@ -28,29 +34,39 @@ interface Props {
 	widthPct: number;
 }
 
-const { svg, alt, caption, n, id, widthPct } = Astro.props;
+const { svg, img, alt, caption, n, id, widthPct } = Astro.props;
 
-const svgSources = import.meta.glob<string>("/src/assets/courses/nbody/**/*.svg", {
+const svgSources = import.meta.glob<string>("/src/assets/courses/**/*.svg", {
 	query: "?raw",
 	import: "default",
 	eager: true,
 });
 
-const inlineSvg =
-	svgSources[`/src/assets/courses/nbody/${svg}.svg`] ??
-	(() => {
-		throw new Error(`Figure: no SVG at src/assets/courses/nbody/${svg}.svg`);
-	})();
+const svgPath = svg && `/src/assets/courses/${svg.startsWith("galform/") ? "" : "nbody/"}${svg}.svg`;
+const inlineSvg = svgPath
+	? (svgSources[svgPath] ??
+		(() => {
+			throw new Error(`Figure: no SVG at ${svgPath}`);
+		})())
+	: "";
 
 // Read the drawing's aspect ratio from its own viewBox: with it the canvas below has its exact final height
 // before the browser has laid the SVG out, which is what lets it skip rendering off-screen figures
 // (content-visibility, see course.css) without the page jumping when they scroll into view.
 const viewBox = inlineSvg.match(/viewBox="[\d.\-]+ [\d.\-]+ ([\d.]+) ([\d.]+)"/);
-const aspect = viewBox ? Number(viewBox[1]) / Number(viewBox[2]) : 0;
+const aspect = img ? img.width / img.height : viewBox ? Number(viewBox[1]) / Number(viewBox[2]) : 0;
 
 ---
 
 <figure class="nb-figure" id={id} style={`--nb-fig-w: ${Math.round(widthPct * 100)}%; --nb-fig-f: ${Math.round(widthPct * 100) / 100}; --nb-fig-ar: ${aspect || "auto"}`}>
-	<div class="nb-figure__canvas" aria-label={alt} set:html={inlineSvg} />
+	{
+		img ? (
+			<div class="nb-figure__canvas">
+				<Image src={img} alt={alt} />
+			</div>
+		) : (
+			<div class="nb-figure__canvas" aria-label={alt} set:html={inlineSvg} />
+		)
+	}
 	<figcaption><span class="nb-figure__n">Figure {n}.</span> {caption}</figcaption>
 </figure>

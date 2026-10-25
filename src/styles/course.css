@@ -140,6 +140,14 @@
 		color: var(--color-global-text);
 	}
 
+	/* A raster figure (a credited screenshot of a published plot): same width rule as the svg. */
+	.nb-figure__canvas img {
+		width: var(--nb-fig-w, 100%);
+		max-width: 100%;
+		height: auto;
+		border-radius: 0.4rem;
+	}
+
 	.nb-figure figcaption {
 		width: 80%;
 		max-width: 80%;
@@ -363,4 +371,34 @@ html[data-theme="dark"] .nb-figure svg image.nb-ink-light {
 		.nb-toc a {
 			color: var(--color-muted);
 		}
+}
+
+
+/* Derivation / definition drop-downs (<details class="nb-deriv">): a thin blue rule and a faint tint, so they
+   read as "optional detail" next to the main text without competing with it. Colours are the site's blue at low
+   opacity, so they follow light and dark themes. */
+.prose details.nb-deriv {
+	margin-block: 1.1em;
+	padding: 0.15rem 1rem 0.15rem 0.9rem;
+	border-left: 3px solid rgb(43 127 214 / 55%);
+	border-radius: 0 0.4rem 0.4rem 0;
+	background: rgb(43 127 214 / 5%);
+}
+
+.prose details.nb-deriv > summary {
+	cursor: pointer;
+	padding-block: 0.45rem;
+	font-size: 0.85rem;
+	font-weight: 600;
+	color: var(--color-muted);
+}
+
+.prose details.nb-deriv > summary:hover,
+.prose details.nb-deriv[open] > summary {
+	color: var(--color-global-text);
+}
+
+.prose details.nb-deriv[open] > summary {
+	margin-bottom: 0.4rem;
+	border-bottom: 1px solid rgb(43 127 214 / 25%);
 }

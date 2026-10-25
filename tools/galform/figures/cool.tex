@@ -1,0 +1,61 @@
+% Gas-cooling figure, six frames. Build one frame with:  pdflatex '\def\fr{3}\input{cool}'
+% One halo cross-section (centre at the origin); each frame only ADDS things to the previous one.
+%   1 hot halo + density profile   2 a shell and its cooling time   3 r_cool and r_ff
+%   4 r_infall shaded              5 the cooled gas reaches the disc  6 AGN heating switches cooling off
+% Annotations sit in side columns with leader lines, so nothing overprints the picture.
+\input{common}
+\ifdefined\fr\else\def\fr{6}\fi
+\begin{document}
+\begin{tikzpicture}[>={Stealth[length=2.6mm,width=2mm]},
+  lab/.style={font=\footnotesize,inner sep=1.5pt},
+  leader/.style={thin,black!60},
+  flow/.style={->,thick}]
+  \useasboundingbox (-6.6,-4.5) rectangle (10.6,4.5);
+  \def\rvir{3.6} \def\rff{2.6} \def\rcool{1.6}
+  % ---- 1: the hot halo, denser towards the centre ----
+  % concentric translucent discs instead of \shade: a radial gradient would carry ~250 opaque stops that the
+  % recolour script cannot adapt to dark mode, while plain fill-opacity circles blend into any background
+  \foreach \i in {0,...,13}{\fill[cred,opacity=0.06] (0,0) circle ({\rvir*(1-\i/14)});}
+  \draw[cred,line width=0.9pt] (0,0) circle (\rvir);
+  \node[lab,anchor=south,align=center] at (0,\rvir+0.1) {\textbf{hot halo} at $T_{\rm vir}\propto V_{\rm vir}^2$};
+  \node[lab,anchor=north,align=center] at (0,-\rvir-0.1) {denser towards the centre:\ $\rho_{\rm hot}(r)\propto \dfrac{1}{r^2+r_{\rm core}^2}$};
+  % ---- 2: one shell of gas and its local cooling time ----
+  \ifnum\fr>1
+    \draw[black,line width=1.1pt] (0,0) circle (0.9);
+    \draw[<->,thick] (0,0) -- (-130:0.9) node[midway,below left=-1pt,font=\small] {$r$};
+    \draw[leader] (25:0.9) -- (4.4,1.6);
+    \node[lab,anchor=west,align=left] at (4.4,1.6) {\textbf{local cooling time} of the shell\\[0.5mm]$t_{\rm cool}(r)=\dfrac{243}{32}\dfrac{\mu m_p k_BT}{\rho_{\rm hot}(r)\,\Lambda}$};
+  \fi
+  % ---- 3: the two radii ----
+  \ifnum\fr>2
+    \draw[cblue,dashed,very thick] (0,0) circle (\rcool);
+    \draw[cgreen,dashed,very thick] (0,0) circle (\rff);
+    \draw[leader] (155:\rff) -- (-4.2,1.3) node[lab,cgreen!60!black,anchor=east,align=right] {free-fall radius\\$r_{\rm ff}$};
+    \draw[leader] (205:\rcool) -- (-4.2,-1.3) node[lab,cblue!60!black,anchor=east,align=right] {cooling radius\\$r_{\rm cool}$};
+  \fi
+  % ---- 4: everything inside r_infall = min(r_cool, r_ff) has cooled ----
+  \ifnum\fr>3
+    \fill[cblue!35] (0,0) circle (\rcool);
+    \draw[cblue,very thick] (0,0) circle (\rcool);
+    \draw[black,line width=1.1pt] (0,0) circle (0.9);
+    \draw[leader] (5:\rcool) -- (4.4,-0.4);
+    \node[lab,anchor=west,align=left] at (4.4,-0.4) {$r_{\rm infall}=\min(r_{\rm cool},r_{\rm ff})$\\[0.5mm]everything inside has cooled};
+  \fi
+  % ---- 5: the disc, and the gas that cools onto it ----
+  \ifnum\fr>4
+    \fill[cblue!65] (0,0) ellipse (0.75 and 0.16);
+    \draw[cblue,thick] (0,0) ellipse (0.75 and 0.16);
+    \draw[corange,line width=2.4pt] (0,0) circle (\rcool);
+    \foreach \a in {50,130,230,310}{\draw[flow,corange] (\a:\rcool-0.08) -- ({0.62*cos(\a)},{0.13*sin(\a)});}
+    \draw[leader] (-70:\rcool) -- (4.4,-3.4);
+    \node[lab,anchor=west,align=left] at (4.4,-3.4) {the shell $\Delta r_{\rm infall}$ cools onto the \textbf{galaxy disc}:\\[0.5mm]$\dot M_{\rm cool}=4\pi r_{\rm infall}^2\rho_{\rm hot}\dfrac{{\rm d}r_{\rm infall}}{{\rm d}t}$};
+  \fi
+  % ---- 6: AGN heating switches the cooling flow off ----
+  \ifnum\fr>5
+    \fill[black] (0,0) circle (0.1);
+    \foreach \a in {50,130,230,310}{\draw[cred,line width=1.6pt] (\a:0.95) -- (\a:1.45); \draw[cred,line width=1.6pt] ($(\a:1.2)+(\a+90:0.18)$) -- ($(\a:1.2)+(\a-90:0.18)$);}
+    \draw[leader] (0.1,0) -- (4.4,-2.0);
+    \node[lab,anchor=west,align=left] at (4.4,-2.0) {\textbf{AGN feedback}: if $\epsilon_{\rm SMBH}L_{\rm Edd}>L_{\rm cool}$,\\the cooling is switched OFF};
+  \fi
+\end{tikzpicture}
+\end{document}
