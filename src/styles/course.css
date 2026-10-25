@@ -1,5 +1,5 @@
 /*
- * Styles for /courses/ and its lecture pages ("Gravity from Scratch" and any course added
+ * Styles for /notes/ and its lecture pages ("N-body Sim from Scratch" and any course added
  * later). Scoped to .nb-* (n-body / notes) so it cannot leak into the rest of the site.
  *
  * The callout boxes and figures are deliberately modelled on the LaTeX lecture PDFs rather

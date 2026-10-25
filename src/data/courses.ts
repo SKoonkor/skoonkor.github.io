@@ -1,7 +1,7 @@
 /**
- * The course hub at /courses/.
+ * The course hub at /notes/.
  *
- * One entry per course, each pointing at its own landing page. Only "Gravity from Scratch"
+ * One entry per course, each pointing at its own landing page. Only "N-body Sim from Scratch"
  * exists today; this list is where a second course gets added later. Deliberately separate
  * from src/data/course.ts (singular), which is the older, still-unpublished ML course card
  * shown on /explore/ -- that one is left as it is rather than folded in here.
@@ -17,8 +17,8 @@ export type CourseSummary = {
 
 export const courses: CourseSummary[] = [
 	{
-		href: "/courses/nbody/",
-		title: "Gravity from Scratch",
+		href: "/notes/nbody/",
+		title: "N-body Sim from Scratch",
 		tagline: "building N-body solvers, from direct summation to the fast multipole method",
 		blurb:
 			"Eleven lectures that build a dark-matter N-body code from nothing: a double loop of " +

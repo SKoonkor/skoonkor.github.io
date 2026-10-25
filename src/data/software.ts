@@ -5,7 +5,7 @@
  * Explore section and by anything else that wants to name a project, so a
  * title or a tagline exists in exactly one place rather than in two that
  * drift. This used to have its own top-level /software/ hub page; it was
- * folded into Explore to make room for /courses/ in the nav bar.
+ * folded into Explore to make room for /notes/ in the nav bar.
  *
  * A project with no `href` has no page yet. It shows on the card list as
  * "coming soon" and is excluded from `liveProjects`.

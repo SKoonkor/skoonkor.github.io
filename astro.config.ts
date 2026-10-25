@@ -23,8 +23,11 @@ import { expressiveCodeOptions, siteConfig } from "./src/site.config";
 export default defineConfig({
 	site: siteConfig.url,
 	// Software moved from its own /software/ hub into a section of /explore/,
-	// to free up a nav slot for /courses/. Keep old links working.
+	// to free up a nav slot for /notes/. /courses/ was renamed /notes/. Keep old links working.
 	redirects: {
+		"/courses/": "/notes/",
+		"/courses/nbody/": "/notes/nbody/",
+		"/courses/nbody/[...slug]": "/notes/nbody/[...slug]",
 		"/software/": "/explore/#software",
 		"/software/where-did-my-money-go/": "/explore/where-did-my-money-go/",
 	},

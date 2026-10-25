@@ -1,9 +1,9 @@
 ---
 /**
- * A lecture page at /courses/<course>/<slug>/.
+ * A lecture page at /notes/<course>/<slug>/.
  *
  * Modelled on src/layouts/Lesson.astro (the ml course's layout) but parameterised by course
- * name and index href, rather than copying it and hardcoding "Gravity from Scratch" into a
+ * name and index href, rather than copying it and hardcoding "N-body Sim from Scratch" into a
  * file meant for a different course -- Lesson.astro itself is left untouched.
  */
 import type { CollectionEntry } from "astro:content";
@@ -70,7 +70,7 @@ const katexFonts = [
 
 	<article data-pagefind-body>
 		<p class="text-muted -mt-6 mb-8 text-xs">
-			<a class="cactus-link" href="/courses/">Courses</a>
+			<a class="cactus-link" href="/notes/">Notes</a>
 			&nbsp;&rsaquo;&nbsp;
 			<a class="cactus-link" href={courseHref}>{courseTitle}</a>
 			&nbsp;&rsaquo;&nbsp; {lectureLabel}

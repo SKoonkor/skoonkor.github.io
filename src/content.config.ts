@@ -153,12 +153,12 @@ const lesson = defineCollection({
 });
 
 /**
- * "Gravity from Scratch", the N-body gravity-solver course at /courses/nbody/.
+ * "N-body Sim from Scratch", the N-body gravity-solver course at /notes/nbody/.
  *
  * One entry per lecture, L00-L10. Modelled on the `lesson` collection (see above), but with
  * `draft` doing real work here rather than being always-false: each lecture is written and
  * reviewed with `draft: true`, previewable only in `pnpm dev` (see
- * src/pages/courses/nbody/[...slug].astro), and flipped to `false` only once its owner has
+ * src/pages/notes/nbody/[...slug].astro), and flipped to `false` only once its owner has
  * checked it against the lecture PDF and is happy to publish it. That is a deliberate
  * difference from `lesson`, where a draft is simply unfinished -- here a draft can be
  * complete and still deliberately unpublished.

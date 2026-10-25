@@ -1,11 +1,11 @@
 /**
- * The full lecture roster for "Gravity from Scratch", L00-L10.
+ * The full lecture roster for "N-body Sim from Scratch", L00-L10.
  *
  * Taken from the course-order table in Lecture 0. This list exists independently of the
- * `nbody` content collection so that /courses/nbody/ can show all eleven lectures --
+ * `nbody` content collection so that /notes/nbody/ can show all eleven lectures --
  * including the ones with no page yet -- rather than only the ones that happen to have an
  * .mdx file. The index page cross-references this against the collection by `slug` to decide
- * which rows are clickable, so a slug here MUST equal the lecture file's name (content/courses/nbody/
+ * which rows are clickable, so a slug here MUST equal the lecture file's name (content/notes/nbody/
  * <slug>.mdx): a mismatch leaves a published lecture unlinked from the index (L05 was missing for a day
  * this way). The index page now throws at build time if a lecture file has no matching row.
  *
